@@ -14,10 +14,10 @@ torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 
 
-class LineDataExtractor:
+class LineCoordinateExtractor:
     def __init__(self, main_dir, output_file="alldata.json"):
         self.main_dir = main_dir
-        self.output_file = os.path.join(self.main_dir,output_file)
+        self.output_file = os.path.join(self.main_dir, output_file)
 
     @staticmethod
     def parse_path_data(d):
@@ -117,3 +117,5 @@ class LineDataExtractor:
 
         with open(self.output_file, 'w') as json_file:
             json.dump(all_data, json_file, indent=4)
+
+        return self.output_file
