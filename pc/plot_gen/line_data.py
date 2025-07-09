@@ -6,7 +6,7 @@ from xml.etree import ElementTree as ET
 import torch
 import random
 
-from src.plot_gen.plot_utils import extract_vertical_axes_coords
+from pc.plot_gen.plot_utils import extract_vertical_axes_coords, safe_join
 
 random.seed(0)
 np.random.seed(0)
@@ -17,7 +17,7 @@ torch.cuda.manual_seed_all(0)
 class LineCoordinateExtractor:
     def __init__(self, main_dir, output_file="alldata.json"):
         self.main_dir = main_dir
-        self.output_file = os.path.join(self.main_dir, output_file)
+        self.output_file = safe_join(self.main_dir, output_file)
 
     @staticmethod
     def parse_path_data(d):

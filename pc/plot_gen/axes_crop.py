@@ -1,11 +1,10 @@
 import xml.etree.ElementTree as ET
 import os
-import re
 import torch
 import io
 import cairosvg
 from PIL import Image
-from src.plot_gen.plot_utils import extract_number, extract_vertical_axes_coords
+from pc.plot_gen.plot_utils import extract_number, extract_vertical_axes_coords
 
 
 class CroppingProcessor:

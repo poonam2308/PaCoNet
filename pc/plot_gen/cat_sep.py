@@ -8,7 +8,8 @@ from pathlib import Path
 from scipy.signal import find_peaks
 from sklearn.cluster import DBSCAN
 
-from src.plot_gen.line_data import LineCoordinateExtractor
+from pc.plot_gen.line_data import LineCoordinateExtractor
+from pc.plot_gen.plot_utils import safe_join
 
 
 class CategorySeparator:
@@ -34,8 +35,8 @@ class CategorySeparator:
 
     def separate_by_hist_peaks(self, output_dir, output_json="all_histdata.json", color_json="color.json"):
         os.makedirs(output_dir, exist_ok=True)
-        output_json=os.path.join(output_dir, output_json)
-        color_json = os.path.join(output_dir, color_json)
+        output_json = safe_join(output_dir, output_json)
+        color_json = safe_join(output_dir, color_json)
         output_data, color_data = [], []
         image_groups = self.group_images()
 
@@ -70,8 +71,8 @@ class CategorySeparator:
 
     def separate_by_dbscan(self, output_dir, output_json="all_clusdata.json", color_json="color.json", eps=5, min_samples=200):
         os.makedirs(output_dir, exist_ok=True)
-        output_json = os.path.join(output_dir, output_json)
-        color_json = os.path.join(output_dir, color_json)
+        output_json = safe_join(output_dir, output_json)
+        color_json = safe_join(output_dir, color_json)
         output_data, color_data = [], []
         image_groups = self.group_images()
 
@@ -168,7 +169,6 @@ class CategorySeparator:
         output_data.sort(key=lambda x: x["filename"])
         color_data.sort(key=lambda x: x["filename"])
 
-        # ✅ Ensure parent directories exist
         os.makedirs(os.path.dirname(output_json), exist_ok=True)
         os.makedirs(os.path.dirname(color_json), exist_ok=True)
 

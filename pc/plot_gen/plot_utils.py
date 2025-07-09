@@ -4,6 +4,7 @@ import colorsys
 import re
 import xml.etree.ElementTree as ET
 import json
+import os
 
 
 # Convert HSV to RGB for Altair compatibility
@@ -77,3 +78,8 @@ def split_json_data(input_json, train_json, valid_json, train_ratio=0.8):
 
     with open(valid_json, 'w') as valid_file:
         json.dump(valid_data, valid_file, indent=4)
+
+def safe_join(base_dir, file_path):
+    if not os.path.isabs(file_path) and not os.path.dirname(file_path):
+        return os.path.join(base_dir, file_path)
+    return file_path

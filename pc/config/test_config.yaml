@@ -1,0 +1,47 @@
+paths:
+  # CSV-style input
+  test_input_dir: "data/raw_synthetic/testing_data/data_1k"
+
+  # Single-category plots
+  s_plots: "data/synthetic_plots/testing/single_cat/images"
+  s_dist_file: "data/synthetic_plots/testing/single_cat/dist_annotations.json"
+  s_axes_file: "data/synthetic_plots/testing/single_cat/axes_annotations.json"
+  s_crops: "data/synthetic_plots/testing/single_cat/s_crops/images"
+
+  # Multi-category
+  m_plots: "data/synthetic_plots/testing/multi_cat/images"
+  m_dist_file: "data/synthetic_plots/testing/multi_cat/dist_annotations.json"
+  m_axes_file: "data/synthetic_plots/testing/multi_cat/axes_annotations.json"
+  m_crops: "data/synthetic_plots/testing/multi_cat/m_crops/images"
+
+  # Multi-category separated
+  m_color_sep_plots: "data/synthetic_plots/testing/multi_cat/color/images"
+  m_cluster_sep_plots: "data/synthetic_plots/testing/multi_cat/cluster/images"
+  m_color_denoised_plots: "data/synthetic_plots/testing/multi_cat/color_denoised"
+  m_cluster_denoised_plots: "data/synthetic_plots/testing/multi_cat/cluster_denoised"
+
+  # Real-world plots
+  real_plots: "data/real_plots/images"
+  real_crops: "data/real_plots/crops"
+  real_axes_file: "data/real_plots/r_axes_annotations.json"
+  real_color_mapping: "data/real_plots/color_mapping.json"
+  real_color_sep_plots: "data/real_plots/color/images"
+  real_cluster_sep_plots: "data/real_plots/cluster/images"
+  real_color_denoised_plots: "data/real_plots/color/denoised"
+  real_cluster_denoised_plots: "data/real_plots/cluster/denoised"
+
+unet:
+  chkpt_path: "outputs/chkpt/unet_sd/unet_sd_clusternew_mse_model_epoch50.pth"
+  input_dir: "data/real_plots/cluster/images"
+  output_dir: "data/real_plots/cluster/denoised"
+
+#  input_dir: "data/real_plots/color/images"
+#  output_dir: "data/real_plots/cluster/images"
+#
+#  input_dir: "data/synthetic_plots/testing/multi_cat/color/images"
+#  output_dir: "data/synthetic_plots/testing/multi_cat/color_denoised"
+#
+#  input_dir: "data/synthetic_plots/testing/multi_cat/cluster/images"
+#  output_dir: "data/synthetic_plots/testing/multi_cat/cluster_denoised"
+
+

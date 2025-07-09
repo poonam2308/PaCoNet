@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import altair as alt
 import random
-from src.plot_gen.plot_utils import normalize_column, create_ticks_labels, calculate_pixel_positions
+from pc.plot_gen.plot_utils import normalize_column, create_ticks_labels, calculate_pixel_positions, safe_join
 
 
 class SingleCatPCPGenerator:
@@ -108,7 +108,8 @@ class SingleCatPCPGenerator:
     def generate_batch(self, input_dir, output_dir, num_files, annotation_file="dist_annotations.json"):
         """Generate plots and annotations for a directory of CSV files."""
         os.makedirs(output_dir, exist_ok=True)
-        annotation_file = os.path.join(output_dir, annotation_file)
+        annotation_file = safe_join(output_dir, annotation_file)
+
         annotations = []
 
         for i in range(1, num_files + 1):
