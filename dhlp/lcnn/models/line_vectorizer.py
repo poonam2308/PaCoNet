@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from lcnn.config import M
+from dhlp.lcnn.config import M
 
 ### no line pre-featuress required
 FEATURE_DIM = 0

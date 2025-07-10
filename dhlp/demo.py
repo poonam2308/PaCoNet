@@ -55,10 +55,10 @@ def main():
                         default="logs_and_results/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth",
                         help="Path to the checkpoint")
     parser.add_argument("image_dir", nargs="?",
-                        default="data/sd_data_redesign/input_images/1",
+                        default="data/real_plots/input_images/1",
                         help="Directory containing input images")
     parser.add_argument("output_dir", nargs="?",
-                        default="data/sd_data_redesign/output/1_",
+                        default="data/predicted_data/output/1_",
                         help="Directory to save processed images")
     parser.add_argument("-d", "--devices", default="0", help="Comma-separated GPU devices [default: 0]")
 

@@ -16,8 +16,8 @@ import torch.nn.functional as F
 from skimage import io
 from tensorboardX import SummaryWriter
 
-from lcnn.config import C, M
-from lcnn.utils import recursive_to
+from dhlp.lcnn.config import C, M
+from dhlp.lcnn.utils import recursive_to
 
 
 class Trainer(object):

@@ -1,9 +1,9 @@
 #for all the data
 io:
-  vote_index: vote_index_128_128_3_clst5kdenew.mat
-  logdir: logs_clst5kdenew/
+  vote_index: data/vote_index_128_128_3_clst5kdenew.mat
+  logdir: outputs/logs_clst5kdenew/
   datadir: data/pcwireframe_clst5kdenew/
-  outdir: results_clst5kdenew/
+  outdir: outputs/results_clst5kdenew/
   resume_from:
   num_workers: 4
   tensorboard_port: 0

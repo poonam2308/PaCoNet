@@ -12,7 +12,7 @@ from skimage import io
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import default_collate
 
-from lcnn.config import M
+from dhlp.lcnn.config import M
 
 
 class WireframeDataset(Dataset):

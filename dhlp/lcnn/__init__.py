@@ -1,4 +1,4 @@
-import lcnn.models
-import lcnn.trainer
-import lcnn.datasets
-import lcnn.config
+import dhlp.lcnn.models
+import dhlp.lcnn.trainer
+import dhlp.lcnn.datasets
+import dhlp.lcnn.config

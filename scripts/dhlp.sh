@@ -1,0 +1,1 @@
+python train.py --identifier baseline config/clust5kdenoisednew.yaml

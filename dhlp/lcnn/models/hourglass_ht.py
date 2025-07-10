@@ -6,7 +6,7 @@ Modified by Yancong LIN
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lcnn.models import HT
+from dhlp.lcnn.models import HT
 
 
 class Bottleneck2D(nn.Module):

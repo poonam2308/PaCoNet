@@ -30,7 +30,7 @@ from scipy.ndimage import zoom
 try:
     sys.path.append(".")
     sys.path.append("..")
-    from lcnn.utils import parmap
+    from dhlp.lcnn.utils import parmap
 except Exception:
     raise
 

@@ -2,7 +2,7 @@ import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
 
-from lcnn.utils import argsort2d
+from dhlp.lcnn.utils import argsort2d
 
 DX = [0, 0, 1, -1, 1, 1, -1, -1]
 DY = [1, -1, 0, 0, 1, -1, 1, -1]
