@@ -37,6 +37,11 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize to [-1,1]
 ])
 
+SESSION_LOG = {
+    "inputs": {},
+    "steps": [],
+    "results": {}
+}
 
 # Store session-specific paths
 SESSION = {
@@ -104,6 +109,16 @@ def process_input(file_or_folder, aperture_size, min_line_length, max_line_gap):
         img_path = SESSION["line_output_dir"] / img_file
         img = Image.open(img_path).convert("RGB")
         output_images.append(img)
+
+    SESSION_LOG["inputs"]["uploaded_files"] = [str(p) for p in file_or_folder] if isinstance(file_or_folder,
+                                                                                             list) else [
+        str(file_or_folder)]
+    SESSION_LOG["inputs"]["line_detection_params"] = {
+        "aperture_size": aperture_size,
+        "min_line_length": min_line_length,
+        "max_line_gap": max_line_gap
+    }
+    SESSION_LOG["steps"].append("Axes Detection Completed")
 
     return output_images
 
@@ -184,6 +199,11 @@ def run_category_separation(method, top_k):
     SESSION["denoised_dir"] = Path("outputs/reals/denoised")
 
     status = f"Category separation complete: {len(image_items)} items."
+
+    SESSION_LOG["inputs"]["category_method"] = method
+    SESSION_LOG["inputs"]["top_k"] = top_k
+    SESSION_LOG["steps"].append("Category Separation Completed")
+
     return (
         image_items,
         gr.update(visible=True),
@@ -226,6 +246,9 @@ def run_denoising(selected_files):
     ])
     # Return paths for gallery
     output_images = sorted(denoised_dir.glob("*"))
+    SESSION_LOG["steps"].append("Denoising Completed")
+    SESSION_LOG["results"]["denoised_files"] = [str(p) for p in output_images]
+
     return (
         [str(p) for p in output_images],
         gr.update(visible=True),
@@ -305,36 +328,29 @@ def run_stitching_from_prediction(threshold_val, use_hsv_colors):
         svg_file = str(output_svg_path[0]) if output_svg_path else None
 
         category_filenames = [[f.stem, ""] for f in stitched_csv_dir.glob("*.csv")]
-        return category_filenames, svg_file, "✅ XY Plot generated and saved."
+        SESSION_LOG["inputs"]["stitching_threshold"] = threshold_val
+        SESSION_LOG["inputs"]["use_hsv"] = use_hsv_colors
+        SESSION_LOG["results"]["final_svg"] = svg_file
+        SESSION_LOG["results"]["stitched_csv"] = [str(p) for p in stitched_csv_dir.glob("*.csv")]
+        SESSION_LOG["steps"].append("Stitching & Plot Completed")
 
-        # # Run plot redesign here
-        # hsv_json_path = SESSION.get("dominant_colors_json") if use_hsv_colors else None
-        # generate_allcat_hsvplots_for_directory(
-        #     input_dir=stitched_csv_dir,
-        #     output_dir=stitched_csv_dir,
-        #     color_json_path=hsv_json_path
-        # )
-        #
-        # # Get the resulting redesigned SVG
-        # output_svg_path = stitched_csv_dir / (combined_filename.replace(".csv", ".svg"))
-        # output_svg_path = list(stitched_csv_dir.glob("*.svg"))
-        # if output_svg_path:
-        #     svg_file = str(output_svg_path[0])
-        # else:
-        #     svg_file = None
-        #
-        # category_filenames = [[name, ""] for name, _ in dfs_by_cat]
-        # return category_filenames, svg_file, "✅ Plot redesigned and saved."
+        return category_filenames, svg_file, "✅ XY Plot generated and saved."
 
     except Exception as e:
         return [], "", f"❌ Error: {str(e)}"
 
-
+def save_session_log():
+    log_path = Path("outputs/reals/session_log.json")
+    with open(log_path, "w") as f:
+        json.dump(SESSION_LOG, f, indent=2)
+    return str(log_path)
 
 
 # --- Gradio Interface ---
 with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
     gr.Markdown("## 📊 PaCoNet - Data Extraction and Plot Redesign")
+
+
 
     with gr.Tabs():
         # --- TAB 1: Line Detection ---
@@ -389,7 +405,7 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
             json_output = gr.Textbox(label="JSON Outputs", lines=10)
 
         with gr.TabItem("6️⃣ Stitch & View CSVs"):
-            threshold_input = gr.Slider(minimum=1.0, maximum=20.0, step=1.0, value=10.0, label="Matching Threshold")
+            threshold_input = gr.Slider(minimum=1.0, maximum=50.0, step=1.0, value=10.0, label="Matching Threshold")
             use_hsv_checkbox = gr.Checkbox(label="Use Custom HSV Colors", value=True)
             run_stitch_btn = gr.Button("Run Stitching from Predictions")
             csv_list_output = gr.Dataframe(
@@ -400,6 +416,12 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
             )
             svg_viewer = gr.Image(label="Redesigned Plot", type="filepath")
             csv_status = gr.Textbox(label="Status", interactive=False)
+
+    with gr.Row():
+        download_log_btn = gr.Button("📥 Download Session Log")
+        log_file_output = gr.File(label="Downloadable Session Summary")
+
+
 
     # --- Hook up logic ---
     run_btn.click(fn=process_input,
@@ -442,6 +464,8 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
         inputs=[threshold_input, use_hsv_checkbox],
         outputs=[csv_list_output, svg_viewer, csv_status]
     )
+
+    download_log_btn.click(fn=save_session_log, outputs=[log_file_output])
 
 demo.launch()
 
