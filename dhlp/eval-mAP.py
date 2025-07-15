@@ -14,15 +14,10 @@ Options:
    -h --help                         Show this screen.
 """
 
-import os
-import re
+
 import glob
 import os.path as osp
-from collections import defaultdict
-
-import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 from docopt import docopt
 
 import lcnn.models

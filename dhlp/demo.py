@@ -1,4 +1,20 @@
-import argparse
+#!/usr/bin/env python3
+"""Process an image with the trained neural network
+Usage:
+    demo.py [options] <yaml-config> <checkpoint> <images>...
+    demo.py (-h | --help )
+
+Arguments:
+   <yaml-config>                 Path to the yaml hyper-parameter file
+   <checkpoint>                  Path to the checkpoint
+   <source-dir>                  Directory containing input images
+   <output-dir>                  Directory to save processed images
+
+Options:
+   -h --help                     Show this screen.
+   -d --devices <devices>        Comma seperated GPU devices [default: 0]
+"""
+
 import os
 import os.path as osp
 import pprint
@@ -11,19 +27,21 @@ import skimage.io
 import skimage.transform
 import torch
 import yaml
+from docopt import docopt
 import scipy.io as sio
 import glob
 import json
 from matplotlib.widgets import Slider, Button
-import lcnn
-from lcnn.config import C, M
-from lcnn.models.line_vectorizer import LineVectorizer
-from lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
-from lcnn.models.HT import hough_transform
+from dhlp import lcnn
+from dhlp.lcnn.config import C, M
+from dhlp.lcnn.models.line_vectorizer import LineVectorizer
+from dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
+from dhlp.lcnn.models.HT import hough_transform
 
-from lcnn.postprocess import postprocess
-from lcnn.utils import recursive_to
-
+from dhlp.lcnn.postprocess import postprocess
+from dhlp.lcnn.utils import recursive_to
+#https://observablehq.com/@d3/color-schemes
+# --- Helper threshold predictor ---
 class ThresholdPredictor(torch.nn.Module):
     def __init__(self, input_dim=3):
         super().__init__()
@@ -36,7 +54,7 @@ class ThresholdPredictor(torch.nn.Module):
         return x
 
 PLTOPTS = {"color": "#33FFFF", "s": 15, "edgecolors": "none", "zorder": 5}
-cmap = plt.get_cmap("plasma")
+cmap = plt.get_cmap("plasma")  # or "plasma", "cividis", inferno.
 norm = mpl.colors.Normalize(vmin=0.9, vmax=1.0)
 sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])
@@ -45,29 +63,15 @@ score_percent = 0.01
 
 def c(x):
     return sm.to_rgba(x)
+#python ./demo.py -d 0 config/clust5kdenoisednew.yaml logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth data/real_world/denoised
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Process an image with the trained neural network.")
-    parser.add_argument("yaml_config", nargs="?",
-                        default="config/clust5kdenoisednew.yaml",
-                        help="Path to the yaml hyper-parameter file")
-    parser.add_argument("checkpoint", nargs="?",
-                        default="logs_and_results/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth",
-                        help="Path to the checkpoint")
-    parser.add_argument("image_dir", nargs="?",
-                        default="data/real_plots/input_images/1",
-                        help="Directory containing input images")
-    parser.add_argument("output_dir", nargs="?",
-                        default="data/predicted_data/output/1_",
-                        help="Directory to save processed images")
-    parser.add_argument("-d", "--devices", default="0", help="Comma-separated GPU devices [default: 0]")
-
-    args = parser.parse_args()
-
-    config_file = args.yaml_config
-    source_dir = args.image_dir
-    output_dir = args.output_dir
-    os.makedirs(output_dir, exist_ok=True)
+    args = docopt(__doc__)
+    print("Parsed arguments:", args)
+    config_file = args["<yaml-config>"] or "config/wireframe.yaml"
+    source_dir = args.get("<source-dir>", "./outputs/reals/denoised")
+    output_dir = args.get("<output-dir>", "./outputs/reals/redesigned/1")
 
     C.update(C.from_yaml(filename=config_file))
     M.update(C.model)
@@ -78,7 +82,7 @@ def main():
     torch.manual_seed(0)
 
     device_name = "cpu"
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.devices
+    os.environ["CUDA_VISIBLE_DEVICES"] = args["--devices"]
     if torch.cuda.is_available():
         device_name = "cuda"
         torch.backends.cudnn.deterministic = True
@@ -87,8 +91,9 @@ def main():
     else:
         print("CUDA is not available")
     device = torch.device(device_name)
-    checkpoint = torch.load(args.checkpoint, map_location=device)
+    checkpoint = torch.load(args["<checkpoint>"], map_location=device)
 
+    os.makedirs(output_dir, exist_ok=True)
     json_data = []
     # Load model
     if os.path.isfile(C.io.vote_index):
