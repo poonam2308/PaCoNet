@@ -255,10 +255,10 @@ def run_denoising(selected_files):
         f"Denoising complete: {len(output_images)} items."
     )
 
-def trigger_line_prediction():
+def trigger_line_prediction(score_threshold):
     denoised_dir = SESSION["denoised_dir"]
     images = [str(denoised_dir / f) for f in os.listdir(denoised_dir) if f.endswith(".png")]
-    svg_files, json_files = run_line_prediction_on_images(images)
+    svg_files, json_files = run_line_prediction_on_images(images, score_threshold=score_threshold)
 
     # 🔁 NEW: Save directory of JSONs to SESSION
     if json_files:
@@ -278,6 +278,9 @@ def trigger_line_prediction():
     sorted_pairs = sorted(zip(svg_files, json_files), key=lambda pair: extract_cat_crop_key(Path(pair[1]).name))
     sorted_svgs, sorted_jsons = zip(*sorted_pairs)
     json_filenames = [Path(f).name for f in sorted_jsons]
+    SESSION_LOG["inputs"]["line_score_threshold"] = score_threshold
+    SESSION_LOG["steps"].append("Line Prediction Completed")
+    SESSION_LOG["results"]["line_jsons"] = json_files
 
     return list(sorted_svgs), "\n".join(json_filenames)
 
@@ -400,6 +403,14 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
 
         with gr.TabItem("5️⃣ Line Prediction"):
             # yaml_input = gr.File(label="YAML Config", file_types=[".yaml"])
+            line_threshold_slider = gr.Slider(
+                minimum=0.0,
+                maximum=1.0,
+                step=0.01,
+                value=0.5,
+                label="Line Confidence Threshold"
+            )
+
             predict_btn = gr.Button("Run Line Prediction")
             svg_gallery = gr.Gallery(label="Line SVGs", columns=3)
             json_output = gr.Textbox(label="JSON Outputs", lines=10)
@@ -457,6 +468,7 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
 
     predict_btn.click(
         fn=trigger_line_prediction,
+        inputs=[line_threshold_slider],
         outputs=[svg_gallery, json_output]
     )
     run_stitch_btn.click(

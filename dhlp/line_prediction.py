@@ -26,7 +26,10 @@ class ThresholdPredictor(torch.nn.Module):
         x = torch.sigmoid(self.fc2(x))
         return x
 
-def run_line_prediction_on_images(image_paths, config_path="./dhlp/config/clust5kdenoisednew.yaml", checkpoint_path="./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth", output_dir="./outputs/reals/redesigned"):
+def run_line_prediction_on_images(image_paths, config_path="./dhlp/config/clust5kdenoisednew.yaml",
+                                  checkpoint_path="./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth",
+                                  output_dir="./outputs/reals/redesigned",
+                                  score_threshold=0.5):
     os.makedirs(output_dir, exist_ok=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -90,7 +93,9 @@ def run_line_prediction_on_images(image_paths, config_path="./dhlp/config/clust5
         filtered_lines = [
             [[a[1], a[0]], [b[1], b[0]]]
             for (a, b), score in zip(nlines, nscores)
-            if score >= predicted_threshold
+            # if score >= predicted_threshold
+            if score >= score_threshold
+
         ]
 
         # Save JSON
