@@ -45,13 +45,6 @@ def group_by_base_name(file_list):
         groups.setdefault(base, []).append(fname)
     return groups
 
-# def ensure_red_peak(peaks):
-#     peaks = list(peaks)
-#     if not any(p <= 10 or p >= 170 for p in peaks):
-#         peaks.append(0)
-#     return sorted(list(set(peaks)))
-
-
 def ensure_red_peak(peaks, red_tolerance=10):
     """
     Ensures that a red peak is considered. If no existing peak is within the red hue range
