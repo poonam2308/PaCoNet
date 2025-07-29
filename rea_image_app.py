@@ -65,7 +65,9 @@ def save_uploaded_file(file_obj, tmp_dir):
     return str(dest)
 
 
-def process_input(file_or_folder, aperture_size, min_line_length, max_line_gap):
+def process_input(file_or_folder, aperture_size, min_line_length, max_line_gap,
+                  min_spacing, left_edge_thresh, right_edge_thresh):
+
     output_root = Path("outputs/reals")
     output_root.mkdir(exist_ok=True, parents=True)
     tmp_dir = output_root
@@ -102,6 +104,10 @@ def process_input(file_or_folder, aperture_size, min_line_length, max_line_gap):
         apertureSize=aperture_size,
         minLineLength=min_line_length,
         maxLineGap=max_line_gap,
+        min_spacing = min_spacing,
+        left_edge_thresh = left_edge_thresh,
+        right_edge_thresh= right_edge_thresh,
+        method ="combined"
     )
 
     output_images = []
@@ -362,8 +368,14 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
                 file_input = gr.File(file_types=[".png", ".jpg", ".jpeg"], file_count="multiple", label="Upload Image(s)")
             with gr.Row():
                 aperture = gr.Slider(3, 7, step=2, value=5, label="Canny Aperture Size")
-                min_len = gr.Slider(8, 150, step=10, value=40, label="Min Line Length")
-                max_gap = gr.Slider(5, 50, step=5, value=10, label="Max Line Gap")
+                min_len = gr.Slider(10, 150, step=2, value=20, label="Min Line Length")
+                max_gap = gr.Slider(1, 50, step=1, value=1, label="Max Line Gap")
+                min_spacing_slider = gr.Slider(5, 100, step=1, value=20, label="Minimum Spacing Between Axes (px)")
+                left_thresh_slider = gr.Slider(0.0, 0.2, step=0.01, value=0.03,
+                                               label="Left Edge Ignore Threshold (fraction)")
+                right_thresh_slider = gr.Slider(0.8, 1.0, step=0.01, value=0.95,
+                                                label="Right Edge Ignore Threshold (fraction)")
+
             run_btn = gr.Button("Run Detection")
             img_output = gr.Gallery(label="Detected Images with Lines", columns=[3], height=400)
 
@@ -436,7 +448,8 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
 
     # --- Hook up logic ---
     run_btn.click(fn=process_input,
-                  inputs=[file_input, aperture, min_len, max_gap],
+                  inputs=[file_input, aperture, min_len, max_gap, min_spacing_slider, left_thresh_slider,
+                          right_thresh_slider],
                   outputs=[img_output])
 
     crop_btn.click(fn=crop_and_return_images,
