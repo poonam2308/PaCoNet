@@ -3,7 +3,8 @@ import json
 import numpy as np
 import pandas as pd
 import altair as alt
-from pc.plot_gen.plot_utils import normalize_column, hsv_to_rgb, create_ticks_labels, calculate_pixel_positions
+from pc.plot_gen.plot_utils import normalize_column, hsv_to_rgb, create_ticks_labels, calculate_pixel_positions, \
+    safe_join
 import random
 
 
