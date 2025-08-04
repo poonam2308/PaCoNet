@@ -64,16 +64,44 @@ def generate_plot(file, mode):
     clean_output_dir("outputs/separated")
     clean_output_dir("outputs/denoised")
 
-    df = pd.read_csv(file.name)
+    filename = file.name
+    ext = os.path.splitext(filename)[1].lower()
     os.makedirs("outputs/plots", exist_ok=True)
-    svg_path = "outputs/plots/app_plot.svg"
 
-    if mode == "Multi-category":
-        chart, _ = multi_gen.generate_plot(df, filename=svg_path)
+    if ext == ".csv":
+        # Generate SVG from CSV
+        df = pd.read_csv(file.name)
+        svg_path = "outputs/plots/app_plot.svg"
+
+        if mode == "Multi-category":
+            chart, _ = multi_gen.generate_plot(df, filename=svg_path)
+        else:
+            chart, _, _ = single_gen.generate_plot(df, filename=svg_path)
+
+        return [(svg_path, "Full Plot")], svg_path, mode, file.name, gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+
+    elif ext == ".svg":
+        # Save uploaded SVG with original filename
+        svg_path = os.path.join("outputs/plots", os.path.basename(file.name))
+        with open(file.name, 'rb') as src, open(svg_path, 'wb') as dst:
+            dst.write(src.read())
+
+        return ([(svg_path, f"Uploaded Plot: {os.path.basename(svg_path)}")],
+                svg_path, mode, file.name, gr.update(
+            visible=True), gr.update(visible=False), gr.update(visible=False))
+
+    elif ext in [".png", ".jpg", ".jpeg"]:
+        # Save uploaded image with original filename
+        img_path = os.path.join("outputs/plots", os.path.basename(file.name))
+        with open(file.name, 'rb') as src, open(img_path, 'wb') as dst:
+            dst.write(src.read())
+
+        return [(img_path, f"Uploaded Image Plot: {os.path.basename(img_path)}")], img_path, mode, file.name, gr.update(
+            visible=True), gr.update(visible=False), gr.update(visible=False)
+
     else:
-        chart, _, _ = single_gen.generate_plot(df, filename=svg_path)
+        raise ValueError("Unsupported file type. Upload a CSV, SVG, PNG, or JPEG file.")
 
-    return [(svg_path, "Full Plot")], svg_path, mode, file.name, gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
 
 # === Step 2: Crop SVGs ===
 def crop_plot(svg_path, mode, file_path):
@@ -86,7 +114,12 @@ def crop_plot(svg_path, mode, file_path):
         if f.lower().endswith(".png")
     ])
 
-    return [(svg_path, "Full Plot")] + [(p, f"Crop {i+1}") for i, p in enumerate(crops)]
+    # Remove the original plot from the crop gallery
+    images = [(p, f"Crop: {os.path.basename(p)}") for p in crops]
+
+    return images
+
+
 
 # === Step 3: Separate Crops by Color ===
 def separate_categories(file_path):
@@ -101,12 +134,30 @@ def separate_categories(file_path):
         color_json="outputs/colors.json"
     )
 
-    images = sorted([
-        os.path.join("outputs/separated", f)
-        for f in os.listdir("outputs/separated")
+    separated_files = sorted([
+        f for f in os.listdir("outputs/separated")
         if f.endswith(".png")
     ])
-    return [(p, f"Category {i+1}") for i, p in enumerate(images)]
+
+    # Group labels: assume N categories per crop (e.g. 2–3)
+    images = []
+    crop_count = 0
+    category_count = 0
+    prev_crop_stub = ""
+
+    for i, fname in enumerate(separated_files):
+        full_path = os.path.join("outputs/separated", fname)
+        label = f"Crop {crop_count} — Category {category_count + 1}"
+        images.append((full_path, label))
+
+        category_count += 1
+        # After 3 categories, move to next crop (adjust this number if needed)
+        if category_count == 3:  # <- adjust based on how many categories per crop
+            crop_count += 1
+            category_count = 0
+
+    return images
+
 
 # === Step 4: Denoise Categories with UNet ===
 def denoise_categories():
@@ -129,16 +180,17 @@ def denoise_categories():
 
 # === Gradio UI ===
 with gr.Blocks() as demo:
-    gr.Markdown("## 📈 PaCoNet — Parallel Coordinates Pipeline + UNet Denoising")
+    gr.Markdown("## 📈 PaCoNet — Parallel Coordinates Pipeline ")
 
-    file_input = gr.File(label="Upload CSV File")
+    file_input = gr.File(label="Upload CSV or Image", file_types=[".csv", ".svg", ".png", ".jpg", ".jpeg"])
+
     mode_radio = gr.Radio(["Multi-category", "Single-category"], label="Plot Type", value="Multi-category")
-    plot_btn = gr.Button("Generate Plot")
+    plot_btn = gr.Button("Show Plot")
 
-    gallery_plot = gr.Gallery(label="📊 Step 1: Full Plot", columns=3, visible=False)
+    gallery_plot = gr.Gallery(label="📊 Full Plot", columns=2, visible=False)
     crop_btn = gr.Button("Crop This Plot", visible=False)
 
-    gallery_crop = gr.Gallery(label="✂️ Step 2: Cropped Images", columns=3, visible=False)
+    gallery_crop = gr.Gallery(label="✂️ Cropped Images", columns=3, visible=False)
     sep_btn = gr.Button("Separate Categories", visible=False)
 
     gallery_sep = gr.Gallery(label="🎨 Step 3: Color Separated", columns=3, visible=False)
@@ -200,4 +252,4 @@ with gr.Blocks() as demo:
 
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch()
