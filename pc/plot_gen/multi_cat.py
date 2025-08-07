@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import altair as alt
 from pc.plot_gen.plot_utils import normalize_column, hsv_to_rgb, create_ticks_labels, calculate_pixel_positions, \
-    safe_join
+    safe_join, generate_hsv_pool
 import random
 
 # plot library : https://altair-viz.github.io/user_guide/customization.html
@@ -25,9 +25,22 @@ class MultiCatPCPGenerator:
         normalized_columns = [normalize_column(df, col) for col in column_names]
 
         unique_categories = sorted(df[color_column].unique())
+        # category_colors = {
+        #     category: hsv_to_rgb(round(h / len(unique_categories), 2), 1, 1)
+        #     for h, category in enumerate(unique_categories)
+        # }
+
+        # Step 1: Generate HSV pool of 100 vibrant colors
+        hsv_pool = generate_hsv_pool(40)
+
+        # Step 2: Randomly select k = number of categories (without replacement)
+        selected_indices = np.random.choice(len(hsv_pool), len(unique_categories), replace=False)
+        selected_hsvs = [hsv_pool[i] for i in selected_indices]
+
+        # Step 3: Assign these random HSV colors to each category
         category_colors = {
-            category: hsv_to_rgb(round(h / len(unique_categories), 2), 1, 1)
-            for h, category in enumerate(unique_categories)
+            category: hsv_to_rgb(hsv['h'], hsv['s'], hsv['v'])
+            for category, hsv in zip(unique_categories, selected_hsvs)
         }
 
         base = alt.Chart(df).transform_window(index="count()").transform_fold(
@@ -39,7 +52,7 @@ class MultiCatPCPGenerator:
             height=self.height
         )
 
-        lines = base.mark_line(opacity=0.3).encode(
+        lines = base.mark_line(opacity=0.4).encode(
             x=alt.X('key:N', axis=alt.Axis(title=None)),
             y=alt.Y('value:Q', axis=alt.Axis(title=None, labels=False)),
             color=alt.Color(f"{color_column}:N", scale=alt.Scale(
@@ -113,7 +126,7 @@ class MultiCatPCPGenerator:
         if filename:
             chart.save(filename)
 
-        return chart, normalized_columns
+        return chart, normalized_columns, dict(zip(unique_categories, selected_hsvs))
 
     def generate_batch(
             self,
@@ -162,7 +175,7 @@ class MultiCatPCPGenerator:
             print(f"Plot {i}: background={background_value}, grid={grid_on}, ticks={show_ticks_labels}")
 
             output_file = os.path.join(output_dir, f'image_{i}.svg')
-            _, normalized_columns = self.generate_plot(
+            _, normalized_columns, category_hsv_map = self.generate_plot(
                 df,
                 filename=output_file,
                 background_value=background_value,
@@ -187,12 +200,15 @@ class MultiCatPCPGenerator:
                 if category not in selected_categories:
                     continue
 
-                h_index = np.where(selected_categories == category)[0][0]
-                color_hsv = {'h': round(h_index / len(unique_categories), 2), 's': 1, 'v': 1}
+                # h_index = np.where(selected_categories == category)[0][0]
+                # color_hsv = {'h': round(h_index / len(unique_categories), 2), 's': 1, 'v': 1}
+
+                color_hsv = category_hsv_map[category]
 
                 category_stats = {
                     'category': category,
                     'color_hsv': color_hsv,
+                    'color_rgb': hsv_to_rgb(color_hsv['h'], color_hsv['s'], color_hsv['v']),
                     'columns': []
                 }
 
