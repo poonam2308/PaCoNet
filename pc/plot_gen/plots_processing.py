@@ -5,11 +5,12 @@ import os
 import numpy as np
 import torch
 
-from pc.config.config import get_args, load_config
-from pc.plot_gen.single_cat import SingleCatPCPGenerator
-
 project_root = os.path.abspath(os.path.join(os.getcwd(), '..'))
 sys.path.append(project_root)
+
+
+from pc.config.config import get_args, load_config
+from pc.plot_gen.single_cat import SingleCatPCPGenerator
 
 import pc.data_gen.data_generator as dgen
 from pc.plot_gen.multi_cat import MultiCatPCPGenerator
