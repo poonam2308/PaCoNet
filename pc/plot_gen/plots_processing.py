@@ -5,9 +5,8 @@ import os
 import numpy as np
 import torch
 
-project_root = os.path.abspath(os.path.join(os.getcwd(), '..'))
-sys.path.append(project_root)
-
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
 
 from pc.config.config import get_args, load_config
 from pc.plot_gen.single_cat import SingleCatPCPGenerator
