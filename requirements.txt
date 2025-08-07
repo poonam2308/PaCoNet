@@ -1,5 +1,5 @@
 jupyterlab
-numpy >=1.23.5
+numpy >=2.26
 matplotlib >=3.5.1
 scipy >=1.9.3
 scikit-image[data] >=0.20
