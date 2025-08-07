@@ -14,7 +14,7 @@ def get_args():
     parse.add_argument('--cfg', type=str, required=True, help="Path to YAML config file")
 
     # csv count
-    parse.add_argument('--num_files', type=int, default=10)
+    parse.add_argument('--num_files', type=int, default=1000)
     parse.add_argument('--seed', type=int, default=42)
 
     #plots generated tasks
