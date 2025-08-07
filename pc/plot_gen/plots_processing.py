@@ -3,7 +3,6 @@ import sys
 import os
 
 import numpy as np
-import pandas as pd
 import torch
 
 from pc.config.config import get_args, load_config
@@ -18,6 +17,8 @@ from pc.plot_gen.axes_crop import CroppingProcessor
 from pc.plot_gen.line_data import LineCoordinateExtractor
 from pc.plot_gen.cat_sep import CategorySeparator
 from pc.plot_gen.plot_utils import split_json_data
+from pc.data_gen.real_dist_info import extract_distributions_from_excel, extract_dist_plots_from_excel
+
 
 class PlotsPipeline:
     def __init__(self):
@@ -28,7 +29,20 @@ class PlotsPipeline:
         self._set_seed(self.args.seed)
 
     def generate_data(self):
-        dgen.generate_synthetic_datasets(self.paths['input_dir'], self.args.num_files,  seed=self.args.seed)
+        dgen.generate_synthetic_datasets(self.paths['input_dir'],
+                                         self.args.num_files,  seed=self.args.seed)
+
+    def generate_data_from_excel_distribution(self):
+        excel_path = self.paths['real_dist_file']
+        axes_dist, cat_dist, rows_dist = extract_distributions_from_excel(excel_path)
+        dgen.generate_synthetic_datasets_from_distributions(
+            directory_path=self.paths['input_dir'],
+            k=self.args.num_files,
+            axes_distribution=axes_dist,
+            categories_distribution=cat_dist,
+            rows_distribution=rows_dist,
+            seed=self.args.seed
+        )
 
     def _set_seed(self, seed):
         torch.manual_seed(seed)
@@ -47,8 +61,18 @@ class PlotsPipeline:
         print("Generating SVG plots...")
         input_dir = self.paths['input_dir']
         plot_dir = self.paths['m_plots']
-        mcat = MultiCatPCPGenerator(show_labels=False)
-        mcat.generate_batch(input_dir, plot_dir, self.args.num_files)
+        excel_path = self.paths['real_dist_file']
+
+        bg_dist, grid_dist, ticks_dist = extract_dist_plots_from_excel(excel_path)
+        mcat = MultiCatPCPGenerator()
+        mcat.generate_batch(
+            input_dir=input_dir,
+            output_dir=plot_dir,
+            num_files=self.args.num_files,
+            background_distribution=bg_dist,
+            grid_distribution=grid_dist,
+            ticks_labels_distribution=ticks_dist
+        )
         print("Generated SVG plots...")
 
 
@@ -120,6 +144,8 @@ if __name__ == "__main__":
     # Dispatch the task
     if task == 'run':
         pipeline.run()
+    elif task == 'run_dist':
+        pipeline.generate_data_from_excel_distribution()
     elif task == 'run_single':
         pipeline.run_single()
     elif hasattr(pipeline, task):
