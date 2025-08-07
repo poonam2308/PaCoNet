@@ -24,7 +24,7 @@ def detect_peaks(hist, min_height_ratio=0.005, distance=5):
 def get_color_ranges(peaks, tolerance=20):
     return [(max(0, p - tolerance), min(179, p + tolerance)) for p in peaks]
 
-def create_color_mask(hsv_img, low, high, s_thresh=20, v_thresh=1):
+def create_color_mask(hsv_img, low, high, s_thresh=10, v_thresh=0):
     if low > high:
         mask1 = cv2.inRange(hsv_img, (0, s_thresh, v_thresh), (high, 255, 255))
         mask2 = cv2.inRange(hsv_img, (low, s_thresh, v_thresh), (179, 255, 255))
@@ -143,7 +143,8 @@ def process_images_separation(input_dir, output_dir, output_json, method='peaks'
                 continue
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             h, s, v = cv2.split(hsv)
-            mask = (s > 20) & (v > 1)
+            # mask = (s > 20) & (v > 1)
+            mask = (v > 0)
             hue_values.extend(h[mask])
 
         hue_values = np.array(hue_values)
@@ -168,7 +169,35 @@ def process_images_separation(input_dir, output_dir, output_json, method='peaks'
         # Save histogram for debugging/visualization (optional)
         # save_histogram(hist, peaks, base_name, output_dir)
 
-        color_ranges = get_color_ranges(peaks)
+        # ---- Check for black region explicitly and treat as another peak ----
+        # Add a pseudo-peak for black (we'll treat this as a synthetic color range)
+        black_low, black_high = 0, 0  # placeholder hue range, not used directly
+        add_black = False
+
+        for crop in crops:
+            image = cv2.imread(os.path.join(input_dir, crop))
+            if image is None:
+                continue
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            black_mask = cv2.inRange(hsv, (0, 0, 0), (180, 255, 40))  # value ≤ 40 = black
+            black_ratio = np.count_nonzero(black_mask) / black_mask.size
+            if black_ratio > 0.01:
+                add_black = True
+                break  # one match is enough to add it
+
+        if add_black:
+            peaks = [-1] + peaks  # use -1 as a dummy hue value for black
+
+
+        # color_ranges = get_color_ranges(peaks)
+
+        color_ranges = []
+        for peak in peaks:
+            if peak == -1:
+                color_ranges.append(('black',))  # Special case
+            else:
+                color_ranges.append(get_color_ranges([peak])[0])
+
 
         for crop in crops:
             crop_img = cv2.imread(os.path.join(input_dir, crop))

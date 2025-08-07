@@ -7,6 +7,10 @@ import json
 import os
 
 
+def hsv_to_hex(h, s=1, v=1):
+    r, g, b = colorsys.hsv_to_rgb(h, s, v)
+    return '#{:02x}{:02x}{:02x}'.format(int(r * 255), int(g * 255), int(b * 255))
+
 # Convert HSV to RGB for Altair compatibility
 def hsv_to_rgb(h, s, v):
     return tuple(int(c * 255) for c in colorsys.hsv_to_rgb(h, s, v))

@@ -7,18 +7,18 @@ from pc.plot_gen.plot_utils import normalize_column, hsv_to_rgb, create_ticks_la
     safe_join
 import random
 
-
+# plot library : https://altair-viz.github.io/user_guide/customization.html
 class MultiCatPCPGenerator:
-    def __init__(self, width=600, height=300, seed =42, show_labels=True):
+    def __init__(self, width=600, height=300, seed =42):
         self.width = width
         self.height = height
         self.seed = seed
-        self.show_labels = show_labels
         np.random.seed(self.seed)
         random.seed(self.seed)
 
-    def generate_plot(self, df, filename=None):
-        """Generate a single parallel coordinates plot and optionally save it."""
+    def generate_plot(self, df, filename=None, background_value=None,
+                      grid_on=True, show_ticks_labels=True):
+
         column_names = sorted(list(df.columns)[:-1])
         color_column = df.columns[-1]
 
@@ -32,32 +32,36 @@ class MultiCatPCPGenerator:
 
         base = alt.Chart(df).transform_window(index="count()").transform_fold(
             normalized_columns
-        ).transform_calculate(mid="(datum.value + datum.value) / 2").properties(
-            width=self.width, height=self.height
+        ).transform_calculate(
+            mid="(datum.value + datum.value) / 2"
+        ).properties(
+            width=self.width,
+            height=self.height
         )
 
         lines = base.mark_line(opacity=0.3).encode(
-            x='key:N',
-            y=alt.Y('value:Q', axis=None),
+            x=alt.X('key:N', axis=alt.Axis(title=None)),
+            y=alt.Y('value:Q', axis=alt.Axis(title=None, labels=False)),
             color=alt.Color(f"{color_column}:N", scale=alt.Scale(
                 domain=list(category_colors.keys()),
                 range=['rgb({},{},{})'.format(*color) for color in category_colors.values()]
-            )),
+            ),legend=None),
             detail="index:N",
             tooltip=column_names
         )
 
-        rules = base.mark_rule(color="#ccc", tooltip=None).encode(x="key:N")
+        rules = base.mark_rule(color="#ccc", tooltip=None).encode(
+            x=alt.X('key:N', axis=alt.Axis(title=None))
+        )
 
         tick_dfs = [create_ticks_labels(df, norm_col, orig_col)
                     for norm_col, orig_col in zip(normalized_columns, column_names)]
         ticks_labels_df = pd.concat(tick_dfs)
 
-        if self.show_labels:
+        if show_ticks_labels:
             ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, color="#ccc", orient="horizontal").encode(
                 x='variable:N', y='value:Q'
             )
-
             labels = alt.Chart(ticks_labels_df).mark_text(
                 align='center', baseline='middle', dx=-10
             ).encode(
@@ -67,39 +71,61 @@ class MultiCatPCPGenerator:
             ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, color="transparent", orient="horizontal").encode(
                 x='variable:N', y='value:Q'
             )
-
             labels = alt.Chart(ticks_labels_df).mark_text(
                 align='center', baseline='middle', dx=-10, color="transparent"
             ).encode(
                 x='variable:N', y='value:Q', text='label:N'
             )
 
-        # chart = alt.layer(lines, rules, ticks, labels).configure_axisX(
-        #     domain=False, labelAngle=0, tickColor="#ccc", title=None
-        # ).configure_view(stroke=None)
-
+        # Axis configuration
         axis_config = {
             "domain": False,
             "labelAngle": 0,
             "title": None,
-            "tickColor": "#ccc",
-            "labelColor": "#000"
+            "tickColor": "#ccc" if show_ticks_labels else "transparent",
+            "labelColor": "#000" if show_ticks_labels else "transparent",
+            "grid": grid_on,
+            "gridColor":"transparent"
         }
 
-        if not self.show_labels:
-            axis_config["tickColor"] = "transparent"
-            axis_config["labelColor"] = "transparent"
+        axis_config_y = {
+            "domain": False,
+            "labelAngle": 0,
+            "title": None,
+            "tickColor": "#ccc" if show_ticks_labels else "transparent",
+            "labelColor": "#000" if show_ticks_labels else "transparent",
+            "grid": grid_on,
+            "gridColor": "transparent"
+        }
 
         chart = alt.layer(lines, rules, ticks, labels).configure_axisX(
-            **axis_config).configure_view(stroke=None)
+            **axis_config
+        ).configure_axisY(
+            **axis_config_y
+        ).configure_view(
+            stroke=None
+        )
+
+        if background_value is not None and int(background_value) < 255:
+            background_rgb = f"rgb({background_value},{background_value},{background_value})"
+            chart = chart.configure(background=background_rgb)
 
         if filename:
             chart.save(filename)
 
         return chart, normalized_columns
 
-    def generate_batch(self, input_dir, output_dir, num_files, annotation_file="dist_annotations.json"):
-        """Generate plots and annotations for a directory of CSV files."""
+    def generate_batch(
+            self,
+            input_dir,
+            output_dir,
+            num_files,
+            annotation_file="dist_annotations.json",
+            background_distribution=None,
+            grid_distribution=None,
+            ticks_labels_distribution=None
+    ):
+        """Generate plots and annotations for a directory of CSV files with real-world style distributions."""
         os.makedirs(output_dir, exist_ok=True)
         annotation_file = safe_join(output_dir, annotation_file)
         annotations = []
@@ -120,11 +146,37 @@ class MultiCatPCPGenerator:
                 print(f"No valid categories in {csv_path}")
                 continue
 
+            # Sample style attributes from real distributions
+            background_value = None
+            grid_on = True
+            show_ticks_labels = True
+
+            if background_distribution is not None:
+                background_value = np.random.choice(background_distribution.index, p=background_distribution.values)
+            if grid_distribution is not None:
+                grid_on = bool(np.random.choice(grid_distribution.index, p=grid_distribution.values))
+
+            if ticks_labels_distribution is not None:
+                show_ticks_labels = bool(
+                    np.random.choice(ticks_labels_distribution.index, p=ticks_labels_distribution.values))
+            print(f"Plot {i}: background={background_value}, grid={grid_on}, ticks={show_ticks_labels}")
+
             output_file = os.path.join(output_dir, f'image_{i}.svg')
-            _, normalized_columns = self.generate_plot(df, filename=output_file)
+            _, normalized_columns = self.generate_plot(
+                df,
+                filename=output_file,
+                background_value=background_value,
+                grid_on=grid_on,
+                show_ticks_labels=show_ticks_labels
+            )
 
             image_annotation = {
                 'image_name': os.path.basename(output_file),
+                'image_style': {
+                    'background_rgb': int(background_value) if background_value is not None else None,
+                    'grid': grid_on,
+                    'ticks_labels': show_ticks_labels
+                },
                 'categories': []
             }
 

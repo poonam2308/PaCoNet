@@ -7,6 +7,10 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from PIL import Image, ImageDraw
+import cairosvg
+import io
+
 
 # Ensure reproducibility
 random.seed(42)
@@ -15,6 +19,7 @@ np.random.seed(42)
 sys.path.append(os.path.abspath("."))  # Ensure src/ is importable
 
 # PaCoNet components
+from pc.plot_gen.plot_utils import extract_vertical_axes_coords
 from pc.plot_gen.multi_cat import MultiCatPCPGenerator
 from pc.plot_gen.single_cat import SingleCatPCPGenerator
 from pc.plot_gen.axes_crop import CroppingProcessor
@@ -26,8 +31,6 @@ from pc.models.unet import UNetSD
 from pc.data_gen.custom_dataset_unet import CustomTestDatasetSD
 from pc.run_epoch_unet import test_unetsd_cluster
 
-
-
 # === Initialization ===
 multi_gen = MultiCatPCPGenerator(width=600, height=300, show_labels=False)
 single_gen = SingleCatPCPGenerator(width=600, height=300, show_labels=False)
@@ -35,14 +38,32 @@ cropper = CroppingProcessor()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 unet_model = UNetSD(in_channels=3, out_channels=3).to(device)
-unet_model.load_state_dict(torch.load("outputs/chkpt/unet_sd/unet_sd_clusternew_mse_model_epoch50.pth", map_location=device))  # Adjust if needed
+unet_model.load_state_dict(torch.load("outputs/chkpt/unet_sd/unet_sd_clusternew_mse_model_epoch50.pth", map_location=device))
 unet_model.eval()
 
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize to [-1,1]
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
+
+def show_input_image(svg_path):
+    if not os.path.exists(svg_path):
+        return svg_path
+
+    # Convert SVG to PNG
+    png_bytes = cairosvg.svg2png(url=svg_path)
+    image = Image.open(io.BytesIO(png_bytes)).convert("RGB")
+
+    x_coords = extract_vertical_axes_coords(svg_path)
+    draw = ImageDraw.Draw(image)
+
+    for x in x_coords:
+        draw.line([(x+5, 0), (x+5, image.height)], fill="red", width=2)
+
+    output_path = "outputs/plots/input_with_lines.png"
+    image.save(output_path)
+    return output_path
 
 
 def clean_output_dir(path):
@@ -57,7 +78,6 @@ def clean_output_dir(path):
     else:
         os.makedirs(path, exist_ok=True)
 
-# === Step 1: Generate Plot ===
 def generate_plot(file, mode):
     clean_output_dir("outputs/plots")
     clean_output_dir("outputs/crops")
@@ -69,41 +89,29 @@ def generate_plot(file, mode):
     os.makedirs("outputs/plots", exist_ok=True)
 
     if ext == ".csv":
-        # Generate SVG from CSV
         df = pd.read_csv(file.name)
         svg_path = "outputs/plots/app_plot.svg"
-
         if mode == "Multi-category":
             chart, _ = multi_gen.generate_plot(df, filename=svg_path)
         else:
             chart, _, _ = single_gen.generate_plot(df, filename=svg_path)
-
-        return [(svg_path, "Full Plot")], svg_path, mode, file.name, gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+        return [(svg_path, "Full Plot")], svg_path, mode, file.name
 
     elif ext == ".svg":
-        # Save uploaded SVG with original filename
         svg_path = os.path.join("outputs/plots", os.path.basename(file.name))
         with open(file.name, 'rb') as src, open(svg_path, 'wb') as dst:
             dst.write(src.read())
-
-        return ([(svg_path, f"Uploaded Plot: {os.path.basename(svg_path)}")],
-                svg_path, mode, file.name, gr.update(
-            visible=True), gr.update(visible=False), gr.update(visible=False))
+        return [(svg_path, f"Uploaded Plot: {os.path.basename(svg_path)}")], svg_path, mode, file.name
 
     elif ext in [".png", ".jpg", ".jpeg"]:
-        # Save uploaded image with original filename
         img_path = os.path.join("outputs/plots", os.path.basename(file.name))
         with open(file.name, 'rb') as src, open(img_path, 'wb') as dst:
             dst.write(src.read())
-
-        return [(img_path, f"Uploaded Image Plot: {os.path.basename(img_path)}")], img_path, mode, file.name, gr.update(
-            visible=True), gr.update(visible=False), gr.update(visible=False)
+        return [(img_path, f"Uploaded Image Plot: {os.path.basename(img_path)}")], img_path, mode, file.name
 
     else:
         raise ValueError("Unsupported file type. Upload a CSV, SVG, PNG, or JPEG file.")
 
-
-# === Step 2: Crop SVGs ===
 def crop_plot(svg_path, mode, file_path):
     df = pd.read_csv(file_path)
     cropper.create_crops("outputs/plots", "outputs/crops")
@@ -114,14 +122,9 @@ def crop_plot(svg_path, mode, file_path):
         if f.lower().endswith(".png")
     ])
 
-    # Remove the original plot from the crop gallery
     images = [(p, f"Crop: {os.path.basename(p)}") for p in crops]
-
     return images
 
-
-
-# === Step 3: Separate Crops by Color ===
 def separate_categories(file_path):
     extractor = LineCoordinateExtractor(main_dir="outputs/plots")
     extractor.extract_all()
@@ -139,27 +142,21 @@ def separate_categories(file_path):
         if f.endswith(".png")
     ])
 
-    # Group labels: assume N categories per crop (e.g. 2–3)
     images = []
     crop_count = 0
     category_count = 0
-    prev_crop_stub = ""
 
     for i, fname in enumerate(separated_files):
         full_path = os.path.join("outputs/separated", fname)
         label = f"Crop {crop_count} — Category {category_count + 1}"
         images.append((full_path, label))
-
         category_count += 1
-        # After 3 categories, move to next crop (adjust this number if needed)
-        if category_count == 3:  # <- adjust based on how many categories per crop
+        if category_count == 3:
             crop_count += 1
             category_count = 0
 
     return images
 
-
-# === Step 4: Denoise Categories with UNet ===
 def denoise_categories():
     input_dir = "outputs/separated"
     output_dir = "outputs/denoised"
@@ -178,34 +175,36 @@ def denoise_categories():
     ])
     return [(p, f"Denoised {i+1}") for i, p in enumerate(images)]
 
-# === Gradio UI ===
 with gr.Blocks() as demo:
-    gr.Markdown("## 📈 PaCoNet — Parallel Coordinates Pipeline ")
+    gr.Markdown("## 📊 PaCoNet - Data Extraction and Plot Redesign")
 
-    file_input = gr.File(label="Upload CSV or Image", file_types=[".csv", ".svg", ".png", ".jpg", ".jpeg"])
+    with gr.Tabs():
+        with gr.TabItem("1️⃣ Input Image"):
+            file_input = gr.File(label="Upload Image", file_types=[".csv", ".svg", ".png", ".jpg", ".jpeg"])
+            #mode_radio = gr.Radio(["Multi-category", "Single-category"], label="Plot Type", value="Multi-category")
+            plot_btn = gr.Button("Show Plot")
+            gallery_plot = gr.Gallery(label="📊 Full Plot", columns=2, visible=False)
 
-    mode_radio = gr.Radio(["Multi-category", "Single-category"], label="Plot Type", value="Multi-category")
-    plot_btn = gr.Button("Show Plot")
+        with gr.TabItem("2️⃣ Cropping "):
+            crop_btn = gr.Button("Crop This Plot", visible=False)
+            input_preview = gr.Image(label="Input Image Preview", type="filepath", visible=False)
+            gallery_crop = gr.Gallery(label="✂️ Cropped Images", columns=3, visible=False)
 
-    gallery_plot = gr.Gallery(label="📊 Full Plot", columns=2, visible=False)
-    crop_btn = gr.Button("Crop This Plot", visible=False)
+        with gr.TabItem("3️⃣ Categroy Separation"):
+            sep_btn = gr.Button("Separate Categories", visible=False)
+            gallery_sep = gr.Gallery(label="🎨 Step 3: Color Separated", columns=3, visible=False)
 
-    gallery_crop = gr.Gallery(label="✂️ Cropped Images", columns=3, visible=False)
-    sep_btn = gr.Button("Separate Categories", visible=False)
-
-    gallery_sep = gr.Gallery(label="🎨 Step 3: Color Separated", columns=3, visible=False)
-    denoise_btn = gr.Button("Denoise Categories", visible=False)
-
-    gallery_denoise = gr.Gallery(label="🧹 Step 4: Denoised Outputs", columns=3, visible=False)
+        with gr.TabItem("4️⃣ Denoising"):
+            denoise_btn = gr.Button("Denoise Categories", visible=False)
+            gallery_denoise = gr.Gallery(label="🧹 Step 4: Denoised Outputs", columns=3, visible=False)
 
     svg_path_state = gr.State()
     mode_state = gr.State()
     file_path_state = gr.State()
 
-    # Step 1: Generate Plot
     plot_btn.click(
         fn=generate_plot,
-        inputs=[file_input, mode_radio],
+        inputs=[file_input],
         outputs=[gallery_plot, svg_path_state, mode_state, file_path_state]
     ).then(
         fn=lambda: gr.update(visible=True),
@@ -215,20 +214,20 @@ with gr.Blocks() as demo:
         outputs=gallery_plot
     )
 
-    # Step 2: Crop Plot
     crop_btn.click(
+        fn=show_input_image,
+        inputs=file_path_state,
+        outputs=input_preview
+    ).then(
         fn=crop_plot,
         inputs=[svg_path_state, mode_state, file_path_state],
         outputs=gallery_crop
     ).then(
-        fn=lambda: gr.update(visible=True),
-        outputs=sep_btn
-    ).then(
-        fn=lambda: gr.update(visible=True),
-        outputs=gallery_crop
+        fn=lambda: (gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)),
+        outputs=[input_preview, gallery_crop, sep_btn]
     )
 
-    # Step 3: Separate Categories
+
     sep_btn.click(
         fn=separate_categories,
         inputs=file_path_state,
@@ -241,7 +240,6 @@ with gr.Blocks() as demo:
         outputs=gallery_sep
     )
 
-    # Step 4: Denoise
     denoise_btn.click(
         fn=denoise_categories,
         outputs=gallery_denoise
@@ -249,7 +247,6 @@ with gr.Blocks() as demo:
         fn=lambda: gr.update(visible=True),
         outputs=gallery_denoise
     )
-
 
 if __name__ == "__main__":
     demo.launch()

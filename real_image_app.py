@@ -8,7 +8,7 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from PIL import ImageFilter, ImageDraw, Image
+from PIL import ImageFilter, ImageDraw, Image, ImageChops
 
 from rwd.color_extraction import process_image_input
 from rwd.axes_detection import detect_vertical_axes
@@ -369,6 +369,101 @@ def run_category_separation(method, top_k):
         gr.update(visible=True),
         gr.update(visible=True),
     )
+def generate_category_overlay(selected_filenames):
+    import re
+    from PIL import ImageChops
+
+    if not selected_filenames or "ALL" in selected_filenames:
+        return None
+
+    if not SESSION["input_path"] or not SESSION["line_json"] or not SESSION["cropped_dir"] or not SESSION["separated_dir"]:
+        return None
+
+    # --- 1) Group selection by image_id and keep the first image_id (single overlay like Cropping) ---
+    by_img = {}
+    for fname in selected_filenames:
+        m = re.match(r"(\d+)_crop_(\d+)_cat_(\d+)\.png", fname)
+        if not m:
+            continue
+        img_id, crop_idx = m.group(1), m.group(2)
+        by_img.setdefault(img_id, set()).add(f"{img_id}_crop_{crop_idx}.png")
+
+    if not by_img:
+        return None
+
+    image_id, selected_crops = next(iter(by_img.items()))  # show one base image overlay
+    orig_fname = f"{image_id}.png"
+    img_path = SESSION["input_path"] / orig_fname
+
+    # --- 2) Base image + blur (like cropping overlay) ---
+    base_img = Image.open(img_path).convert("RGB")
+    blurred_img = base_img.filter(ImageFilter.GaussianBlur(radius=6))
+    output = blurred_img.copy()
+    draw = ImageDraw.Draw(output)
+
+    # --- 3) Get vertical lines / crop boxes for this image ---
+    with open(SESSION["line_json"], "r") as f:
+        line_data = json.load(f)
+
+    x_coords = []
+    for entry in line_data:
+        if entry["image_name"] == orig_fname:
+            x_coords = sorted(entry["x_coordinates"])
+            break
+
+    for x in x_coords:
+        draw.line([(x, 0), (x, base_img.height)], fill="blue", width=2)
+
+    crop_files = sorted([f for f in os.listdir(SESSION["cropped_dir"]) if f.endswith(".png")])
+    crop_map = {}
+    for i, crop_fname in enumerate(crop_files):
+        if i >= len(x_coords) - 1:
+            continue
+        box = (x_coords[i], 0, x_coords[i + 1], base_img.height)
+        crop_map[crop_fname] = box
+
+    # --- 4) Paste ALL selected categories for this image onto one overlay ---
+    for crop_fname, box in crop_map.items():
+        if crop_fname not in selected_crops:
+            # keep blurred background for non-selected crops (like Cropping tab)
+            continue
+
+        # find all separated category files that match this crop index
+        crop_idx = re.search(r"_crop_(\d+)", crop_fname).group(1)
+        matching = [name for name in selected_filenames if name.startswith(f"{image_id}_crop_{crop_idx}_cat_")]
+        if not matching:
+            continue
+
+        # base crop area (blur underneath)
+        w, h = (box[2] - box[0], box[3] - box[1])
+        blurred_crop = base_img.crop(box).filter(ImageFilter.GaussianBlur(radius=5))
+
+        # stack all picked categories for this crop onto the blurred crop
+        blended = blurred_crop.convert("RGBA")
+        for sep_name in matching:
+            sep_path = SESSION["separated_dir"] / sep_name
+            if not sep_path.exists():
+                continue
+
+            cat_rgb = Image.open(sep_path).convert("RGB").resize((w, h))
+
+            # derive transparency from non-white (display-time only)
+            white_bg = Image.new("RGB", (w, h), "white")
+            diff = ImageChops.difference(cat_rgb, white_bg).convert("L")
+            alpha = diff.point(lambda p: 255 if p > 10 else 0)
+
+            cat_rgba = cat_rgb.copy()
+            cat_rgba.putalpha(alpha)
+            blended.paste(cat_rgba, (0, 0), mask=alpha)
+
+        # paste the combined crop back into the full image
+        output.paste(blended.convert("RGB"), box)
+
+    out_path = Path("outputs/reals/category_overlay") / f"{image_id}_overlay.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    output.save(out_path)
+    return str(out_path)
+
 
 def run_denoising(selected_files):
     separated_dir = SESSION["separated_dir"]
@@ -411,6 +506,122 @@ def run_denoising(selected_files):
         gr.update(visible=True),
         f"Denoising complete: {len(output_images)} items."
     )
+
+def generate_denoised_overlay(selected_filenames):
+
+    if not selected_filenames or "ALL" in selected_filenames:
+        return None
+
+    # Pre-reqs
+    if not SESSION["input_path"] or not SESSION["line_json"] or not SESSION["cropped_dir"]:
+        return None
+    denoised_dir = SESSION.get("denoised_dir")
+    if not denoised_dir or not denoised_dir.exists():
+        return None  # nothing denoised yet
+
+    # --- 1) Group by image_id and keep the first for single-image overlay (like Cropping) ---
+    by_img = {}
+    for fname in selected_filenames:
+        m = re.match(r"(\d+)_crop_(\d+)_cat_(\d+).*\.png", fname)
+        if not m:
+            continue
+        img_id, crop_idx = m.group(1), m.group(2)
+        by_img.setdefault(img_id, set()).add(f"{img_id}_crop_{crop_idx}.png")
+    if not by_img:
+        return None
+
+    image_id, selected_crops = next(iter(by_img.items()))
+    orig_fname = f"{image_id}.png"
+    img_path = SESSION["input_path"] / orig_fname
+
+    # --- 2) Base blurred image (like cropping overlay) ---
+    base_img = Image.open(img_path).convert("RGB")
+    blurred_img = base_img.filter(ImageFilter.GaussianBlur(radius=6))
+    output = blurred_img.copy()
+    draw = ImageDraw.Draw(output)
+
+    # --- 3) Vertical lines / crop boxes for this image ---
+    with open(SESSION["line_json"], "r") as f:
+        line_data = json.load(f)
+
+    x_coords = []
+    for entry in line_data:
+        if entry["image_name"] == orig_fname:
+            x_coords = sorted(entry["x_coordinates"])
+            break
+
+    for x in x_coords:
+        draw.line([(x, 0), (x, base_img.height)], fill="blue", width=2)
+
+    crop_files = sorted([f for f in os.listdir(SESSION["cropped_dir"]) if f.endswith(".png")])
+    crop_map = {}
+    for i, crop_fname in enumerate(crop_files):
+        if i >= len(x_coords) - 1:
+            continue
+        box = (x_coords[i], 0, x_coords[i + 1], base_img.height)
+        crop_map[crop_fname] = box
+
+    # Helper: pick denoised filename that corresponds to a selection name
+    # We denoised _wb.png inputs, and the UNet wrote .png outputs with the same base names.
+    def resolve_denoised_name(name: str) -> str:
+        # Try exact; else strip known suffixes to match denoise output naming
+        candidates = [
+            name,
+            name.replace("_alpha.png", "_wb.png"),
+            name.replace("_wb.png", ".png") if name.endswith("_wb.png") else name,
+        ]
+        for c in candidates:
+            p = denoised_dir / c
+            if p.exists():
+                return c
+        # fallback: best-effort (model often preserves stem)
+        stem = Path(name).stem
+        for p in denoised_dir.glob("*.png"):
+            if Path(p).stem == stem or Path(p).stem.startswith(stem):
+                return p.name
+        return name  # may not exist
+
+    # --- 4) Composite ALL selected denoised categories onto one overlay ---
+    for crop_fname, box in crop_map.items():
+        if crop_fname not in selected_crops:
+            continue
+
+        crop_idx = re.search(r"_crop_(\d+)", crop_fname).group(1)
+        # Collect selected categories for this crop (from the user's list)
+        matching = [n for n in selected_filenames if n.startswith(f"{image_id}_crop_{crop_idx}_cat_")]
+        if not matching:
+            continue
+
+        w, h = (box[2] - box[0], box[3] - box[1])
+        blended = base_img.crop(box).filter(ImageFilter.GaussianBlur(radius=5)).convert("RGBA")
+
+        for name in matching:
+            den_name = resolve_denoised_name(name)
+            den_path = denoised_dir / den_name
+            if not den_path.exists():
+                # Optional: fall back to separated_dir if denoised missing
+                sep_path = SESSION["separated_dir"] / name
+                if not sep_path.exists():
+                    continue
+                cat_rgb = Image.open(sep_path).convert("RGB").resize((w, h))
+            else:
+                cat_rgb = Image.open(den_path).convert("RGB").resize((w, h))
+
+            # Build alpha from “non-white” (display-time only)
+            white_bg = Image.new("RGB", (w, h), "white")
+            diff = ImageChops.difference(cat_rgb, white_bg).convert("L")
+            alpha = diff.point(lambda p: 255 if p > 10 else 0)
+
+            cat_rgba = cat_rgb.copy()
+            cat_rgba.putalpha(alpha)
+            blended.paste(cat_rgba, (0, 0), mask=alpha)
+
+        output.paste(blended.convert("RGB"), box)
+
+    out_path = Path("outputs/reals/denoise_overlay") / f"{image_id}_overlay.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    output.save(out_path)
+    return str(out_path)
 
 def trigger_line_prediction(score_threshold):
     denoised_dir = SESSION["denoised_dir"]
@@ -565,13 +776,22 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
             sep_btn = gr.Button("Run Category Separation", visible=False)
             sep_result_text = gr.Textbox(label="Separation Status", interactive=False, visible=False)
             sep_gallery = gr.Gallery(label="Separated Categories", columns=[4], visible=False)
+            category_overlay_img = gr.Image(label="Overlay: Selected Category Highlight", type="filepath", visible=True)
+
             denoise_selection = gr.CheckboxGroup(label="Select Images for Denoising", choices=["ALL"], visible=False)
+
 
         # --- TAB 4: Denoising ---
         with gr.TabItem("4️⃣ Denoising"):
             run_denoise_btn = gr.Button("Run Denoising", visible=False)
             denoise_gallery = gr.Gallery(label="Denoised Images", columns=[4], visible=False)
             denoise_status = gr.Textbox(label="Denoising Status", interactive=False, visible=False)
+            denoised_selection = gr.CheckboxGroup(label="Select Denoised Overlays", choices=[], visible=False)
+            denoise_overlay_img = gr.Image(
+                label="Overlay: Denoised Categories on Original",
+                type="filepath",
+                visible=True
+            )
 
         with gr.TabItem("5️⃣ Line Prediction"):
             # yaml_input = gr.File(label="YAML Config", file_types=[".yaml"])
@@ -659,10 +879,27 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
         ]
     )
 
+    denoise_selection.change(
+        fn=generate_category_overlay,
+        inputs=[denoise_selection],
+        outputs=[category_overlay_img]
+    )
+
     run_denoise_btn.click(
         fn=run_denoising,
-        inputs=[denoise_selection],
+        inputs=[denoise_selection],  # existing category selection
         outputs=[denoise_gallery, denoise_gallery, denoise_status]
+    ).then(
+        fn=lambda files: gr.update(
+            choices=["ALL"] + [Path(f[0]).name if isinstance(f, (tuple, list)) else Path(f).name for f in files],
+            visible=True
+        )
+    )
+
+    denoised_selection.change(
+        fn=generate_denoised_overlay,
+        inputs=[denoised_selection],
+        outputs=[denoise_overlay_img]
     )
 
     predict_btn.click(

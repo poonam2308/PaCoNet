@@ -80,8 +80,21 @@ def detect_vertical_axes(image_input, save_dir, output_json, apertureSize=5,
 
         # Draw and save
         img_out = img.copy()
-        for x in filtered:
+        # for x in filtered:
+        #     cv2.line(img_out, (x, 0), (x, img.shape[0]), (0, 0, 255), 2)
+        for i, x in enumerate(filtered):
             cv2.line(img_out, (x, 0), (x, img.shape[0]), (0, 0, 255), 2)
+            cv2.putText(
+                img_out,
+                str(x),
+                (x + 5, img.shape[0] - 10), # slightly offset to the right and down
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 0),  # green text
+                2,
+                cv2.LINE_AA
+            )
+
         cv2.imwrite(os.path.join(save_dir, fname), img_out)
 
         results.append({
