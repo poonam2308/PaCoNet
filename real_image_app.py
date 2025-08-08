@@ -4,7 +4,8 @@ import gradio as gr
 import os
 from pathlib import Path
 import shutil
-from PIL import Image
+import re
+import io
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
@@ -370,8 +371,6 @@ def run_category_separation(method, top_k):
         gr.update(visible=True),
     )
 def generate_category_overlay(selected_filenames):
-    import re
-    from PIL import ImageChops
 
     if not selected_filenames or "ALL" in selected_filenames:
         return None
@@ -491,20 +490,19 @@ def run_denoising(selected_files):
     for _ in range(1):
         test_unetsd_cluster(unet_model, loader, device, denoised_dir)
 
-    images = sorted([
-        os.path.join(denoised_dir, f)
-        for f in os.listdir(denoised_dir)
-        if f.endswith(".png")
-    ])
-    # Return paths for gallery
-    output_images = sorted(denoised_dir.glob("*"))
+    output_images = sorted([p for p in denoised_dir.glob("*.png")])
+
     SESSION_LOG["steps"].append("Denoising Completed")
     SESSION_LOG["results"]["denoised_files"] = [str(p) for p in output_images]
 
+    gallery_items = [str(p) for p in output_images]
+    choice_names = ["ALL"] + [p.name for p in output_images]
+
     return (
-        [str(p) for p in output_images],
-        gr.update(visible=True),
-        f"Denoising complete: {len(output_images)} items."
+        gallery_items,  # denoise_gallery
+        gr.update(visible=True),  # denoise_gallery visible
+        f"Denoising complete: {len(output_images)} items.",  # denoise_status
+        gr.update(choices=choice_names, visible=True, value=[])  # denoised_selection 👈
     )
 
 def generate_denoised_overlay(selected_filenames):
@@ -618,10 +616,12 @@ def generate_denoised_overlay(selected_filenames):
 
         output.paste(blended.convert("RGB"), box)
 
-    out_path = Path("outputs/reals/denoise_overlay") / f"{image_id}_overlay.png"
+    # Only PNGs
+    out_path = Path("outputs/reals/denoised_overlay") / f"{image_id}_overlay.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     output.save(out_path)
     return str(out_path)
+
 
 def trigger_line_prediction(score_threshold):
     denoised_dir = SESSION["denoised_dir"]
@@ -633,8 +633,6 @@ def trigger_line_prediction(score_threshold):
         json_dir = Path(json_files[0]).parent
         SESSION["json_dir"] = json_dir
 
-    # Optional: clean sort
-    import re
     def extract_cat_crop_key(filename):
         match = re.search(r'_crop_(\d+)_cat_(\d+)', filename)
         if match:
@@ -646,13 +644,128 @@ def trigger_line_prediction(score_threshold):
     sorted_pairs = sorted(zip(svg_files, json_files), key=lambda pair: extract_cat_crop_key(Path(pair[1]).name))
     sorted_svgs, sorted_jsons = zip(*sorted_pairs)
     json_filenames = [Path(f).name for f in sorted_jsons]
+
+
+    SESSION["pred_image_to_json"] = {Path(s).name: j for s, j in zip(sorted_svgs, sorted_jsons)}
+    svg_names = [Path(f).name for f in sorted_svgs]
+
     SESSION_LOG["inputs"]["line_score_threshold"] = score_threshold
     SESSION_LOG["steps"].append("Line Prediction Completed")
     SESSION_LOG["results"]["line_jsons"] = json_files
 
-    return list(sorted_svgs), "\n".join(json_filenames)
+    return list(sorted_svgs), "\n".join(json_filenames), \
+        gr.update(choices=["ALL"] + svg_names, visible=True, value=[]),  \
+        gr.update(visible=True)  # show the overlay image area
 
-from rwd.plot_redesigner import generate_allcat_hsvplots_for_directory
+def generate_predicted_overlay(selected_image_names):
+    if not selected_image_names:
+        return None
+
+    mapping = SESSION.get("pred_image_to_json", {})
+    if not mapping:
+        return None
+
+    chosen_imgs = list(mapping.keys()) if "ALL" in selected_image_names \
+        else [n for n in selected_image_names if n in mapping]
+    if not chosen_imgs:
+        return None
+
+    first_json = Path(mapping[chosen_imgs[0]])
+    m = re.match(r"(\d+)_crop_", first_json.name)
+    if not m:
+        return None
+    image_id = m.group(1)
+    orig_fname = f"{image_id}.png"
+
+    base_img = Image.open(SESSION["input_path"] / orig_fname).convert("RGB")
+    blurred = base_img.filter(ImageFilter.GaussianBlur(radius=6))
+    output = blurred.copy()  # start blurred everywhere
+
+    # load verticals / axes
+    with open(SESSION["line_json"], "r") as f:
+        line_data = json.load(f)
+    x_coords = []
+    for entry in line_data:
+        if entry.get("image_name") == orig_fname:
+            x_coords = sorted(entry.get("x_coordinates", []))
+            break
+    if len(x_coords) < 2:
+        out_path = Path("outputs/reals/predicted_overlay") / f"{image_id}_pred_overlay.png"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        output.save(out_path)
+        return str(out_path)
+
+    H = base_img.height
+
+    # detect crop index base (0 or 1)
+    crop_indices_found = []
+    for n in os.listdir(SESSION["cropped_dir"]):
+        mm = re.search(r"_crop_(\d+)", n)
+        if mm: crop_indices_found.append(int(mm.group(1)))
+    base0 = 0 if crop_indices_found and min(crop_indices_found) == 0 else 1
+
+    def crop_idx_to_box(crop_idx: int):
+        i = crop_idx - base0
+        if i < 0 or i >= len(x_coords) - 1:
+            return None
+        return (x_coords[i], 0, x_coords[i + 1], H)
+
+    # draw axes on top (crisp)
+    draw = ImageDraw.Draw(output)
+    for x in x_coords:
+        draw.line([(x, 0), (x, H)], fill="blue", width=2)
+
+    def svg_to_rgba(svg_path: Path, size_wh):
+        try:
+            import cairosvg, io
+            buf = cairosvg.svg2png(url=str(svg_path), background_color="transparent")
+            im = Image.open(io.BytesIO(buf)).convert("RGBA").resize(size_wh, Image.LANCZOS)
+        except Exception:
+            rgb = Image.open(svg_path).convert("RGB").resize(size_wh, Image.LANCZOS)
+            im = rgb.convert("RGBA")
+        # ensure non-ink stays transparent (in case background isn’t transparent)
+        rgb = im.convert("RGB")
+        white = Image.new("RGB", size_wh, "white")
+        diff = ImageChops.difference(rgb, white).convert("L")
+        alpha = diff.point(lambda p: 255 if p > 10 else 0)
+        im.putalpha(alpha)
+        return im
+
+    # 🔑 Only sharpen under predicted strokes; everything else stays blurred
+    for img_name in chosen_imgs:
+        json_path = Path(mapping[img_name])
+        mm = re.search(r"_crop_(\d+)", json_path.name)
+        if not mm:
+            continue
+        crop_idx = int(mm.group(1))
+        box = crop_idx_to_box(crop_idx)
+        if not box:
+            continue
+
+        svg_path = json_path.with_suffix(".svg")
+        if not svg_path.exists():
+            continue
+
+        w, h = box[2] - box[0], box[3] - box[1]
+        overlay_rgba = svg_to_rgba(svg_path, (w, h))
+        mask = overlay_rgba.split()[-1]  # ink alpha (255 on strokes)
+
+        sharp_crop = base_img.crop(box).convert("RGBA")
+        blurred_crop = output.crop(box).convert("RGBA")
+
+        # make region sharp only where mask has strokes
+        sharpened_under_lines = Image.composite(sharp_crop, blurred_crop, mask)
+
+        # then paint the colored lines on top
+        composited = sharpened_under_lines.copy()
+        composited.alpha_composite(overlay_rgba)
+
+        output.paste(composited.convert("RGB"), box)
+
+    out_path = Path("outputs/reals/predicted_overlay") / f"{image_id}_pred_overlay.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    output.save(out_path)
+    return str(out_path)
 
 def run_stitching_from_prediction(threshold_val, use_hsv_colors):
     json_dir = SESSION.get("json_dir")
@@ -698,6 +811,10 @@ def run_stitching_from_prediction(threshold_val, use_hsv_colors):
         output_svg_path = list(stitched_csv_dir.glob("*.svg"))
         svg_file = str(output_svg_path[0]) if output_svg_path else None
 
+        stitched_overlay = None
+        if svg_file:
+            stitched_overlay = generate_stitched_overlay(svg_file, image_id, blur_radius=6, darken_bg=False)
+
         category_filenames = [[f.stem, ""] for f in stitched_csv_dir.glob("*.csv")]
         SESSION_LOG["inputs"]["stitching_threshold"] = threshold_val
         SESSION_LOG["inputs"]["use_hsv"] = use_hsv_colors
@@ -705,10 +822,55 @@ def run_stitching_from_prediction(threshold_val, use_hsv_colors):
         SESSION_LOG["results"]["stitched_csv"] = [str(p) for p in stitched_csv_dir.glob("*.csv")]
         SESSION_LOG["steps"].append("Stitching & Plot Completed")
 
-        return category_filenames, svg_file, "✅ XY Plot generated and saved."
+        return category_filenames, (stitched_overlay or svg_file), "✅ XY Plot generated and saved."
 
     except Exception as e:
         return [], "", f"❌ Error: {str(e)}"
+def generate_stitched_overlay(svg_path: str, image_id: str, blur_radius=6, darken_bg=False):
+    """Overlay stitched SVG on blurred input, showing blurred background with sharp lines where SVG has strokes."""
+    try:
+        import cairosvg
+    except Exception:
+        cairosvg = None
+
+    orig_fname = f"{image_id}.png"
+    base_img = Image.open(SESSION["input_path"] / orig_fname).convert("RGB")
+    blurred = base_img.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+
+    if darken_bg:
+        dark_layer = Image.new("RGBA", base_img.size, (0, 0, 0, 80))
+        tmp = blurred.convert("RGBA")
+        tmp.alpha_composite(dark_layer)
+        blurred = tmp.convert("RGB")
+
+    W, H = base_img.size
+    if cairosvg:
+        png_bytes = cairosvg.svg2png(url=str(svg_path), output_width=W, output_height=H, background_color="transparent")
+        overlay = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
+    else:
+        overlay = Image.open(svg_path).convert("RGBA").resize((W, H), Image.LANCZOS)
+
+    # Alpha mask from non-white so background remains transparent
+    rgb = overlay.convert("RGB")
+    white = Image.new("RGB", (W, H), "white")
+    diff = ImageChops.difference(rgb, white).convert("L")
+    alpha_mask = diff.point(lambda p: 255 if p > 10 else 0)
+    overlay.putalpha(alpha_mask)
+
+    # Make only the SVG stroke areas sharp
+    sharp = base_img.convert("RGBA")
+    blurred_rgba = blurred.convert("RGBA")
+    sharp_under = Image.composite(sharp, blurred_rgba, alpha_mask)
+
+    # Place the colored SVG strokes on top
+    composited = sharp_under.copy()
+    composited.alpha_composite(overlay)
+
+    # Save final composite over blurred background
+    out_path = Path("outputs/reals/stitched_overlay") / f"{image_id}_stitched_overlay.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    composited.save(out_path)  # keeps transparency from overlay
+    return str(out_path)
 
 def save_session_log():
     log_path = Path("outputs/reals/session_log.json")
@@ -807,6 +969,17 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
             svg_gallery = gr.Gallery(label="Line SVGs", columns=3)
             json_output = gr.Textbox(label="JSON Outputs", lines=10)
 
+            pred_overlay_selection = gr.CheckboxGroup(
+                label="Select Predicted Lines to Overlay",
+                choices=[],
+                visible=False
+            )
+            pred_overlay_img = gr.Image(
+                label="Overlay: Predicted Lines on Original",
+                type="filepath",
+                visible=True
+            )
+
         with gr.TabItem("6️⃣ Stitch & View CSVs"):
             threshold_input = gr.Slider(minimum=1.0, maximum=50.0, step=1.0, value=10.0, label="Matching Threshold")
             use_hsv_checkbox = gr.Checkbox(label="Use Custom HSV Colors", value=True)
@@ -888,12 +1061,7 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
     run_denoise_btn.click(
         fn=run_denoising,
         inputs=[denoise_selection],  # existing category selection
-        outputs=[denoise_gallery, denoise_gallery, denoise_status]
-    ).then(
-        fn=lambda files: gr.update(
-            choices=["ALL"] + [Path(f[0]).name if isinstance(f, (tuple, list)) else Path(f).name for f in files],
-            visible=True
-        )
+        outputs=[denoise_gallery, denoise_gallery, denoise_status, denoised_selection]
     )
 
     denoised_selection.change(
@@ -905,8 +1073,15 @@ with gr.Blocks(title="PaCoNet - Data Extraction and Plot Redesign") as demo:
     predict_btn.click(
         fn=trigger_line_prediction,
         inputs=[line_threshold_slider],
-        outputs=[svg_gallery, json_output]
+        outputs=[svg_gallery, json_output, pred_overlay_selection, pred_overlay_img]
     )
+
+    pred_overlay_selection.change(
+        fn=generate_predicted_overlay,
+        inputs=[pred_overlay_selection],
+        outputs=[pred_overlay_img]
+    )
+
     run_stitch_btn.click(
         fn=run_stitching_from_prediction,
         inputs=[threshold_input, use_hsv_checkbox],
