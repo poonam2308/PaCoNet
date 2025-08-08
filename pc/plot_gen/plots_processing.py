@@ -52,9 +52,9 @@ class PlotsPipeline:
 
     def run(self):
         self.generate_plots()
-        self.crop_plots()
-        self.extract_lines()
-        self.separate_by_color(method='dbscan')  # or method='hist'
+        # self.crop_plots()
+        # self.extract_lines()
+        # self.separate_by_color(method='dbscan')  # or method='hist'
 
 
     def generate_plots(self):
