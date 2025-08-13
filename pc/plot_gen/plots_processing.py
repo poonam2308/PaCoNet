@@ -55,7 +55,7 @@ class PlotsPipeline:
         print("Generating SVG plots...")
         input_dir = self.paths['input_dir']
         plot_dir = self.paths['m_plots']
-        gt_plot_dir = self.path['m_gt_plots']
+        gt_plot_dir = self.paths['m_gt_plots']
         excel_path = self.paths['real_dist_file']
 
         bg_dist, grid_dist, ticks_dist = extract_dist_plots_from_excel(excel_path)
