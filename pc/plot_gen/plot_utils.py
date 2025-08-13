@@ -2,10 +2,8 @@ import pandas as pd
 import numpy as np
 import colorsys
 import re
-import xml.etree.ElementTree as ET
 import json
 import os
-
 
 def generate_large_color_palette(n=100):
     return [tuple(int(x * 255) for x in colorsys.hsv_to_rgb(i / n, 1, 1)) for i in range(n)]
@@ -51,25 +49,6 @@ def calculate_pixel_positions(df, normalized_columns, height):
 def extract_number(filename):
     match = re.search(r'(\d+)', filename)
     return int(match.group(1)) if match else 0
-
-def extract_vertical_axes_coords(svg_path):
-    tree = ET.parse(svg_path)
-    root = tree.getroot()
-    vertical_axes_coords = set()
-    transform_pattern = re.compile(r'translate\(([\d\.]+),([\d\.]+)\)')
-
-    for elem in root.iter():
-        if elem.tag.endswith('g') and 'role-axis' in elem.attrib.get('class', ''):
-            for subelem in elem.iter():
-                if subelem.tag.endswith('line') and subelem.attrib.get('y2') and subelem.attrib['y2'] != '0':
-                    transform = subelem.attrib.get('transform')
-                    if transform:
-                        match = transform_pattern.search(transform)
-                        if match:
-                            x_coord = int(float(match.group(1)))
-                            vertical_axes_coords.add(x_coord)
-
-    return sorted(vertical_axes_coords)
 
 def split_json_data(input_json, train_json, valid_json, train_ratio=0.8):
     with open(input_json, 'r') as file:

@@ -6,6 +6,7 @@ import altair as alt
 from pc.plot_gen.plot_utils import normalize_column, hsv_to_rgb, create_ticks_labels, calculate_pixel_positions, \
     safe_join, generate_hsv_pool
 import random
+from pc.plot_gen.coordinate_extraction import CoordinateExtraction
 
 # plot library : https://altair-viz.github.io/user_guide/customization.html
 class MultiCatPCPGenerator:
@@ -16,8 +17,8 @@ class MultiCatPCPGenerator:
         np.random.seed(self.seed)
         random.seed(self.seed)
 
-    def generate_plot(self, df, filename=None, background_value=None,
-                      grid_on=True, show_ticks_labels=True):
+    def generate_plot(self, df, filename=None, background_value=255,
+                      grid_on=False, show_ticks_labels=False, category_hsv_map=None):
 
         column_names = sorted(list(df.columns)[:-1])
         color_column = df.columns[-1]
@@ -25,22 +26,18 @@ class MultiCatPCPGenerator:
         normalized_columns = [normalize_column(df, col) for col in column_names]
 
         unique_categories = sorted(df[color_column].unique())
-        # category_colors = {
-        #     category: hsv_to_rgb(round(h / len(unique_categories), 2), 1, 1)
-        #     for h, category in enumerate(unique_categories)
-        # }
 
         # Step 1: Generate HSV pool of 100 vibrant colors
-        hsv_pool = generate_hsv_pool(40)
-
-        # Step 2: Randomly select k = number of categories (without replacement)
-        selected_indices = np.random.choice(len(hsv_pool), len(unique_categories), replace=False)
-        selected_hsvs = [hsv_pool[i] for i in selected_indices]
-
+        if category_hsv_map is None:
+            # original random assignment (kept as-is)
+            hsv_pool = generate_hsv_pool(40)
+            selected_indices = np.random.choice(len(hsv_pool), len(unique_categories), replace=False)
+            selected_hsvs = [hsv_pool[i] for i in selected_indices]
+            category_hsv_map = dict(zip(unique_categories, selected_hsvs))
         # Step 3: Assign these random HSV colors to each category
         category_colors = {
             category: hsv_to_rgb(hsv['h'], hsv['s'], hsv['v'])
-            for category, hsv in zip(unique_categories, selected_hsvs)
+            for category, hsv in category_hsv_map.items()
         }
 
         base = alt.Chart(df).transform_window(index="count()").transform_fold(
@@ -53,8 +50,18 @@ class MultiCatPCPGenerator:
         )
 
         lines = base.mark_line(opacity=0.4).encode(
-            x=alt.X('key:N', axis=alt.Axis(title=None)),
-            y=alt.Y('value:Q', axis=alt.Axis(title=None, labels=False)),
+            x=alt.X('key:N', axis=alt.Axis(
+                title=None,
+                domain=False,
+                labels=show_ticks_labels,
+                labelAngle=0,
+                ticks=False)),
+            y=alt.Y('value:Q', axis=alt.Axis(
+                title=None,
+                domain =False,
+                labels=False,
+                ticks= False,
+                grid=grid_on)),
             color=alt.Color(f"{color_column}:N", scale=alt.Scale(
                 domain=list(category_colors.keys()),
                 range=['rgb({},{},{})'.format(*color) for color in category_colors.values()]
@@ -64,14 +71,14 @@ class MultiCatPCPGenerator:
         )
 
         rules = base.mark_rule(color="#ccc", tooltip=None).encode(
-            x=alt.X('key:N', axis=alt.Axis(title=None))
+            x=alt.X('key:N', axis=alt.Axis(title=None, labels=False, ticks=False))
         )
-
         tick_dfs = [create_ticks_labels(df, norm_col, orig_col)
                     for norm_col, orig_col in zip(normalized_columns, column_names)]
         ticks_labels_df = pd.concat(tick_dfs)
 
         if show_ticks_labels:
+
             ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, color="#ccc", orient="horizontal").encode(
                 x='variable:N', y='value:Q'
             )
@@ -81,24 +88,26 @@ class MultiCatPCPGenerator:
                 x='variable:N', y='value:Q', text='label:N'
             )
         else:
-            ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, color="transparent", orient="horizontal").encode(
+            # ticks = alt.LayerChart()
+            # labels = alt.LayerChart()
+            ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, opacity=0, orient="horizontal").encode(
                 x='variable:N', y='value:Q'
             )
             labels = alt.Chart(ticks_labels_df).mark_text(
-                align='center', baseline='middle', dx=-10, color="transparent"
+                align='center', baseline='middle', dx=-10, opacity=0
             ).encode(
                 x='variable:N', y='value:Q', text='label:N'
             )
 
         # Axis configuration
-        axis_config = {
+        axis_config_x = {
             "domain": False,
             "labelAngle": 0,
             "title": None,
             "tickColor": "#ccc" if show_ticks_labels else "transparent",
             "labelColor": "#000" if show_ticks_labels else "transparent",
             "grid": grid_on,
-            "gridColor":"transparent"
+            "gridColor": "#ccc" if grid_on else "transparent"
         }
 
         axis_config_y = {
@@ -108,11 +117,11 @@ class MultiCatPCPGenerator:
             "tickColor": "#ccc" if show_ticks_labels else "transparent",
             "labelColor": "#000" if show_ticks_labels else "transparent",
             "grid": grid_on,
-            "gridColor": "transparent"
+            "gridColor": "#ccc" if grid_on else "transparent"
         }
 
         chart = alt.layer(lines, rules, ticks, labels).configure_axisX(
-            **axis_config
+            **axis_config_x
         ).configure_axisY(
             **axis_config_y
         ).configure_view(
@@ -126,7 +135,7 @@ class MultiCatPCPGenerator:
         if filename:
             chart.save(filename)
 
-        return chart, normalized_columns, dict(zip(unique_categories, selected_hsvs))
+        return chart, normalized_columns, category_hsv_map
 
     def generate_batch(
             self,
@@ -136,10 +145,13 @@ class MultiCatPCPGenerator:
             annotation_file="dist_annotations.json",
             background_distribution=None,
             grid_distribution=None,
-            ticks_labels_distribution=None
+            ticks_labels_distribution=None,
+            no_ticks_output_dir=None,
     ):
         """Generate plots and annotations for a directory of CSV files with real-world style distributions."""
         os.makedirs(output_dir, exist_ok=True)
+        if no_ticks_output_dir is not None:
+            os.makedirs(no_ticks_output_dir, exist_ok=True)
         annotation_file = safe_join(output_dir, annotation_file)
         annotations = []
 
@@ -150,6 +162,7 @@ class MultiCatPCPGenerator:
                 continue
 
             df = pd.read_csv(csv_path)
+            df1 = pd.read_csv(csv_path)
             color_column = df.columns[-1]
             unique_categories = df[color_column].unique()
             selected_categories = unique_categories
@@ -161,8 +174,8 @@ class MultiCatPCPGenerator:
 
             # Sample style attributes from real distributions
             background_value = None
-            grid_on = True
-            show_ticks_labels = True
+            grid_on = False
+            show_ticks_labels = False
 
             if background_distribution is not None:
                 background_value = np.random.choice(background_distribution.index, p=background_distribution.values)
@@ -182,6 +195,46 @@ class MultiCatPCPGenerator:
                 grid_on=grid_on,
                 show_ticks_labels=show_ticks_labels
             )
+            if no_ticks_output_dir:
+                output_file_no_ticks = os.path.join(no_ticks_output_dir, f'image_{i}.svg')
+                _, _, _= self.generate_plot(
+                    df1,
+                    filename=output_file_no_ticks,
+                    background_value=background_value,
+                    grid_on=False,
+                    show_ticks_labels=False,
+                    category_hsv_map=category_hsv_map
+                )
+
+            extractor = CoordinateExtraction(normalize_y_to_plot=False)
+            # lines grouped by crop/region (list-of-lists)
+            lines_by_region = extractor.extract_line_coordinates(output_file)["lines_by_region"]
+            vertical_axes = extractor.extract_vertical_axes(output_file)
+            category_colors = {
+                str(cat): {
+                    "h": round(hsv['h'], 4),
+                    "s": round(hsv['s'], 4),
+                    "v": round(hsv['v'], 4)
+                }
+                for cat, hsv in category_hsv_map.items()
+            }
+            ann = {
+                "filename": os.path.basename(output_file),
+                "vertical_axes": [round(float(x), 2) for x in vertical_axes],
+                "category_colors": category_colors,
+                "lines_by_region": {
+                    k: [[round(float(a), 2) for a in line] for line in v]
+                    for k, v in lines_by_region.items()
+                }
+            }
+
+            json_path = os.path.join(
+                output_dir,
+                os.path.splitext(os.path.basename(output_file))[0] + ".json"
+            )
+            with open(json_path, "w") as jf:
+                json.dump(ann, jf, indent=4)
+
 
             image_annotation = {
                 'image_name': os.path.basename(output_file),
@@ -231,5 +284,3 @@ class MultiCatPCPGenerator:
         with open(annotation_file, 'w') as f:
             json.dump(annotations, f, indent=4)
 
-        print(f"Saved {len(annotations)} plots to {output_dir}")
-        print(f"Annotations written to {annotation_file}")

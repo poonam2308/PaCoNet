@@ -28,6 +28,12 @@ class PlotsPipeline:
         self.paths = self.cfg['paths']
         self._set_seed(self.args.seed)
 
+    def _set_seed(self, seed):
+            torch.manual_seed(seed)
+            np.random.seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(seed)
+
     def generate_data(self):
         dgen.generate_synthetic_datasets(self.paths['input_dir'],
                                          self.args.num_files,  seed=self.args.seed)
@@ -44,23 +50,12 @@ class PlotsPipeline:
             seed=self.args.seed
         )
 
-    def _set_seed(self, seed):
-        torch.manual_seed(seed)
-        np.random.seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed_all(seed)
-
-    def run(self):
-        self.generate_plots()
-        # self.crop_plots()
-        # self.extract_lines()
-        # self.separate_by_color(method='dbscan')  # or method='hist'
-
 
     def generate_plots(self):
         print("Generating SVG plots...")
         input_dir = self.paths['input_dir']
         plot_dir = self.paths['m_plots']
+        gt_plot_dir = self.path['m_gt_plots']
         excel_path = self.paths['real_dist_file']
 
         bg_dist, grid_dist, ticks_dist = extract_dist_plots_from_excel(excel_path)
@@ -71,7 +66,8 @@ class PlotsPipeline:
             num_files=self.args.num_files,
             background_distribution=bg_dist,
             grid_distribution=grid_dist,
-            ticks_labels_distribution=ticks_dist
+            ticks_labels_distribution=ticks_dist,
+            no_ticks_output_dir= gt_plot_dir
         )
         print("Generated SVG plots...")
 
@@ -80,6 +76,8 @@ class PlotsPipeline:
         print(" Cropping SVGs...")
         cropper = CroppingProcessor()
         cropper.create_crops(self.paths['m_plots'], self.paths['m_crops'])
+        cropper.create_crops(self.paths['m_gt_plots'], self.paths['m_gt_crops'])
+
         print("cropped SVG plot and saved as pngs ...")
 
     def extract_lines(self):
@@ -112,11 +110,6 @@ class PlotsPipeline:
                 valid_json=self.paths['m_cluster_valid_json']
             )
 
-    def run_single(self):
-        self.generate_plots_single()
-        self.crop_plots_single()
-        self.extract_lines_single()
-
     def generate_plots_single(self):
         print("Generating SVG plots...")
         input_dir = self.paths['input_dir']
@@ -136,6 +129,18 @@ class PlotsPipeline:
         extractor = LineCoordinateExtractor(main_dir=self.paths['s_plots'], output_file=self.paths['s_all_json'])
         extractor.extract_all()
 
+    def run_single(self):
+        self.generate_plots_single()
+        self.crop_plots_single()
+        self.extract_lines_single()
+
+    def run(self):
+        self.generate_data_from_excel_distribution()
+        self.generate_plots()
+        self.crop_plots()
+        # self.extract_lines()
+        # self.separate_by_color(method='dbscan')  # or method='hist'
+
 
 if __name__ == "__main__":
     pipeline = PlotsPipeline()
@@ -144,8 +149,6 @@ if __name__ == "__main__":
     # Dispatch the task
     if task == 'run':
         pipeline.run()
-    elif task == 'run_dist':
-        pipeline.generate_data_from_excel_distribution()
     elif task == 'run_single':
         pipeline.run_single()
     elif hasattr(pipeline, task):
