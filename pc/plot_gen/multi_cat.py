@@ -30,7 +30,7 @@ class MultiCatPCPGenerator:
         # Step 1: Generate HSV pool of 100 vibrant colors
         if category_hsv_map is None:
             # original random assignment (kept as-is)
-            hsv_pool = generate_hsv_pool(40)
+            hsv_pool = generate_hsv_pool(30)
             selected_indices = np.random.choice(len(hsv_pool), len(unique_categories), replace=False)
             selected_hsvs = [hsv_pool[i] for i in selected_indices]
             category_hsv_map = dict(zip(unique_categories, selected_hsvs))
@@ -73,29 +73,23 @@ class MultiCatPCPGenerator:
         rules = base.mark_rule(color="#ccc", tooltip=None).encode(
             x=alt.X('key:N', axis=alt.Axis(title=None, labels=False, ticks=False))
         )
+
         tick_dfs = [create_ticks_labels(df, norm_col, orig_col)
                     for norm_col, orig_col in zip(normalized_columns, column_names)]
         ticks_labels_df = pd.concat(tick_dfs)
 
         if show_ticks_labels:
-
             ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, color="#ccc", orient="horizontal").encode(
-                x='variable:N', y='value:Q'
-            )
+                x='variable:N', y='value:Q')
             labels = alt.Chart(ticks_labels_df).mark_text(
-                align='center', baseline='middle', dx=-10
-            ).encode(
-                x='variable:N', y='value:Q', text='label:N'
-            )
+                align='center', baseline='middle', dx=-10).encode(
+                x='variable:N', y='value:Q', text='label:N')
         else:
             ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, opacity=0, orient="horizontal").encode(
-                x='variable:N', y='value:Q'
-            )
+                x='variable:N', y='value:Q')
             labels = alt.Chart(ticks_labels_df).mark_text(
-                align='center', baseline='middle', dx=-10, opacity=0
-            ).encode(
-                x='variable:N', y='value:Q', text='label:N'
-            )
+                align='center', baseline='middle', dx=-10, opacity=0).encode(
+                x='variable:N', y='value:Q', text='label:N')
 
         # Axis configuration
         axis_config_x = {
@@ -138,6 +132,106 @@ class MultiCatPCPGenerator:
 
         return chart, normalized_columns, category_hsv_map
 
+    def generate_individual_plots(self, df, output_dir, filename_prefix,background_value=255,
+                      grid_on=False, show_ticks_labels=False, category_hsv_map=None):
+        """Generate separate plots for each category in the DataFrame."""
+        os.makedirs(output_dir, exist_ok=True)
+
+        column_names = sorted(list(df.columns)[:-1])
+        color_column = df.columns[-1]
+        normalized_columns = [normalize_column(df, col) for col in column_names]
+
+        # If no color map provided, fall back to generate_plot logic
+        if category_hsv_map is None:
+            _, _, category_hsv_map = self.generate_plot(df)
+
+        # Convert HSV map to RGB map
+        category_colors = {
+            category: hsv_to_rgb(hsv['h'], hsv['s'], hsv['v'])
+            for category, hsv in category_hsv_map.items()
+        }
+
+
+        for category in df[color_column].unique():
+            df_category = df[df[color_column] == category]
+            if df_category.empty:
+                continue
+
+            output_filename = os.path.join(output_dir, f"image_{filename_prefix}_{category}.svg")
+
+            # Make a single-category plot with fixed color
+            base = alt.Chart(df_category).transform_window(index="count()").transform_fold(
+                normalized_columns
+            ).transform_calculate(
+                mid="(datum.value + datum.value) / 2"
+            ).properties(width=self.width, height=self.height)
+
+            lines = base.mark_line(opacity=0.4).encode(
+                x='key:N',
+                y=alt.Y('value:Q', axis=None),
+                color=alt.value(f'rgb({category_colors[category][0]},'
+                                f'{category_colors[category][1]},'
+                                f'{category_colors[category][2]})'),
+                detail="index:N"
+            )
+
+            rules = base.mark_rule(color="#ccc", tooltip=None).encode(x="key:N")
+
+            # Shared tick labels
+            tick_dfs = [create_ticks_labels(df, norm_col, orig_col)
+                        for norm_col, orig_col in zip(normalized_columns, column_names)]
+            ticks_labels_df = pd.concat(tick_dfs)
+
+            if show_ticks_labels:
+                ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, color="#ccc", orient="horizontal").encode(
+                    x='variable:N', y='value:Q')
+                labels = alt.Chart(ticks_labels_df).mark_text(
+                    align='center', baseline='middle', dx=-10).encode(
+                    x='variable:N', y='value:Q', text='label:N')
+            else:
+                ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, opacity=0, orient="horizontal").encode(
+                    x='variable:N', y='value:Q')
+                labels = alt.Chart(ticks_labels_df).mark_text(
+                    align='center', baseline='middle', dx=-10, opacity=0).encode(
+                    x='variable:N', y='value:Q', text='label:N')
+
+            # Axis configuration
+            axis_config_x = {
+                "domain": False,
+                "labelAngle": 0,
+                "title": None,
+                "tickColor": "#ccc" if show_ticks_labels else "transparent",
+                "labelColor": "#000" if show_ticks_labels else "transparent",
+                "grid": grid_on,
+                "gridColor": "#ccc" if grid_on else "transparent"
+            }
+
+            axis_config_y = {
+                "domain": False,
+                "labelAngle": 0,
+                "title": None,
+                "tickColor": "#ccc" if show_ticks_labels else "transparent",
+                "labelColor": "#000" if show_ticks_labels else "transparent",
+                "grid": grid_on,
+                "gridColor": "#ccc" if grid_on else "transparent"
+            }
+
+            chart = alt.layer(lines, rules, ticks, labels).configure_axisX(
+                **axis_config_x
+            ).configure_axisY(
+                **axis_config_y
+            ).configure_view(
+                stroke=None
+            )
+
+            if background_value is not None and int(background_value) < 255:
+                background_rgb = f"rgb({background_value},{background_value},{background_value})"
+                chart = chart.configure(background=background_rgb)
+
+
+            chart.save(output_filename)
+            print(f"Saved {output_filename}")
+
     def generate_batch(
             self,
             input_dir,
@@ -164,6 +258,8 @@ class MultiCatPCPGenerator:
 
             df = pd.read_csv(csv_path)
             df1 = pd.read_csv(csv_path)
+            df2 = pd.read_csv(csv_path)
+            df3 = pd.read_csv(csv_path)
             color_column = df.columns[-1]
             unique_categories = df[color_column].unique()
             selected_categories = unique_categories
@@ -182,34 +278,37 @@ class MultiCatPCPGenerator:
                 background_value = np.random.choice(background_distribution.index, p=background_distribution.values)
             if grid_distribution is not None:
                 grid_on = bool(np.random.choice(grid_distribution.index, p=grid_distribution.values))
-
             if ticks_labels_distribution is not None:
-                show_ticks_labels = bool(
-                    np.random.choice(ticks_labels_distribution.index, p=ticks_labels_distribution.values))
-            print(f"Plot {i}: background={background_value}, grid={grid_on}, ticks={show_ticks_labels}")
+                show_ticks_labels = bool(np.random.choice(ticks_labels_distribution.index, p=ticks_labels_distribution.values))
 
             output_file = os.path.join(output_dir, f'image_{i}.svg')
             _, normalized_columns, category_hsv_map = self.generate_plot(
-                df,
-                filename=output_file,
-                background_value=background_value,
-                grid_on=grid_on,
+                df, filename=output_file, background_value=background_value, grid_on=grid_on,
                 show_ticks_labels=show_ticks_labels
             )
+
+
             if no_ticks_output_dir:
                 output_file_no_ticks = os.path.join(no_ticks_output_dir, f'image_{i}.svg')
-                _, _, _= self.generate_plot(
-                    df1,
-                    filename=output_file_no_ticks,
-                    background_value=background_value,
-                    grid_on=False,
-                    show_ticks_labels=False,
-                    category_hsv_map=category_hsv_map
+                indiv_dir_with_ticks= os.path.join(no_ticks_output_dir, "per_category")
+                indiv_dir_no_ticks = os.path.join(no_ticks_output_dir, "per_category_noticks")
+                _, _, _ = self.generate_plot(
+                    df1, filename=output_file_no_ticks, background_value=background_value, grid_on=False,
+                    show_ticks_labels=False, category_hsv_map=category_hsv_map
                 )
+                self.generate_individual_plots(
+                    df2, output_dir=indiv_dir_with_ticks, filename_prefix=i, background_value=background_value, grid_on=grid_on,
+                    show_ticks_labels=show_ticks_labels, category_hsv_map=category_hsv_map)
+
+                self.generate_individual_plots(
+                    df3, output_dir=indiv_dir_no_ticks, filename_prefix=i,background_value=background_value, grid_on=False,
+                    show_ticks_labels=False,  category_hsv_map=category_hsv_map)
+
+
 
             extractor = CoordinateExtraction(normalize_y_to_plot=False)
-            # lines grouped by crop/region (list-of-lists)
-            lines_by_region = extractor.extract_line_coordinates(output_file)["lines_by_region"]
+            # lines_by_region = extractor.extract_line_coordinates(output_file)["lines_by_region"]
+
             vertical_axes = extractor.extract_vertical_axes(output_file)
             category_colors = {
                 str(cat): {
@@ -219,13 +318,29 @@ class MultiCatPCPGenerator:
                 }
                 for cat, hsv in category_hsv_map.items()
             }
+            # normalize category_colors: ensure rgb
+            rgb_category_colors = {}
+            for cat, val in category_colors.items():
+                if isinstance(val, dict) and "h" in val:  # HSV dict
+                    rgb_category_colors[cat] = hsv_to_rgb(val["h"], val["s"], val["v"])
+                else:  # already rgb tuple
+                    rgb_category_colors[cat] = val
+
+            lines_by_region = extractor.extract_line_coordinates_by_category(
+                output_file,
+                category_colors=rgb_category_colors
+            )["lines_by_region"]
+
             ann = {
                 "filename": os.path.basename(output_file),
                 "vertical_axes": [round(float(x), 2) for x in vertical_axes],
                 "category_colors": category_colors,
                 "lines_by_region": {
-                    k: [[round(float(a), 2) for a in line] for line in v]
-                    for k, v in lines_by_region.items()
+                    crop: {
+                        cat: [[round(float(a), 2) for a in line] for line in lines]
+                        for cat, lines in categories.items()
+                    }
+                    for crop, categories in lines_by_region.items()
                 }
             }
 

@@ -18,6 +18,120 @@ class CoordinateExtraction:
     def __init__(self, normalize_y_to_plot=False):
         self.normalize_y_to_plot = normalize_y_to_plot
 
+    def extract_line_coordinates_by_category(
+            self,
+            svg_file_path: str,
+            category_colors: dict,
+            eps_axis: float = 0.25
+    ):
+        """
+        Extract line coordinates grouped by crop and category.
+
+        Args:
+            svg_file_path: Path to the SVG file.
+            category_colors: dict of {category: (r,g,b)} mapping from MultiCatPCPGenerator.
+            eps_axis: tolerance for clustering vertical axes.
+
+        Returns:
+            {
+              "lines_by_region": {
+                  "crop_1": {
+                      "CategoryA": [[x1, y1, x2, y2], ...],
+                      "CategoryB": [[...], ...]
+                  },
+                  "crop_2": { ... }
+              }
+            }
+        """
+        tree = ET.parse(svg_file_path)
+        root = tree.getroot()
+        ns = {'svg': 'http://www.w3.org/2000/svg'}
+        ET.register_namespace('', ns['svg'])
+
+        parent_map = {child: parent for parent in root.iter() for child in parent}
+        to_px = _unit_to_px(root)
+        chart_top = _detect_chart_top(root, parent_map, ns)
+
+        # Collect path elements
+        path_items = []
+        for elem in root.findall('.//svg:path', ns):
+            role = (elem.attrib.get('aria-roledescription') or '').lower()
+            if role != 'line mark':
+                continue
+            d = elem.attrib.get('d')
+            if not d:
+                continue
+            stroke = elem.attrib.get('stroke') or elem.attrib.get('style', '')
+            M = _cumulative_transform(elem, parent_map)
+            path_items.append((d, M, stroke))
+
+        segs_px = []
+        for d, M, stroke in path_items:
+            _, segs = parse_path_data(d)
+
+            # normalize stroke string → rgb tuple
+            stroke = stroke.strip()
+            if "rgb" in stroke:
+                rgb_str = stroke[stroke.find("(") + 1:stroke.find(")")]
+                rgb = tuple(int(float(v)) for v in rgb_str.split(","))
+            else:
+                rgb = None
+
+            # find category for this stroke
+            category = None
+            if rgb:
+                for cat, rgb_tuple in category_colors.items():
+                    if tuple(map(int, rgb_tuple)) == rgb:
+                        category = cat
+                        break
+            if category is None:
+                category = "unknown"
+
+            for (sx, sy), (ex, ey) in segs:
+                sx2, sy2 = _apply_M(M, sx, sy)
+                ex2, ey2 = _apply_M(M, ex, ey)
+                (sx2, sy2) = to_px(sx2, sy2)
+                (ex2, ey2) = to_px(ex2, ey2)
+                if self.normalize_y_to_plot:
+                    sy2 -= chart_top
+                    ey2 -= chart_top
+                segs_px.append(((sx2, sy2), (ex2, ey2), category))
+
+        if not segs_px:
+            return {"lines_by_region": {}}
+
+        # cluster vertical axes
+        all_x = []
+        for (sx, _), (ex, _), _ in segs_px:
+            all_x.append(sx)
+            all_x.append(ex)
+        unique_xs = _cluster_means(all_x, eps=eps_axis)
+        if len(unique_xs) < 2:
+            return {"lines_by_region": {}}
+
+        # group per crop and per category
+        lines_by_region = {}
+        for i in range(len(unique_xs) - 1):
+            left_x, right_x = unique_xs[i], unique_xs[i + 1]
+            crop_key = f"crop_{i + 1}"
+
+            for (sx, sy), (ex, ey), category in segs_px:
+                if left_x <= sx <= right_x and left_x <= ex <= right_x:
+                    if abs(sx - ex) < 1e-9:
+                        continue
+                    if crop_key not in lines_by_region:
+                        lines_by_region[crop_key] = {}
+                    if category not in lines_by_region[crop_key]:
+                        lines_by_region[crop_key][category] = []
+                    lines_by_region[crop_key][category].append([
+                        round(sx - left_x, 2),
+                        round(sy, 2),
+                        round(ex - left_x, 2),
+                        round(ey, 2)
+                    ])
+
+        return {"lines_by_region": lines_by_region}
+
     def extract_line_coordinates(self, svg_file_path: str, eps_axis: float = 0.25):
 
         tree = ET.parse(svg_file_path)
