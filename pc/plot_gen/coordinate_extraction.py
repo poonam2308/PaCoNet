@@ -98,7 +98,7 @@ class CoordinateExtraction:
                 segs_px.append(((sx2, sy2), (ex2, ey2), category))
 
         if not segs_px:
-            return {"lines_by_region": {}}
+            return {"lines": {}}
 
         # cluster vertical axes
         all_x = []
@@ -107,7 +107,7 @@ class CoordinateExtraction:
             all_x.append(ex)
         unique_xs = _cluster_means(all_x, eps=eps_axis)
         if len(unique_xs) < 2:
-            return {"lines_by_region": {}}
+            return {"lines": {}}
 
         # group per crop and per category
         lines_by_region = {}
@@ -130,7 +130,7 @@ class CoordinateExtraction:
                         round(ey, 2)
                     ])
 
-        return {"lines_by_region": lines_by_region}
+        return {"lines": lines_by_region}
 
     def extract_line_coordinates(self, svg_file_path: str, eps_axis: float = 0.25):
 
@@ -171,7 +171,7 @@ class CoordinateExtraction:
                 segs_px.append(((sx2, sy2), (ex2, ey2)))
 
         if not segs_px:
-            return {"lines_by_region": {}}
+            return {"lines": {}}
 
         # infer vertical axes from x endpoints and cluster near-dupes
         all_x = []
@@ -180,7 +180,7 @@ class CoordinateExtraction:
             all_x.append(ex)
         unique_xs = _cluster_means(all_x, eps=eps_axis)
         if len(unique_xs) < 2:
-            return {"lines_by_region": {}}
+            return {"lines": {}}
 
         # build output per region
         lines_by_region = {}
@@ -206,7 +206,7 @@ class CoordinateExtraction:
                 # round to 2 decimals like the original
                 lines_by_region[key] = [[round(a, 2) for a in line] for line in region_lines]
 
-        return {"lines_by_region": lines_by_region}
+        return {"lines": lines_by_region}
 
     def extract_vertical_axes(self, svg_path: str, eps: float = 0.75) -> List[float]:
         tree = ET.parse(svg_path)

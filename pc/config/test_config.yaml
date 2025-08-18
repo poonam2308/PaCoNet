@@ -20,6 +20,12 @@ paths:
   m_gt_axes_file: "data/synthetic_plots/multi_cat/testing/gt/gt_axes_annotations.json"
   m_gt_crops: "data/synthetic_plots/multi_cat/testing/gt_crops/images"
   m_gt_line_color: "data/synthetic_plots/multi_cat/testing/gt/gt_line_color.json"
+  
+  # Ground truth plots for individual category
+  m_gt_plots_cat: "data/synthetic_plots/multi_cat/testing/gt_cat"
+  m_gt_plots_cat_crops: "data/synthetic_plots/multi_cat/testing/gt_cat_crops"
+  m_gt_plots_cat_ntl: "data/synthetic_plots/multi_cat/testing/gt_cat_ntl"
+  m_gt_plots_cat_ntl_crops: "data/synthetic_plots/multi_cat/testing/gt_cat_ntl_crops"
 
   # Multi-category separated
   m_color_sep_plots: "data/synthetic_plots/multi_cat/testing/color/images"

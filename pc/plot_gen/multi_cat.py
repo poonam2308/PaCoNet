@@ -132,7 +132,6 @@ class MultiCatPCPGenerator:
                 os.makedirs(png_dir, exist_ok=True)
                 png_filename = os.path.join(png_dir, os.path.basename(base) + ".png")
                 chart.save(png_filename, format="png")
-                print(f"Saved PNG: {png_filename}")
 
         return chart, normalized_columns, category_hsv_map
 
@@ -234,7 +233,6 @@ class MultiCatPCPGenerator:
 
 
             chart.save(output_filename)
-            print(f"Saved {output_filename}")
 
     def generate_batch(
             self,
@@ -340,13 +338,13 @@ class MultiCatPCPGenerator:
             lines_by_region = extractor.extract_line_coordinates_by_category(
                 output_file,
                 category_colors=rgb_category_colors
-            )["lines_by_region"]
+            )["lines"]
 
             ann = {
                 "filename": os.path.basename(output_file),
                 "vertical_axes": [round(float(x), 2) for x in vertical_axes],
                 "category_colors": category_colors,
-                "lines_by_region": {
+                "lines": {
                     crop: {
                         cat: [[round(float(a), 2) for a in line] for line in lines]
                         for cat, lines in categories.items()
