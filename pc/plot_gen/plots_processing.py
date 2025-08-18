@@ -65,7 +65,7 @@ class PlotsPipeline:
         mcat.generate_batch(
             input_dir=input_dir,
             output_dir=plot_dir,
-            save_pngs = True,
+            save_png = True,
             num_files=self.args.num_files,
             background_distribution=bg_dist,
             grid_distribution=grid_dist,
