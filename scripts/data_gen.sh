@@ -1,1 +1,1 @@
-python pc/plot_gen/plots_processing.py --cfg pc/config/train_config.yaml --task run
+python pc/plot_gen/plots_processing.py --cfg pc/config/train_config.yaml --num_files 5000 --task run
