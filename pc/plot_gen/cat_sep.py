@@ -8,7 +8,6 @@ from pathlib import Path
 from scipy.signal import find_peaks
 from sklearn.cluster import DBSCAN
 
-from pc.plot_gen.line_data import LineCoordinateExtractor
 from pc.plot_gen.plot_utils import safe_join
 
 

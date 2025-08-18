@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 import math
 from typing import Iterable, List
 
-from pc.plot_gen.vertical_axes_extraction import extract_vertical_axes_coords
+from pc.plot_gen.coordinate_extraction import CoordinateExtraction
 
 def round_half_up(x):
     """Round halves up (0.5 -> 1, -0.5 -> 0) for consistent pixel placement."""
@@ -66,7 +66,8 @@ class CroppingProcessor:
             svg_w, svg_h = self._read_svg_size(svg_path, img.width, img.height)
 
             # 1) Extract vertical axes (deduped)
-            x_coords = extract_vertical_axes_coords(svg_path, eps=eps)
+            extractor = CoordinateExtraction(normalize_y_to_plot=False)
+            x_coords = extractor.extract_vertical_axes(svg_path)
             x_coords = [x for x in x_coords if 0 <= x < svg_w]
             # print(x_coords)
             #

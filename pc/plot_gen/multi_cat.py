@@ -88,8 +88,6 @@ class MultiCatPCPGenerator:
                 x='variable:N', y='value:Q', text='label:N'
             )
         else:
-            # ticks = alt.LayerChart()
-            # labels = alt.LayerChart()
             ticks = alt.Chart(ticks_labels_df).mark_tick(size=8, opacity=0, orient="horizontal").encode(
                 x='variable:N', y='value:Q'
             )
@@ -134,6 +132,9 @@ class MultiCatPCPGenerator:
 
         if filename:
             chart.save(filename)
+            base, ext = os.path.splitext(filename)
+            png_filename = base + ".png"
+            chart.save(png_filename, format="png")
 
         return chart, normalized_columns, category_hsv_map
 

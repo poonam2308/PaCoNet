@@ -100,7 +100,7 @@ def build_ui():
                 # --- NEW: PRE ---
                 gr.Markdown("**Pre-masked filtering predictions**")
                 svg_gallery_pre = gr.Gallery(label="Pre SVGs", columns=3)
-                json_output_pre = gr.Textbox(label="Pre JSON Outputs", lines=10)
+                json_output_pre = gr.Textbox(label="Pre JSON Outputs", lines=10, visible=False)
                 pred_overlay_selection_pre = gr.CheckboxGroup(
                     label="Select Pre Predicted Lines to Overlay",
                     choices=[],
@@ -115,7 +115,7 @@ def build_ui():
                 # --- EXISTING: POST ---
                 gr.Markdown("**Post-masked filtering predictions**")
                 svg_gallery = gr.Gallery(label="Post SVGs", columns=3)
-                json_output = gr.Textbox(label="Post JSON Outputs", lines=10)
+                json_output = gr.Textbox(label="Post JSON Outputs", lines=10, visible=False)
                 pred_overlay_selection = gr.CheckboxGroup(
                     label="Select Post Predicted Lines to Overlay",
                     choices=[],

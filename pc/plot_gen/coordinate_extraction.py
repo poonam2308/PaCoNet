@@ -8,7 +8,6 @@ from pc.plot_gen.svg_helper import (
     parse_path_data,
     _apply_M,
     _cluster_means,
-    _accumulate_tx,
     _dedupe_sorted
 )
 
@@ -96,7 +95,6 @@ class CoordinateExtraction:
         return {"lines_by_region": lines_by_region}
 
     def extract_vertical_axes(self, svg_path: str, eps: float = 0.75) -> List[float]:
-        import xml.etree.ElementTree as ET
         tree = ET.parse(svg_path)
         root = tree.getroot()
         parent_map = {c: p for p in root.iter() for c in p}

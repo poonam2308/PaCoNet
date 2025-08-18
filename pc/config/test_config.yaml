@@ -1,5 +1,6 @@
 paths:
   # CSV-style input
+  real_dist_file:  "data/real_world_dis_info.xlsx"
   test_input_dir: "data/raw_synthetic/testing_data/data_1k"
 
   # Single-category plots
@@ -9,10 +10,18 @@ paths:
   s_crops: "data/synthetic_plots/single_cat/testing/s_crops/images"
 
   # Multi-category
+  m_plots_svgs: "data/synthetic_plots/multi_cat/testing/svg_dir"
   m_plots: "data/synthetic_plots/multi_cat/testing/images"
   m_dist_file: "data/synthetic_plots/multi_cat/testing/dist_annotations.json"
   m_axes_file: "data/synthetic_plots/multi_cat/testing/axes_annotations.json"
   m_crops: "data/synthetic_plots/multi_cat/testing/m_crops/images"
+
+  # Mult-Category Ground truth plots
+  m_gt_plots_svgs: "data/synthetic_plots/multi_cat/testing/gt/svg_dir"
+  m_gt_plots: "data/synthetic_plots/multi_cat/testing/gt/images"
+  m_gt_axes_file: "data/synthetic_plots/multi_cat/testing/gt/gt_axes_annotations.json"
+  m_gt_crops: "data/synthetic_plots/multi_cat/testing/gt_crops/images"
+  m_gt_line_color: "data/synthetic_plots/multi_cat/testing/gt/gt_line_color.json"
 
   # Multi-category separated
   m_color_sep_plots: "data/synthetic_plots/multi_cat/testing/color/images"

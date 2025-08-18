@@ -4,6 +4,7 @@ paths:
   input_dir: "data/raw_synthetic/training_data/data_5k"
 
   # Multi-category full plots
+  m_plots_svgs: "data/synthetic_plots/multi_cat/training/svg_dir"
   m_plots: "data/synthetic_plots/multi_cat/training/images"
   m_axes_file: "data/synthetic_plots/multi_cat/training/axes_annotations.json"
   m_dist_file: "data/synthetic_plots/multi_cat/training/dist_annotations.json"
@@ -15,6 +16,7 @@ paths:
   m_valid_json: "data/synthetic_plots/multi_cat/training/crops/valid.json"
 
   # Ground truth plots
+  m_gt_plots_svgs: "data/synthetic_plots/multi_cat/training/gt/svg_dir"
   m_gt_plots: "data/synthetic_plots/multi_cat/training/gt/images"
   m_gt_axes_file: "data/synthetic_plots/multi_cat/training/gt/gt_axes_annotations.json"
   m_gt_crops: "data/synthetic_plots/multi_cat/training/gt_crops/images"
