@@ -241,16 +241,24 @@ class MultiCatPCPGenerator:
             input_dir,
             output_dir,
             num_files,
+            save_png=False,
             annotation_file="dist_annotations.json",
             background_distribution=None,
             grid_distribution=None,
             ticks_labels_distribution=None,
             no_ticks_output_dir=None,
+            per_cat_dir=None,
+            per_cat_ntl_dir=None
     ):
         """Generate plots and annotations for a directory of CSV files with real-world style distributions."""
         os.makedirs(output_dir, exist_ok=True)
         if no_ticks_output_dir is not None:
             os.makedirs(no_ticks_output_dir, exist_ok=True)
+        if per_cat_dir is not None:
+            os.makedirs(per_cat_dir, exist_ok=True)
+        if per_cat_ntl_dir is not None:
+            os.makedirs(per_cat_ntl_dir, exist_ok=True)
+
         annotation_file = safe_join(output_dir, annotation_file)
         annotations = []
 
@@ -288,24 +296,23 @@ class MultiCatPCPGenerator:
             output_file = os.path.join(output_dir, f'image_{i}.svg')
             _, normalized_columns, category_hsv_map = self.generate_plot(
                 df, filename=output_file, background_value=background_value, grid_on=grid_on,
-                show_ticks_labels=show_ticks_labels, svg_png=True
+                show_ticks_labels=show_ticks_labels, save_png=save_png
             )
 
 
             if no_ticks_output_dir:
                 output_file_no_ticks = os.path.join(no_ticks_output_dir, f'image_{i}.svg')
-                indiv_dir_with_ticks= os.path.join(no_ticks_output_dir, "per_category")
-                indiv_dir_no_ticks = os.path.join(no_ticks_output_dir, "per_category_noticks")
                 _, _, _ = self.generate_plot(
                     df1, filename=output_file_no_ticks, background_value=background_value, grid_on=False,
                     show_ticks_labels=False, category_hsv_map=category_hsv_map
                 )
+            if per_cat_dir:
                 self.generate_individual_plots(
-                    df2, output_dir=indiv_dir_with_ticks, filename_prefix=i, background_value=background_value, grid_on=grid_on,
+                    df2, output_dir=per_cat_dir, filename_prefix=i, background_value=background_value, grid_on=grid_on,
                     show_ticks_labels=show_ticks_labels, category_hsv_map=category_hsv_map)
-
+            if per_cat_ntl_dir:
                 self.generate_individual_plots(
-                    df3, output_dir=indiv_dir_no_ticks, filename_prefix=i,background_value=background_value, grid_on=False,
+                    df3, output_dir=per_cat_ntl_dir, filename_prefix=i,background_value=background_value, grid_on=False,
                     show_ticks_labels=False,  category_hsv_map=category_hsv_map)
 
 

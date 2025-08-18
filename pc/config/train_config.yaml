@@ -17,8 +17,17 @@ paths:
   # Ground truth plots
   m_gt_plots: "data/synthetic_plots/multi_cat/training/gt/images"
   m_gt_axes_file: "data/synthetic_plots/multi_cat/training/gt/gt_axes_annotations.json"
-  m_gt_crops: "data/synthetic_plots/multi_cat/training/gt_crops/images"
   m_gt_line_color: "data/synthetic_plots/multi_cat/training/gt/gt_line_color.json"
+  m_gt_crops: "data/synthetic_plots/multi_cat/training/gt_crops"
+
+
+  # Ground truth plots for individual category
+  m_gt_plots_cat: "data/synthetic_plots/multi_cat/training/gt_cat"
+  m_gt_plots_cat_crops: "data/synthetic_plots/multi_cat/training/gt_cat_crops"
+  m_gt_plots_cat_ntl: "data/synthetic_plots/multi_cat/training/gt_cat_ntl"
+  m_gt_plots_cat_ntl_crops : "data/synthetic_plots/multi_cat/training/gt_cat_ntl_crops"
+
+
 
   # Category separation - color
   m_color_sep_plots: "data/synthetic_plots/multi_cat/training/color/images"

@@ -56,6 +56,8 @@ class PlotsPipeline:
         input_dir = self.paths['input_dir']
         plot_dir = self.paths['m_plots']
         gt_plot_dir = self.paths['m_gt_plots']
+        gt_plot_dir_cat = self.paths['m_gt_plots_cat']
+        gt_plot_dir_cat_ntl = self.paths['m_gt_plots_cat_ntl']
         excel_path = self.paths['real_dist_file']
 
         bg_dist, grid_dist, ticks_dist = extract_dist_plots_from_excel(excel_path)
@@ -63,11 +65,15 @@ class PlotsPipeline:
         mcat.generate_batch(
             input_dir=input_dir,
             output_dir=plot_dir,
+            save_pngs = True,
             num_files=self.args.num_files,
             background_distribution=bg_dist,
             grid_distribution=grid_dist,
             ticks_labels_distribution=ticks_dist,
-            no_ticks_output_dir= gt_plot_dir
+            no_ticks_output_dir=gt_plot_dir,
+            per_cat_dir=gt_plot_dir_cat,
+            per_cat_ntl_dir=gt_plot_dir_cat_ntl
+
         )
         print("Generated SVG plots...")
 
@@ -77,6 +83,8 @@ class PlotsPipeline:
         cropper = CroppingProcessor()
         cropper.create_crops(self.paths['m_plots'], self.paths['m_crops'])
         cropper.create_crops(self.paths['m_gt_plots'], self.paths['m_gt_crops'])
+        cropper.create_crops(self.paths['m_gt_plots_cat'], self.paths['m_gt_plots_cat_crops'])
+        cropper.create_crops(self.paths['m_gt_plots_cat_ntl'], self.paths['m_gt_plots_cat_ntl_crops'])
 
         print("cropped SVG plot and saved as pngs ...")
 
