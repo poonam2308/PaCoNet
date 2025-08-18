@@ -10,14 +10,12 @@ paths:
   s_crops: "data/synthetic_plots/single_cat/testing/s_crops/images"
 
   # Multi-category
-  m_plots_svgs: "data/synthetic_plots/multi_cat/testing/svg_dir"
   m_plots: "data/synthetic_plots/multi_cat/testing/images"
   m_dist_file: "data/synthetic_plots/multi_cat/testing/dist_annotations.json"
   m_axes_file: "data/synthetic_plots/multi_cat/testing/axes_annotations.json"
   m_crops: "data/synthetic_plots/multi_cat/testing/m_crops/images"
 
   # Mult-Category Ground truth plots
-  m_gt_plots_svgs: "data/synthetic_plots/multi_cat/testing/gt/svg_dir"
   m_gt_plots: "data/synthetic_plots/multi_cat/testing/gt/images"
   m_gt_axes_file: "data/synthetic_plots/multi_cat/testing/gt/gt_axes_annotations.json"
   m_gt_crops: "data/synthetic_plots/multi_cat/testing/gt_crops/images"

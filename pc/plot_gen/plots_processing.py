@@ -75,8 +75,8 @@ class PlotsPipeline:
     def crop_plots(self):
         print(" Cropping SVGs...")
         cropper = CroppingProcessor()
-        cropper.create_crops(self.paths['m_plots_svgs'], self.paths['m_crops'])
-        cropper.create_crops(self.paths['m_gt_plots_svgs'], self.paths['m_gt_crops'])
+        cropper.create_crops(self.paths['m_plots'], self.paths['m_crops'])
+        cropper.create_crops(self.paths['m_gt_plots'], self.paths['m_gt_crops'])
 
         print("cropped SVG plot and saved as pngs ...")
 
