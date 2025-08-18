@@ -18,7 +18,7 @@ class MultiCatPCPGenerator:
         random.seed(self.seed)
 
     def generate_plot(self, df, filename=None, background_value=255,
-                      grid_on=False, show_ticks_labels=False, category_hsv_map=None):
+                      grid_on=False, show_ticks_labels=False, category_hsv_map=None, save_png=False):
 
         column_names = sorted(list(df.columns)[:-1])
         color_column = df.columns[-1]
@@ -126,9 +126,13 @@ class MultiCatPCPGenerator:
 
         if filename:
             chart.save(filename)
-            base, ext = os.path.splitext(filename)
-            png_filename = base + ".png"
-            chart.save(png_filename, format="png")
+            if save_png:
+                base, _ = os.path.splitext(filename)
+                png_dir = os.path.join(os.path.dirname(base), "rasterized_images")
+                os.makedirs(png_dir, exist_ok=True)
+                png_filename = os.path.join(png_dir, os.path.basename(base) + ".png")
+                chart.save(png_filename, format="png")
+                print(f"Saved PNG: {png_filename}")
 
         return chart, normalized_columns, category_hsv_map
 
@@ -284,7 +288,7 @@ class MultiCatPCPGenerator:
             output_file = os.path.join(output_dir, f'image_{i}.svg')
             _, normalized_columns, category_hsv_map = self.generate_plot(
                 df, filename=output_file, background_value=background_value, grid_on=grid_on,
-                show_ticks_labels=show_ticks_labels
+                show_ticks_labels=show_ticks_labels, svg_png=True
             )
 
 
