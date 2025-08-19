@@ -128,8 +128,7 @@ class MultiCatPCPGenerator:
             chart.save(filename)
             if save_png:
                 base, _ = os.path.splitext(filename)
-                png_dir = os.path.join(os.path.dirname(base), "rasterized_images")
-                os.makedirs(png_dir, exist_ok=True)
+                png_dir = os.path.join(os.path.dirname(base))
                 png_filename = os.path.join(png_dir, os.path.basename(base) + ".png")
                 chart.save(png_filename, format="png")
 
@@ -339,9 +338,9 @@ class MultiCatPCPGenerator:
                 output_file,
                 category_colors=rgb_category_colors
             )["lines"]
-
+            jsonpng_filename = os.path.splitext(os.path.basename(output_file))[0] + ".png"
             ann = {
-                "filename": os.path.basename(output_file),
+                "filename": jsonpng_filename,
                 "vertical_axes": [round(float(x), 2) for x in vertical_axes],
                 "category_colors": category_colors,
                 "lines": {
@@ -362,7 +361,7 @@ class MultiCatPCPGenerator:
 
 
             image_annotation = {
-                'image_name': os.path.basename(output_file),
+                'image_name': jsonpng_filename,
                 'image_style': {
                     'background_rgb': int(background_value) if background_value is not None else None,
                     'grid': grid_on,

@@ -1,7 +1,8 @@
 import gradio as gr
 
 # --- Import your processing modules ---
-from .detection_tab import process_input, update_coordinate_selector, update_coords_for_image, save_selected_axes
+from .detection_tab import process_input, update_coordinate_selector, update_coords_for_image, save_selected_axes, \
+    toggle_params
 from .cropping_tab import crop_and_return_images, get_base_overlay_with_axes, generate_cropping_overlay, \
     save_selected_images, select_crop_from_gallery
 from .separation_tab import run_category_separation, generate_category_overlay, select_category_from_gallery
@@ -21,7 +22,10 @@ def build_ui():
                 with gr.Row():
                     file_input = gr.File(file_types=[".png", ".jpg", ".jpeg"], file_count="multiple",
                                          label="Upload Image(s)")
-                with gr.Row():
+                    json_input = gr.File(file_types=[".json"], file_count="single",
+                                         label="Upload Metadata JSON (optional)")
+
+                with gr.Group(visible=True) as param_group:
                     aperture = gr.Slider(3, 7, step=2, value=5, label="Canny Aperture Size")
                     min_len = gr.Slider(10, 150, step=2, value=20, label="Min Line Length")
                     max_gap = gr.Slider(1, 50, step=1, value=1, label="Max Line Gap")
@@ -31,6 +35,7 @@ def build_ui():
                     right_thresh_slider = gr.Slider(0.8, 1.0, step=0.01, value=0.95,
                                                     label="Right Edge Ignore Threshold (fraction)")
 
+                json_input.change(toggle_params, inputs=json_input, outputs=param_group)
                 run_btn = gr.Button("Run Detection")
                 img_output = gr.Gallery(label="Detected Images with Lines", columns=[3], height=400)
                 with gr.Row():
@@ -146,7 +151,7 @@ def build_ui():
 
         # --- Hook up logic ---
         run_btn.click(fn=process_input,
-                      inputs=[file_input, aperture, min_len, max_gap, min_spacing_slider, left_thresh_slider,
+                      inputs=[file_input, json_input, aperture, min_len, max_gap, min_spacing_slider, left_thresh_slider,
                               right_thresh_slider],
                       outputs=[img_output]
                       ).then(
