@@ -1,3 +1,5 @@
+import json
+
 from PIL import ImageFilter, Image, ImageChops
 import io
 from pathlib import Path
@@ -21,11 +23,11 @@ def run_stitching_from_prediction(threshold_val, use_hsv_colors):
         if not sample_json:
             return [], "", "❌ No JSON files found."
 
-        import re
-        match = re.match(r"(\d+)_crop_", sample_json.name)
-        if not match:
+        stem = sample_json.stem  # e.g. "hjdhfkjfhh_crop_1_cat_2_post"
+        parts = stem.rsplit("_crop_", 1)
+        if len(parts) != 2:
             return [], "", "❌ Could not extract image ID from filename."
-        image_id = match.group(1)
+        image_id = parts[0]  # ✅ original stem (whatever it is)
 
         # Step 3: Stitch coordinates
         combined_df = stitch_xy_coordinates(json_dir, image_id, crop_width=224.0, threshold_distance=threshold_val)
@@ -60,7 +62,17 @@ def run_stitching_from_prediction(threshold_val, use_hsv_colors):
         SESSION_LOG["results"]["stitched_csv"] = [str(p) for p in stitched_csv_dir.glob("*.csv")]
         SESSION_LOG["steps"].append("Stitching & Plot Completed")
 
-        return category_filenames, (stitched_overlay or svg_file), "✅ XY Plot generated and saved."
+        # Pick the output file safely
+        output_file = None
+        if stitched_overlay and Path(stitched_overlay).is_file():
+            output_file = stitched_overlay
+        elif svg_file and Path(svg_file).is_file():
+            output_file = svg_file
+        else:
+            output_file = None  # nothing valid to return
+
+        return category_filenames, output_file, "✅ XY Plot generated and saved."
+
 
     except Exception as e:
         return [], "", f"❌ Error: {str(e)}"
@@ -71,8 +83,15 @@ def generate_stitched_overlay(svg_path: str, image_id: str, blur_radius=6, darke
     except Exception:
         cairosvg = None
 
-    orig_fname = f"{image_id}.png"
+    with open(SESSION["line_json"], "r") as f:
+        line_data = json.load(f)
+    orig_entry = next((e for e in line_data if Path(e["image_name"]).stem == image_id), None)
+    if not orig_entry:
+        raise FileNotFoundError(f"Could not find matching original image for {image_id}")
+
+    orig_fname = orig_entry["image_name"]  # ✅ exact original filename
     base_img = Image.open(SESSION["input_path"] / orig_fname).convert("RGB")
+
     blurred = base_img.filter(ImageFilter.GaussianBlur(radius=blur_radius))
 
     if darken_bg:

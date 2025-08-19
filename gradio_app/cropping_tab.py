@@ -38,20 +38,21 @@ def crop_and_return_images():
 
 
 def get_base_overlay_with_axes():
-    """
-    Draw only vertical lines (no crop highlights yet).
-    """
     if not SESSION["input_path"] or not SESSION["line_json"]:
         return None
 
-    fname = sorted(os.listdir(SESSION["input_path"]))[0]
-    img_path = SESSION["input_path"] / fname
-    img = Image.open(img_path).convert("RGB")
-    draw = ImageDraw.Draw(img)
-
-
     with open(SESSION["line_json"], "r") as f:
         data = json.load(f)
+    if not data:
+        return None
+
+    fname = data[0]["image_name"]   # ✅ use consistent filename
+    img_path = SESSION["input_path"] / fname
+    if not img_path.exists():
+        return None
+
+    img = Image.open(img_path).convert("RGB")
+    draw = ImageDraw.Draw(img)
 
     for entry in data:
         if entry["image_name"] == fname:
@@ -65,6 +66,7 @@ def get_base_overlay_with_axes():
     return str(out_path)
 
 
+
 def generate_cropping_overlay(selected_crop_names=None):
     """
     Overlay original image with highlighted or blurred crop regions.
@@ -72,15 +74,17 @@ def generate_cropping_overlay(selected_crop_names=None):
     if not SESSION["input_path"] or not SESSION["line_json"] or not SESSION["cropped_dir"]:
         return None
 
-    if not selected_crop_names:
-        return get_base_overlay_with_axes()
-
-    fname = sorted(os.listdir(SESSION["input_path"]))[0]
-    img_path = SESSION["input_path"] / fname
-    base_img = Image.open(img_path).convert("RGB")
-
     with open(SESSION["line_json"], "r") as f:
         data = json.load(f)
+    if not data:
+        return None
+
+    fname = data[0]["image_name"]   # ✅ use consistent filename
+    img_path = SESSION["input_path"] / fname
+    if not img_path.exists():
+        return None
+
+    base_img = Image.open(img_path).convert("RGB")
 
     x_coords = []
     for entry in data:

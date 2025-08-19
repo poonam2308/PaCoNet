@@ -20,6 +20,7 @@ def extract_coords_from_metadata(json_file):
     coords = data.get("vertical_axes", [])
     return {filename: coords}
 
+
 def extract_coords_per_image(json_file):
     with open(json_file, "r") as f:
         data = json.load(f)

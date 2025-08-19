@@ -71,6 +71,13 @@ def generate_category_overlay(selected_filenames):
         # draw axes
         with open(SESSION["line_json"], "r") as f:
             line_data = json.load(f)
+        if not line_data:
+            return None
+
+        fname = line_data[0]["image_name"]  # ✅ use consistent filename
+        img_path = SESSION["input_path"] / fname
+        base_img = Image.open(img_path).convert("RGB")
+
         for entry in line_data:
             if entry["image_name"] == fname:
                 for x in sorted(entry["x_coordinates"]):
@@ -90,21 +97,31 @@ def generate_category_overlay(selected_filenames):
     # --- 1) Group selection by image_id and keep the first image_id (single overlay like Cropping) ---
     by_img = {}
     for fname in selected_filenames:
-        m = re.match(r"(\d+)_crop_(\d+)_cat_(\d+)\.png", fname)
-        if not m:
+        stem = Path(fname).stem  # remove extension
+        parts = stem.rsplit("_crop_", 1)
+        if len(parts) != 2:
             continue
-        img_id, crop_idx = m.group(1), m.group(2)
+        img_id, rest = parts
+        crop_idx = rest.split("_cat_")[0]
         by_img.setdefault(img_id, set()).add(f"{img_id}_crop_{crop_idx}.png")
 
     if not by_img:
         return None
 
-    image_id, selected_crops = next(iter(by_img.items()))  # show one base image overlay
-    orig_fname = f"{image_id}.png"
-    img_path = SESSION["input_path"] / orig_fname
+    image_id, selected_crops = next(iter(by_img.items()))
 
-    # --- 2) Base image + blur (like cropping overlay) ---
+    # Find the actual filename in line_json for this image_id
+    with open(SESSION["line_json"], "r") as f:
+        line_data = json.load(f)
+
+    orig_entry = next((e for e in line_data if str(image_id) in e["image_name"]), None)
+    if not orig_entry:
+        return None
+
+    orig_fname = orig_entry["image_name"]  # ✅ exact filename from detection
+    img_path = SESSION["input_path"] / orig_fname
     base_img = Image.open(img_path).convert("RGB")
+
     blurred_img = base_img.filter(ImageFilter.GaussianBlur(radius=6))
     output = blurred_img.copy()
     draw = ImageDraw.Draw(output)

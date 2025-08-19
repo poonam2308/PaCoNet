@@ -79,7 +79,13 @@ def generate_denoised_overlay(selected_filenames):
         return None  # nothing denoised yet
     # --- CASE 1: No selection → just blurred background + axes ---
     if not selected_filenames:
-        fname = sorted(os.listdir(SESSION["input_path"]))[0]
+        with open(SESSION["line_json"], "r") as f:
+            line_data = json.load(f)
+        if not line_data:
+            return None
+
+        fname = line_data[0]["image_name"]  # ✅ consistent filename
+
         img_path = SESSION["input_path"] / fname
         base_img = Image.open(img_path).convert("RGB")
         blurred_img = base_img.filter(ImageFilter.GaussianBlur(radius=6))
@@ -104,16 +110,25 @@ def generate_denoised_overlay(selected_filenames):
     # --- 1) Group by image_id and keep the first for single-image overlay (like Cropping) ---
     by_img = {}
     for fname in selected_filenames:
-        m = re.match(r"(\d+)_crop_(\d+)_cat_(\d+).*\.png", fname)
-        if not m:
+        stem = Path(fname).stem
+        parts = stem.rsplit("_crop_", 1)
+        if len(parts) != 2:
             continue
-        img_id, crop_idx = m.group(1), m.group(2)
+        img_id, rest = parts
+        crop_idx = rest.split("_cat_")[0]
         by_img.setdefault(img_id, set()).add(f"{img_id}_crop_{crop_idx}.png")
+
     if not by_img:
         return None
 
     image_id, selected_crops = next(iter(by_img.items()))
-    orig_fname = f"{image_id}.png"
+    with open(SESSION["line_json"], "r") as f:
+        line_data = json.load(f)
+    orig_entry = next((e for e in line_data if e["image_name"].startswith(str(image_id))), None)
+    if not orig_entry:
+        return None
+    orig_fname = orig_entry["image_name"]  # ✅ exact original name
+
     img_path = SESSION["input_path"] / orig_fname
 
     # --- 2) Base blurred image (like cropping overlay) ---

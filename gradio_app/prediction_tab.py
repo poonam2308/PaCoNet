@@ -87,7 +87,13 @@ def _generate_predicted_overlay_generic(selected_image_names, mapping_key):
         # generate blurred overlay only once
         if not SESSION.get("input_path") or not SESSION.get("line_json"):
             return None
-        fname = sorted(os.listdir(SESSION["input_path"]))[0]
+        with open(SESSION["line_json"], "r") as f:
+            line_data = json.load(f)
+        if not line_data:
+            return None
+
+        fname = line_data[0]["image_name"]  # ✅ consistent with detection
+
         img_path = SESSION["input_path"] / fname
         base_img = Image.open(img_path).convert("RGB")
         blurred = base_img.filter(ImageFilter.GaussianBlur(radius=6))
@@ -119,11 +125,20 @@ def _generate_predicted_overlay_generic(selected_image_names, mapping_key):
         return None
 
     first_json = Path(mapping[chosen_imgs[0]])
-    m = re.match(r"(\d+)_crop_", first_json.name)
-    if not m:
+    stem = first_json.stem  # e.g. "hjdhfkjfhh_crop_2_cat_3_post"
+    parts = stem.rsplit("_crop_", 1)
+    if len(parts) != 2:
         return None
-    image_id = m.group(1)
-    orig_fname = f"{image_id}.png"
+    image_id = parts[0]  # ✅ full original filename stem
+
+    # find exact filename from line_json
+    with open(SESSION["line_json"], "r") as f:
+        line_data = json.load(f)
+    orig_entry = next((e for e in line_data if Path(e["image_name"]).stem == image_id), None)
+    if not orig_entry:
+        return None
+
+    orig_fname = orig_entry["image_name"]  # ✅ exact original filename
 
     base_img = Image.open(SESSION["input_path"] / orig_fname).convert("RGB")
     blurred = base_img.filter(ImageFilter.GaussianBlur(radius=6))

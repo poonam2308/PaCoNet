@@ -16,7 +16,7 @@ def hsv_to_rgb(h, s, v):
 
 
 # --- XY Plotting with Optional HSV Colors ---
-def generate_xy_plot(df, filename, title="Stitched Lines", width=800, height=600, crop_width=224.0, custom_hsv_colors=None):
+def generate_xy_plot(df, filename, width=800, height=600, crop_width=224.0, custom_hsv_colors=None):
     """
     Generates an XY plot for stitched line segments using Altair, with optional HSV-based coloring.
     """
@@ -77,7 +77,6 @@ def generate_xy_plot(df, filename, title="Stitched Lines", width=800, height=600
     ).encode(x='x_pos:Q')
 
     chart = alt.layer(line_chart, vertical_rules).properties(
-        title=title,
         width=width,
         height=height
     ).interactive()
@@ -149,23 +148,8 @@ def process_stitched_xy_csvs(input_dir, output_dir, crop_width_val, hsv_json_pat
         match = re.match(r"(\d+)_stitched_xy\.csv", csv_filename)
         image_id = match.group(1) if match else "Unknown"
         output_svg = os.path.join(output_dir, f"{image_id}_stitched_xy_plot.svg")
-        title = f"Stitched Lines for Image {image_id}"
 
-        generate_xy_plot(df, output_svg, title=title, crop_width=crop_width_val, custom_hsv_colors=custom_hsv_colors)
+        generate_xy_plot(df, output_svg, crop_width=crop_width_val, custom_hsv_colors=custom_hsv_colors)
 
     print(f"\n✅ All stitched XY plots saved in {output_dir}")
 
-
-# # --- Example CLI Entry Point ---
-# if __name__ == "__main__":
-#     input_dir_stitched = Path("../outputs/reals/redesigned").resolve()
-#     output_dir_stitched = Path("../outputs/reals/redesigned/stitched_xy_plots").resolve()
-#     hsv_json = Path("../outputs/reals/separated/separation_data.json").resolve()
-#     assumed_crop_width = 224.0
-#
-#     process_stitched_xy_csvs(
-#         input_dir=input_dir_stitched,
-#         output_dir=output_dir_stitched,
-#         crop_width_val=assumed_crop_width,
-#         hsv_json_path=str(hsv_json)
-#     )
