@@ -10,7 +10,7 @@ import torch
 import re
 import json
 from PIL import Image, ImageDraw, ImageChops, ImageFilter
-
+from gradio.events import SelectData
 from .session import SESSION, SESSION_LOG
 
 # model
@@ -205,3 +205,16 @@ def generate_denoised_overlay(selected_filenames):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     output.save(out_path)
     return str(out_path)
+
+def select_denoised_from_gallery(evt: gr.SelectData):
+    """
+    Map gallery click (index) to denoised filename.
+    Single-selection: returns a one-element list.
+    """
+    denoised_dir = SESSION.get("denoised_dir")
+    if not denoised_dir or not denoised_dir.exists():
+        return []
+    denoised_files = sorted([f.name for f in denoised_dir.glob("*.png")])
+    if 0 <= evt.index < len(denoised_files):
+        return [denoised_files[evt.index]]
+    return []

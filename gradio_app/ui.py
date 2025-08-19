@@ -3,11 +3,11 @@ import gradio as gr
 # --- Import your processing modules ---
 from .detection_tab import process_input, update_coordinate_selector, update_coords_for_image, save_selected_axes
 from .cropping_tab import crop_and_return_images, get_base_overlay_with_axes, generate_cropping_overlay, \
-    save_selected_images
-from .separation_tab import run_category_separation, generate_category_overlay
-from .denoising_tab import run_denoising, generate_denoised_overlay
+    save_selected_images, select_crop_from_gallery
+from .separation_tab import run_category_separation, generate_category_overlay, select_category_from_gallery
+from .denoising_tab import run_denoising, generate_denoised_overlay, select_denoised_from_gallery
 from .prediction_tab import trigger_line_prediction_both, generate_predicted_overlay_pre, \
-    generate_predicted_overlay_post
+    generate_predicted_overlay_post, select_prediction_from_gallery_pre, select_prediction_from_gallery_post
 from .stitching_tab import run_stitching_from_prediction
 from .session import save_session_log
 
@@ -180,6 +180,12 @@ def build_ui():
             outputs=[crop_overlay_img]
         )
 
+        cropped_output.select(
+            fn=select_crop_from_gallery,
+            inputs=[],
+            outputs=[cropped_selection]
+        )
+
         save_selected_btn.click(fn=save_selected_images,
                                 inputs=[cropped_selection],
                                 outputs=[save_result_text])
@@ -200,6 +206,12 @@ def build_ui():
             outputs=[category_overlay_img]
         )
 
+        sep_gallery.select(
+            fn=select_category_from_gallery,
+            inputs=[],
+            outputs=[denoise_selection]
+        )
+
         denoise_selection.change(
             fn=generate_category_overlay,
             inputs=[denoise_selection],
@@ -207,6 +219,12 @@ def build_ui():
         ).then(
             fn=lambda: generate_denoised_overlay([]),  # 👈 default blurred only
             outputs=[denoise_overlay_img]
+        )
+
+        denoise_gallery.select(
+            fn=select_denoised_from_gallery,
+            inputs=[],
+            outputs=[denoised_selection]
         )
 
         run_denoise_btn.click(
@@ -230,6 +248,12 @@ def build_ui():
                 # POST (4)
                 svg_gallery, json_output, pred_overlay_selection, pred_overlay_img
             ]
+        ).then(
+            fn=lambda: generate_predicted_overlay_pre([]),  # 👈 default: blurred-only pre overlay
+            outputs=[pred_overlay_img_pre]
+        ).then(
+            fn=lambda: generate_predicted_overlay_post([]),  # 👈 default: blurred-only post overlay
+            outputs=[pred_overlay_img]
         )
 
         pred_overlay_selection_pre.change(
@@ -242,6 +266,18 @@ def build_ui():
             fn=generate_predicted_overlay_post,
             inputs=[pred_overlay_selection],
             outputs=[pred_overlay_img]
+        )
+
+        svg_gallery_pre.select(
+            fn=select_prediction_from_gallery_pre,
+            inputs=[],
+            outputs=[pred_overlay_selection_pre]
+        )
+
+        svg_gallery.select(
+            fn=select_prediction_from_gallery_post,
+            inputs=[],
+            outputs=[pred_overlay_selection]
         )
 
         run_stitch_btn.click(

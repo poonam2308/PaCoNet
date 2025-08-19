@@ -85,6 +85,8 @@ def generate_stitched_overlay(svg_path: str, image_id: str, blur_radius=6, darke
     if cairosvg:
         png_bytes = cairosvg.svg2png(url=str(svg_path), output_width=W, output_height=H, background_color="transparent")
         overlay = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
+        overlay = overlay.resize((W, H), Image.LANCZOS)
+
     else:
         overlay = Image.open(svg_path).convert("RGBA").resize((W, H), Image.LANCZOS)
 

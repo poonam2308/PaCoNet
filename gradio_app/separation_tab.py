@@ -7,6 +7,7 @@ from rwd.category_separation import process_images_separation
 import json
 from .session import SESSION, SESSION_LOG
 
+from gradio.events import SelectData
 
 def run_category_separation(method, top_k):
     """
@@ -170,4 +171,18 @@ def generate_category_overlay(selected_filenames):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     output.save(out_path)
     return str(out_path)
+
+
+def select_category_from_gallery(evt: gr.SelectData):
+    """
+    Map gallery click (index) to separated category filename.
+    Single-selection only.
+    """
+    separated_dir = SESSION.get("separated_dir")
+    if not separated_dir or not separated_dir.exists():
+        return []
+    sep_files = sorted([f.name for f in separated_dir.glob("*.png")])
+    if 0 <= evt.index < len(sep_files):
+        return [sep_files[evt.index]]
+    return []
 

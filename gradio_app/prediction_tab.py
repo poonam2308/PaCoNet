@@ -5,6 +5,7 @@ from dhlp.line_prediction import run_line_prediction_on_images, run_line_predict
 import gradio as gr
 from .session import SESSION, SESSION_LOG
 
+from gradio.events import SelectData
 
 def _sort_pairs(svg_files, json_files):
     def extract_cat_crop_key(filename):
@@ -77,7 +78,36 @@ def trigger_line_prediction_both(score_threshold):
 
 def _generate_predicted_overlay_generic(selected_image_names, mapping_key):
     if not selected_image_names:
-        return None
+        tag = "pre" if mapping_key.endswith("_pre") else "post"
+        cache_key = f"blurred_overlay_{tag}"
+
+        if cache_key in SESSION:  # reuse cached blurred overlay
+            return SESSION[cache_key]
+
+        # generate blurred overlay only once
+        if not SESSION.get("input_path") or not SESSION.get("line_json"):
+            return None
+        fname = sorted(os.listdir(SESSION["input_path"]))[0]
+        img_path = SESSION["input_path"] / fname
+        base_img = Image.open(img_path).convert("RGB")
+        blurred = base_img.filter(ImageFilter.GaussianBlur(radius=6))
+        draw = ImageDraw.Draw(blurred)
+
+        # draw axes
+        with open(SESSION["line_json"], "r") as f:
+            line_data = json.load(f)
+        for entry in line_data:
+            if entry["image_name"] == fname:
+                for x in sorted(entry["x_coordinates"]):
+                    draw.line([(x, 0), (x, base_img.height)], fill="blue", width=2)
+                break
+
+        out_path = Path("outputs/reals/predicted_overlay") / f"{Path(fname).stem}_overlay_blurred_{tag}.png"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        blurred.save(out_path)
+
+        SESSION[cache_key] = str(out_path)  # cache path
+        return str(out_path)
 
     mapping = SESSION.get(mapping_key, {})
     if not mapping:
@@ -186,3 +216,25 @@ def generate_predicted_overlay_pre(selected_image_names):
 
 def generate_predicted_overlay_post(selected_image_names):
     return _generate_predicted_overlay_generic(selected_image_names, "pred_image_to_json_post")
+
+
+
+def select_prediction_from_gallery_pre(evt: gr.SelectData):
+    """
+    Map pre-gallery click to its filename for single-selection.
+    """
+    mapping = SESSION.get("pred_image_to_json_pre", {})
+    svg_files = sorted(mapping.keys())
+    if 0 <= evt.index < len(svg_files):
+        return [svg_files[evt.index]]
+    return []
+
+def select_prediction_from_gallery_post(evt: gr.SelectData):
+    """
+    Map post-gallery click to its filename for single-selection.
+    """
+    mapping = SESSION.get("pred_image_to_json_post", {})
+    svg_files = sorted(mapping.keys())
+    if 0 <= evt.index < len(svg_files):
+        return [svg_files[evt.index]]
+    return []
