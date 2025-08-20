@@ -139,9 +139,11 @@ class MultiCatPCPGenerator:
                 str(cat): hsv_to_rgb(hsv["h"], hsv["s"], hsv["v"])
                 for cat, hsv in category_hsv_map.items()
             }
-            lines_by_region = self.extractor.extract_line_coordinates_by_category(
-                svg_filename, category_colors=rgb_category_colors
-            )["lines"]
+            # lines_by_region = self.extractor.extract_line_coordinates_by_category(
+            #     svg_filename, category_colors=rgb_category_colors
+            # )["lines"]
+
+            lines_by_region = self.extractor.extract_line_coordinates(svg_filename)["lines"]
 
             ann = {
                 "filename": basename + ".png",
@@ -154,13 +156,19 @@ class MultiCatPCPGenerator:
                     }
                     for cat, hsv in category_hsv_map.items()
                 },
+                # "lines": {
+                #     crop: {
+                #         cat: [[round(float(a), 2) for a in line] for line in lines]
+                #         for cat, lines in categories.items()
+                #     }
+                #     for crop, categories in lines_by_region.items()
+                # },
+
                 "lines": {
-                    crop: {
-                        cat: [[round(float(a), 2) for a in line] for line in lines]
-                        for cat, lines in categories.items()
-                    }
-                    for crop, categories in lines_by_region.items()
+                    crop: [[round(float(a), 2) for a in line] for line in lines]
+                    for crop, lines in lines_by_region.items()
                 }
+
             }
             with open(json_filename, "w") as jf:
                 json.dump(ann, jf, indent=4)
