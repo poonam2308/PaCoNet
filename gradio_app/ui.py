@@ -1,7 +1,8 @@
 import gradio as gr
 
 # --- Import your processing modules ---
-from .detect_crop_tab import process_input, update_coords_for_image, save_selected_axes, toggle_ui
+from .detection_tab import process_input, update_coordinate_selector, update_coords_for_image, save_selected_axes, \
+    toggle_params
 from .cropping_tab import crop_and_return_images, get_base_overlay_with_axes, generate_cropping_overlay, \
     save_selected_images, select_crop_from_gallery
 from .separation_tab import run_category_separation, generate_category_overlay, select_category_from_gallery
@@ -21,20 +22,10 @@ def build_ui():
                 with gr.Row():
                     file_input = gr.File(file_types=[".png", ".jpg", ".jpeg"], file_count="multiple",
                                          label="Upload Image(s)")
-                with gr.Row():
-                    use_json_radio = gr.Radio(
-                        choices=["Yes", "No"],
-                        value="Yes",
-                        label="Do you have Metadata JSONs?"
-                    )
-                with gr.Row(visible=True) as json_upload_group:
-                    json_input = gr.File(
-                        file_types=[".json"],
-                        file_count="multiple",
-                        label="Upload Metadata JSONs (one per image)"
-                    )
+                    json_input = gr.File(file_types=[".json"], file_count="single",
+                                         label="Upload Metadata JSON (optional)")
 
-                with gr.Group(visible=False) as param_group:
+                with gr.Group(visible=True) as param_group:
                     aperture = gr.Slider(3, 7, step=2, value=5, label="Canny Aperture Size")
                     min_len = gr.Slider(10, 150, step=2, value=20, label="Min Line Length")
                     max_gap = gr.Slider(1, 50, step=1, value=1, label="Max Line Gap")
@@ -44,15 +35,14 @@ def build_ui():
                     right_thresh_slider = gr.Slider(0.8, 1.0, step=0.01, value=0.95,
                                                     label="Right Edge Ignore Threshold (fraction)")
 
-                run_btn = gr.Button("Show")
+                json_input.change(toggle_params, inputs=json_input, outputs=param_group)
+                run_btn = gr.Button("Run Detection")
                 img_output = gr.Gallery(label="Detected Images with Lines", columns=[3], height=400)
-
-                with gr.Group(visible=False) as coord_group:
-                    with gr.Row():
-                        image_selector = gr.Dropdown(choices=[], label="Select Image for Coordinate Filtering")
-                        coord_selector = gr.CheckboxGroup(choices=[], label="Select X-Coordinates to Keep")
-                        save_coords_btn = gr.Button("💾 Save Selected Coordinates")
-                        save_coords_status = gr.Textbox(label="Save Status", interactive=False)
+                with gr.Row():
+                    image_selector = gr.Dropdown(choices=[], label="Select Image for Coordinate Filtering")
+                    coord_selector = gr.CheckboxGroup(choices=[], label="Select X-Coordinates to Keep")
+                    save_coords_btn = gr.Button("💾 Save Selected Coordinates")
+                    save_coords_status = gr.Textbox(label="Save Status", interactive=False)
 
             # --- TAB 2: Cropping ---
             with gr.TabItem("2️⃣ Cropping") as cropping_tab:
@@ -160,33 +150,23 @@ def build_ui():
             log_file_output = gr.File(label="Downloadable Session Summary")
 
         # --- Hook up logic ---
-        # --- Hook up logic ---
-        run_btn.click(
-            fn=process_input,
-            inputs=[file_input, json_input, aperture, min_len, max_gap, min_spacing_slider, left_thresh_slider,
-                    right_thresh_slider],
-            outputs=[img_output]
+        run_btn.click(fn=process_input,
+                      inputs=[file_input, json_input, aperture, min_len, max_gap, min_spacing_slider, left_thresh_slider,
+                              right_thresh_slider],
+                      outputs=[img_output]
+                      ).then(
+            fn=update_coordinate_selector,
+            inputs=[],
+            outputs=[image_selector, coord_selector]
         )
 
-        # Toggle UI groups depending on "Do you have Metadata JSONs?"
-        use_json_radio.change(
-            toggle_ui,
-            inputs=[use_json_radio],
-            outputs=[json_upload_group, param_group, coord_group]
-        )
+        image_selector.change(fn=update_coords_for_image,
+                              inputs=[image_selector],
+                              outputs=[coord_selector])
 
-        # Only used when JSONs are NOT provided
-        image_selector.change(
-            fn=update_coords_for_image,
-            inputs=[image_selector],
-            outputs=[coord_selector]
-        )
-
-        save_coords_btn.click(
-            fn=save_selected_axes,
-            inputs=[image_selector, coord_selector],
-            outputs=[save_coords_status]
-        )
+        save_coords_btn.click(fn=save_selected_axes,
+                              inputs=[image_selector, coord_selector],
+                              outputs=[save_coords_status])
 
         crop_btn.click(
             fn=crop_and_return_images,
