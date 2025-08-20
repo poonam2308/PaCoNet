@@ -1,19 +1,16 @@
 # axes_crop.py
 import xml.etree.ElementTree as ET
-import os
-import io
+import os, io, json
 import cairosvg
 from PIL import Image, ImageDraw
-import math
 from typing import Iterable, List
-
 from pc.plot_gen.coordinate_extraction import CoordinateExtraction
+from pc.plot_gen.plot_utils import round_half_up
 
-def round_half_up(x):
-    """Round halves up (0.5 -> 1, -0.5 -> 0) for consistent pixel placement."""
-    return int(math.floor(float(x) + 0.5))
 
 class CroppingProcessor:
+    def __init__(self ):
+        self.extractor = CoordinateExtraction(normalize_y_to_plot=False)
 
     def _draw_highlights(self, pil_image, x_coords: Iterable[float], height: int, line_width=0.5, radius=7):
         annotated = pil_image.copy()
@@ -22,9 +19,7 @@ class CroppingProcessor:
             x_int = round_half_up(float(x))
             if x_int < 0 or x_int >= annotated.width:
                 continue
-            # draw axis guide
             draw.line([(x_int, 0), (x_int, height - 1)], fill=(0, 255, 0), width=line_width)
-            # bottom marker
             r = radius
             cx, cy = x_int, height - 1
             draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(0, 255, 0), width=line_width)
@@ -42,47 +37,58 @@ class CroppingProcessor:
     def _read_svg_size(self, svg_path: str, raster_fallback_w: int, raster_fallback_h: int):
         tree = ET.parse(svg_path)
         root = tree.getroot()
-        w = self._to_int_px(root.attrib.get('width'),  raster_fallback_w)
+        w = self._to_int_px(root.attrib.get('width'), raster_fallback_w)
         h = self._to_int_px(root.attrib.get('height'), raster_fallback_h)
         return w, h
 
     def create_crops(self, img_dir: str, output_base_dir: str, eps: float = 0.75):
-        """
-        Converts SVG plots to PNGs, saves a highlighted PNG showing vertical axes,
-        then crops strictly between consecutive axes and saves the crops.
-        """
         os.makedirs(output_base_dir, exist_ok=True)
-        svg_files = sorted([f for f in os.listdir(img_dir) if f.lower().endswith('.svg')])
+        files = sorted(os.listdir(img_dir))
 
-        for svg_name in svg_files:
-            svg_path = os.path.join(img_dir, svg_name)
-            base, _ = os.path.splitext(svg_name)
+        for fname in files:
+            ext = os.path.splitext(fname)[1].lower()
+            fpath = os.path.join(img_dir, fname)
+            base, _ = os.path.splitext(fname)
 
-            # Render SVG to PNG (bytes) and open with PIL
-            png_bytes = cairosvg.svg2png(url=svg_path)
-            img = Image.open(io.BytesIO(png_bytes)).convert("RGB")
+            if ext == ".svg":
+                # --- SVG path ---
+                svg_path = fpath
+                png_bytes = cairosvg.svg2png(url=svg_path)
+                img = Image.open(io.BytesIO(png_bytes)).convert("RGB")
 
-            # SVG's own width/height (fallback to raster size)
-            svg_w, svg_h = self._read_svg_size(svg_path, img.width, img.height)
+                svg_w, svg_h = self._read_svg_size(svg_path, img.width, img.height)
+                x_coords = self.extractor.extract_vertical_axes(svg_path)
+                x_coords = [x for x in x_coords if 0 <= x < svg_w]
 
-            # 1) Extract vertical axes (deduped)
-            extractor = CoordinateExtraction(normalize_y_to_plot=False)
-            x_coords = extractor.extract_vertical_axes(svg_path)
-            x_coords = [x for x in x_coords if 0 <= x < svg_w]
-            # print(x_coords)
-            #
-            # # 2) Save a debug-highlighted image
-            # highlighted = self._draw_highlights(img, x_coords, svg_h, line_width=2, radius=7)
-            # highlighted.save(os.path.join(output_base_dir, f"{base}_highlighted.png"))
-            #
-            # # 3) Crop between consecutive axes, skipping 1px inside each axis
-            # pad_in = 0.0
-            xs_px: List[int] = [round_half_up(x) for x in x_coords]
-            xs_px = sorted(set(xs_px))
+                xs_px: List[int] = sorted(set(round_half_up(x) for x in x_coords))
+
+            elif ext in [".png", ".jpg", ".jpeg"]:
+                # --- Raster + metadata JSON ---
+                img = Image.open(fpath).convert("RGB")
+                json_path = os.path.join(img_dir, f"{base}.json")
+                if not os.path.exists(json_path):
+                    print(f" No JSON found for {fname}, skipping.")
+                    continue
+
+                with open(json_path, "r") as f:
+                    data = json.load(f)
+
+                if "vertical_axes" not in data:
+                    print(f"JSON for {fname} missing 'vertical_axes', skipping.")
+                    continue
+
+                x_coords = data["vertical_axes"]
+                xs_px: List[int] = sorted(set(round_half_up(x) for x in x_coords))
+                svg_h = img.height
+
+            else:
+                continue  # skip unknown file types
+
+            # --- Crop between consecutive axes ---
             for i in range(len(xs_px) - 1):
                 l = max(0, xs_px[i])
                 r = min(img.width, xs_px[i + 1])
                 if r <= l:
                     continue
-                crop = img.crop((l, 0, r, svg_h))
+                crop = img.crop((l, 0, r, img.height))
                 crop.save(os.path.join(output_base_dir, f"{base}_crop_{i+1}.png"))

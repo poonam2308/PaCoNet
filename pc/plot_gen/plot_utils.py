@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 import numpy as np
 import colorsys
@@ -69,3 +71,7 @@ def safe_join(base_dir, file_path):
     if not os.path.isabs(file_path) and not os.path.dirname(file_path):
         return os.path.join(base_dir, file_path)
     return file_path
+
+def round_half_up(x):
+    """Round halves up (0.5 -> 1, -0.5 -> 0) for consistent pixel placement."""
+    return int(math.floor(float(x) + 0.5))

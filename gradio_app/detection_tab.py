@@ -62,10 +62,6 @@ def update_coordinate_selector():
     x_coords = coord_map[first_img]
     return gr.update(choices=list(coord_map.keys()), value=first_img), gr.update(choices=x_coords, value=x_coords)
 
-def update_coords_for_image(image_name):
-    coord_map = SESSION.get("all_detected_coords", {})
-    coords = coord_map.get(image_name, [])
-    return gr.update(choices=coords, value=coords)
 
 def process_input(file_or_folder, json_file, aperture_size, min_line_length, max_line_gap,
                   min_spacing, left_edge_thresh, right_edge_thresh):
