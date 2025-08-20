@@ -4,6 +4,7 @@ paths:
   input_dir: "data/raw_synthetic/training_data/data_5k"
 
   # Multi-category full plots
+  m_plots_svg:  "data/synthetic_plots/multi_cat/training/svgs"
   m_plots: "data/synthetic_plots/multi_cat/training/images"
   m_axes_file: "data/synthetic_plots/multi_cat/training/axes_annotations.json"
   m_dist_file: "data/synthetic_plots/multi_cat/training/dist_annotations.json"

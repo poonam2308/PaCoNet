@@ -10,6 +10,7 @@ paths:
   s_crops: "data/synthetic_plots/single_cat/testing/s_crops/images"
 
   # Multi-category
+  m_plots_svg:  "data/synthetic_plots/multi_cat/testing/svgs"
   m_plots: "data/synthetic_plots/multi_cat/testing/images"
   m_dist_file: "data/synthetic_plots/multi_cat/testing/dist_annotations.json"
   m_axes_file: "data/synthetic_plots/multi_cat/testing/axes_annotations.json"

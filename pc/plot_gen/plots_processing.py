@@ -55,6 +55,7 @@ class PlotsPipeline:
         print("Generating SVG plots...")
         input_dir = self.paths['input_dir']
         plot_dir = self.paths['m_plots']
+        svg_dir = self.paths['m_plots_svg']
         gt_plot_dir = self.paths['m_gt_plots']
         gt_plot_dir_cat = self.paths['m_gt_plots_cat']
         gt_plot_dir_cat_ntl = self.paths['m_gt_plots_cat_ntl']
@@ -65,7 +66,7 @@ class PlotsPipeline:
         mcat.generate_batch(
             input_dir=input_dir,
             output_dir=plot_dir,
-            save_png = True,
+            svg_dir = svg_dir,
             num_files=self.args.num_files,
             background_distribution=bg_dist,
             grid_distribution=grid_dist,
