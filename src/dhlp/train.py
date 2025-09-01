@@ -29,6 +29,7 @@ from docopt import docopt
 import scipy.io as sio
 import src.dhlp.lcnn
 from src.dhlp.lcnn.config import C, M
+from src.dhlp.lcnn.trainer import Trainer
 from src.dhlp.lcnn.datasets import WireframeDataset, collate
 from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
@@ -164,7 +165,7 @@ def main():
     print("outdir:", outdir)
 
     try:
-        trainer = src.dhlp.lcnn.trainer.Trainer(
+        trainer = Trainer(
             device=device,
             model=model,
             optimizer=optim,
