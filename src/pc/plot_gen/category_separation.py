@@ -147,7 +147,7 @@ class CategorySeparator:
         hue_filtered = hue[mask]
 
         hist, bins = np.histogram(hue_filtered, bins=180, range=(0, 180))
-        peaks, _ = find_peaks(hist, height=np.max(hist) * 0.07, distance=5)
+        peaks, _ = find_peaks(hist, height=np.max(hist) * 0.05, distance=10)
 
         masks = []
         for p in peaks:
