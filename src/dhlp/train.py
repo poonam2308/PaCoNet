@@ -12,6 +12,8 @@ Options:
    -d --devices <devices>          Comma seperated GPU devices [default: 0]
    -i --identifier <identifier>    Folder identifier [default: default-identifier]
 """
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import datetime
 import glob
