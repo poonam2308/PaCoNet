@@ -76,7 +76,7 @@ class CategorySeparator:
 
         return output_data, color_data
 
-    def process_single_image(self, image_path, json_path, output_dir, method="hist", **kwargs):
+    def process_single_image(self, image_path, json_path, output_dir, method="hist",save_per_file=False, **kwargs):
         os.makedirs(output_dir, exist_ok=True)
         image = cv2.imread(image_path)
 
@@ -119,17 +119,18 @@ class CategorySeparator:
 
         cat_lines_data, color_data = self._process_masks(image_path, image, masks, lines, output_dir)
 
-        # 🔹 New: save JSONs for a single image
-        base_name = Path(image_path).stem
-        with open(os.path.join(output_dir, f"{base_name}_output.json"), "w") as f:
-            json.dump(cat_lines_data, f, indent=4)
-        with open(os.path.join(output_dir, f"{base_name}_colors.json"), "w") as f:
-            json.dump(color_data, f, indent=4)
+        # 🔹 Save JSONs
+        if save_per_file:  # 🔹 only save if flag is True
+            base_name = Path(image_path).stem
+            with open(os.path.join(output_dir, f"{base_name}_output.json"), "w") as f:
+                json.dump(cat_lines_data, f, indent=4)
+            with open(os.path.join(output_dir, f"{base_name}_colors.json"), "w") as f:
+                json.dump(color_data, f, indent=4)
 
         return cat_lines_data, color_data
 
     def process_single_image_enhanced(self, image_path, json_path, output_dir,
-                                      bg_method=None, sat_thresh=50,
+                                      bg_method=None, sat_thresh=50, save_per_file=False,
                                       show_plot=False):
         os.makedirs(output_dir, exist_ok=True)
         img = Image.open(image_path).convert("RGB")
@@ -173,11 +174,12 @@ class CategorySeparator:
             plt.show()
 
         # 🔹 Save JSONs
-        base_name = Path(image_path).stem
-        with open(os.path.join(output_dir, f"{base_name}_output.json"), "w") as f:
-            json.dump(cat_lines_data, f, indent=4)
-        with open(os.path.join(output_dir, f"{base_name}_colors.json"), "w") as f:
-            json.dump(color_data, f, indent=4)
+        if save_per_file:  # 🔹 only save if flag is True
+            base_name = Path(image_path).stem
+            with open(os.path.join(output_dir, f"{base_name}_output.json"), "w") as f:
+                json.dump(cat_lines_data, f, indent=4)
+            with open(os.path.join(output_dir, f"{base_name}_colors.json"), "w") as f:
+                json.dump(color_data, f, indent=4)
 
         return cat_lines_data, color_data
 
