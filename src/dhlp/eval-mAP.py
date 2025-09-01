@@ -20,8 +20,8 @@ import os.path as osp
 import numpy as np
 from docopt import docopt
 
-import lcnn.models
-from lcnn.metric import mAPJ, post_jheatmap
+import src.dhlp.lcnn.models
+from src.dhlp.lcnn.metric import mAPJ, post_jheatmap
 
 
 # GT = "data/wireframe/valid/*.npz"

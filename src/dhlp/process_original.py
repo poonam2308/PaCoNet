@@ -31,13 +31,13 @@ import skimage.io
 import matplotlib.pyplot as plt
 from docopt import docopt
 import scipy.io as sio
-import lcnn
-from lcnn.utils import recursive_to
-from lcnn.config import C, M
-from lcnn.datasets import WireframeDataset, collate
-from lcnn.models.line_vectorizer import LineVectorizer
-from lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
-from lcnn.models.HT import hough_transform
+import src.dhlp.lcnn
+from src.dhlp.lcnn.utils import recursive_to
+from src.dhlp.lcnn.config import C, M
+from src.dhlp.lcnn.datasets import WireframeDataset, collate
+from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
+from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
+from src.dhlp.lcnn.models.HT import hough_transform
 
 
 def main():

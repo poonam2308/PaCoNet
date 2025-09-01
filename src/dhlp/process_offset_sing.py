@@ -22,13 +22,13 @@ import numpy as np
 import torch
 from docopt import docopt
 import scipy.io as sio
-import lcnn
-from lcnn.utils import recursive_to
-from lcnn.config import C, M
-from lcnn.datasets import WireframeDataset, collate
-from lcnn.models.line_vectorizer import LineVectorizer
-from lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
-from lcnn.models.HT import hough_transform
+import src.dhlp.lcnn
+from src.dhlp.lcnn.utils import recursive_to
+from src.dhlp.lcnn.config import C, M
+from src.dhlp.lcnn.datasets import WireframeDataset, collate
+from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
+from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
+from src.dhlp.lcnn.models.HT import hough_transform
 from process_utils import nearest_junction
 
 
@@ -65,7 +65,7 @@ def main():
     print('load vote_index', vote_index.shape)
 
     if M.backbone == "stacked_hourglass":
-        model = lcnn.models.hg(
+        model = src.dhlp.lcnn.models.hg(
             depth=M.depth,
             head=MultitaskHead,
             num_stacks=M.num_stacks,

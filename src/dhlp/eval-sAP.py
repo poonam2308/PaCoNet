@@ -21,8 +21,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from docopt import docopt
 
-import lcnn.utils
-import lcnn.metric
+import src.dhlp.lcnn.utils
+import src.dhlp.lcnn.metric
 
 # GT = "data/pcwireframe_test/test/*.npz"
 # MASK_PATH = "data/pcwireframe_test/masks/*.npz"
