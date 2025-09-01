@@ -1,0 +1,153 @@
+#!/usr/bin/env python
+"""Process Huang's wireframe dataset for L-CNN network
+Usage:
+    dataset/wireframe.py <src> <dst>
+    dataset/wireframe.py (-h | --help )
+
+Examples:
+    python dataset/wireframe.py /datadir/wireframe data/wireframe
+
+Arguments:
+    <src>                Original data directory of Huang's wireframe dataset
+    <dst>                Directory of the output
+
+Options:
+   -h --help             Show this screen.
+"""
+
+import os
+import sys
+import json
+from itertools import combinations
+
+import cv2
+import numpy as np
+import skimage.draw
+from docopt import docopt
+from scipy.ndimage import zoom
+
+try:
+    sys.path.append("")
+    sys.path.append("..")
+    from src.dhlp.lcnn.utils import parmap
+except Exception:
+    raise
+
+
+def inrange(v, shape):
+    return 0 <= v[0] < shape[0] and 0 <= v[1] < shape[1]
+
+
+def to_int(x):
+    return tuple(map(int, x))
+
+
+def save_heatmap(prefix, image, lines):
+    im_rescale = (512, 512)
+    heatmap_scale = (128, 128)
+
+    fy, fx = heatmap_scale[1] / image.shape[0], heatmap_scale[0] / image.shape[1]
+    jmap = np.zeros((1,) + heatmap_scale, dtype=float)
+    joff = np.zeros((1, 2) + heatmap_scale, dtype=float)
+    lmap = np.zeros(heatmap_scale, dtype=float)
+
+    lines[:, :, 0] = np.clip(lines[:, :, 0] * fx, 0, heatmap_scale[0] - 1e-4)
+    lines[:, :, 1] = np.clip(lines[:, :, 1] * fy, 0, heatmap_scale[1] - 1e-4)
+    lines = lines[:, :, ::-1]
+
+    junc = []
+    jids = {}
+
+    def jid(jun):
+        jun = tuple(jun[:2])
+        if jun in jids:
+            return jids[jun]
+        jids[jun] = len(junc)
+        junc.append(np.array(jun + (0,)))
+        return len(junc) - 1
+
+    lnid = []
+    lpos, lneg = [], []
+    for v0, v1 in lines:
+        lnid.append((jid(v0), jid(v1)))
+        lpos.append([junc[jid(v0)], junc[jid(v1)]])
+
+        vint0, vint1 = to_int(v0), to_int(v1)
+        jmap[0][vint0] = 1
+        jmap[0][vint1] = 1
+        rr, cc, value = skimage.draw.line_aa(*to_int(v0), *to_int(v1))
+        lmap[rr, cc] = np.maximum(lmap[rr, cc], value)
+
+    for v in junc:
+        vint = to_int(v[:2])
+        joff[0, :, vint[0], vint[1]] = v[:2] - vint - 0.5
+
+    llmap = zoom(lmap, [0.5, 0.5])
+    lineset = set([frozenset(l) for l in lnid])
+    for i0, i1 in combinations(range(len(junc)), 2):
+        if frozenset([i0, i1]) not in lineset:
+            v0, v1 = junc[i0], junc[i1]
+            vint0, vint1 = to_int(v0[:2] / 2), to_int(v1[:2] / 2)
+            rr, cc, value = skimage.draw.line_aa(*vint0, *vint1)
+            lneg.append([v0, v1, i0, i1, np.average(np.minimum(value, llmap[rr, cc]))])
+
+    assert len(lneg) != 0
+    lneg.sort(key=lambda l: -l[-1])
+
+    junc = np.array(junc, dtype=float)
+    Lpos = np.array(lnid, dtype=int)
+    Lneg = np.array([l[2:4] for l in lneg][:4000], dtype=int)
+    lpos = np.array(lpos, dtype=float)
+    lneg = np.array([l[:2] for l in lneg[:2000]], dtype=float)
+
+    image = cv2.resize(image, im_rescale)
+
+    np.savez_compressed(
+        f"{prefix}_label.npz",
+        aspect_ratio=image.shape[1] / image.shape[0],
+        jmap=jmap,  # [J, H, W]    Junction heat map
+        joff=joff,  # [J, 2, H, W] Junction offset within each pixel
+        lmap=lmap,  # [H, W]       Line heat map with anti-aliasing
+        junc=junc,  # [Na, 3]      Junction coordinate
+        Lpos=Lpos,  # [M, 2]       Positive lines represented with junction indices
+        Lneg=Lneg,  # [M, 2]       Negative lines represented with junction indices
+        lpos=lpos,  # [Np, 2, 3]   Positive lines represented with junction coordinates
+        lneg=lneg,  # [Nn, 2, 3]   Negative lines represented with junction coordinates
+    )
+    cv2.imwrite(f"{prefix}.png", image)
+
+def main():
+    args = docopt(__doc__)
+    data_root = args["<src>"]
+    data_output = args["<dst>"]
+
+    os.makedirs(data_output, exist_ok=True)
+    for batch in ["test", "valid"]:
+        anno_file = os.path.join(data_root, f"{batch}.json")
+
+        with open(anno_file, "r") as f:
+            dataset = json.load(f)
+
+        def handle(data):
+            im = cv2.imread(os.path.join(data_root, "images", data["filename"]))
+            if im is None:
+                print(f"Warning: Unable to read image {data['filename']}. Skipping.")
+                return
+
+            prefix = data["filename"].split(".")[0]
+            print(prefix)
+
+            lines = np.array(data["lines"]).reshape(-1, 2, 2)
+            os.makedirs(os.path.join(data_output, batch), exist_ok=True)
+
+            lines0 = lines.copy()
+
+            path = os.path.join(data_output, batch, prefix)
+            save_heatmap(f"{path}_0", im[::, ::], lines0)
+
+            print("Finishing", os.path.join(data_output, batch, prefix))
+        parmap(handle, dataset, 16)
+
+
+if __name__ == "__main__":
+    main()
