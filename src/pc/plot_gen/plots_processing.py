@@ -105,7 +105,7 @@ class PlotsPipeline:
                 output_dir=self.paths['m_cluster_sep_plots'],
                 method='hist'
             )
-
+    def split_data(self):
         # Optionally split into train/val
         if 'm_color_all_json' in self.paths:
             split_data(
