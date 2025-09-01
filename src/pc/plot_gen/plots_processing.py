@@ -5,13 +5,11 @@ import os
 import numpy as np
 import torch
 
-
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))  # 2 levels up from this file
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 
+
 from src.pc.config.config import get_args, load_config
-from src.pc.plot_gen.single_cat import SingleCatPCPGenerator
 
 import src.pc.data_gen.data_generator as dgen
 from src.pc.data_gen.real_dist_info import extract_distributions_from_excel, extract_dist_plots_from_excel
