@@ -14,21 +14,27 @@ def run_category_separation(method, top_k):
     """
     input_dir = SESSION["selected_dir"]
     output_dir = Path("outputs/reals/separated")
-    output_json = output_dir / "separation_data.json"
-    SESSION["dominant_colors_json"] = output_json
+    # point to the correct outputs from process_batch
+    SESSION["all_data_json"] = output_dir / "all_data.json"
+    SESSION["dominant_colors_json"] = output_dir / "all_colors.json"
 
     if not input_dir.exists() or not any(input_dir.iterdir()):
         return [], "No selected crops found."
 
     sep = CategorySeparator()
 
-    # For your case, match UI dropdowns with methods in category_separation.py
-    if method == "peaks":
-        sep.process_batch(input_dir, SESSION["line_json"], output_dir, method="hist_enhanced", sat_thresh=50)
-    elif method == "topk":
-        sep.process_batch(input_dir, SESSION["line_json"], output_dir, method="hist", top_k=top_k)
+    if SESSION.get("metadata_json"):
+        meta_dir = Path(SESSION["metadata_json"]).parent
     else:
-        sep.process_batch(input_dir, SESSION["line_json"], output_dir, method=method)
+        meta_dir = Path(SESSION["line_json"]).parent
+    #meta_dir = SESSION["metadata_json"].parent if SESSION.get("metadata_json") else SESSION["line_json"].parent
+
+    if method == "peaks":
+        sep.process_batch(input_dir, meta_dir, output_dir, method="hist_enhanced", sat_thresh=50)
+    elif method == "topk":
+        sep.process_batch(input_dir, meta_dir, output_dir, method="hist", top_k=top_k)
+    else:
+        sep.process_batch(input_dir, meta_dir, output_dir, method=method)
 
     # Now collect output images
     image_items, choices = [], []

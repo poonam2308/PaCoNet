@@ -9,7 +9,8 @@ from .separation_tab import run_category_separation, generate_category_overlay, 
 from .denoising_tab import run_denoising, generate_denoised_overlay, select_denoised_from_gallery
 from .prediction_tab import trigger_line_prediction_all, generate_predicted_overlay_pre, \
     generate_predicted_overlay_post, select_prediction_from_gallery_pre, select_prediction_from_gallery_post, \
-    generate_predicted_overlay_mask, generate_predicted_overlay_mask_post
+    generate_predicted_overlay_mask, generate_predicted_overlay_mask_post, select_prediction_from_gallery_mask, \
+    select_prediction_from_gallery_mask_post
 from .stitching_tab import run_stitching_from_prediction
 from .session import save_session_log, SESSION
 
@@ -40,11 +41,11 @@ def build_ui():
                 json_input.change(toggle_params, inputs=json_input, outputs=param_group)
                 run_btn = gr.Button("Run Detection")
                 img_output = gr.Gallery(label="Detected Images with Lines", columns=[3], height=400)
-                with gr.Row():
-                    image_selector = gr.Dropdown(choices=[], label="Select Image for Coordinate Filtering")
-                    coord_selector = gr.CheckboxGroup(choices=[], label="Select X-Coordinates to Keep")
-                    save_coords_btn = gr.Button("💾 Save Selected Coordinates")
-                    save_coords_status = gr.Textbox(label="Save Status", interactive=False)
+                # with gr.Row():
+                #     image_selector = gr.Dropdown(choices=[], label="Select Image for Coordinate Filtering")
+                #     coord_selector = gr.CheckboxGroup(choices=[], label="Select X-Coordinates to Keep")
+                #     save_coords_btn = gr.Button("💾 Save Selected Coordinates")
+                #     save_coords_status = gr.Textbox(label="Save Status", interactive=False)
 
             # --- TAB 2: Cropping ---
             with gr.TabItem("2️⃣ Cropping") as cropping_tab:
@@ -171,23 +172,30 @@ def build_ui():
             log_file_output = gr.File(label="Downloadable Session Summary")
 
         # --- Hook up logic ---
-        run_btn.click(fn=process_input,
-                      inputs=[file_input, json_input, aperture, min_len, max_gap, min_spacing_slider, left_thresh_slider,
-                              right_thresh_slider],
-                      outputs=[img_output]
-                      ).then(
-            fn=update_coordinate_selector,
-            inputs=[],
-            outputs=[image_selector, coord_selector]
+        # run_btn.click(fn=process_input,
+        #               inputs=[file_input, json_input, aperture, min_len, max_gap, min_spacing_slider, left_thresh_slider,
+        #                       right_thresh_slider],
+        #               outputs=[img_output]
+        #               ).then(
+        #     fn=update_coordinate_selector,
+        #     inputs=[],
+        #     outputs=[image_selector, coord_selector]
+        # )
+        #
+        # image_selector.change(fn=update_coords_for_image,
+        #                       inputs=[image_selector],
+        #                       outputs=[coord_selector])
+        #
+        # save_coords_btn.click(fn=save_selected_axes,
+        #                       inputs=[image_selector, coord_selector],
+        #                       outputs=[save_coords_status])
+
+        run_btn.click(
+            fn=process_input,
+            inputs=[file_input, json_input, aperture, min_len, max_gap,
+                    min_spacing_slider, left_thresh_slider, right_thresh_slider],
+            outputs=[img_output]
         )
-
-        image_selector.change(fn=update_coords_for_image,
-                              inputs=[image_selector],
-                              outputs=[coord_selector])
-
-        save_coords_btn.click(fn=save_selected_axes,
-                              inputs=[image_selector, coord_selector],
-                              outputs=[save_coords_status])
 
         crop_btn.click(
             fn=crop_and_return_images,
@@ -280,11 +288,17 @@ def build_ui():
                 pred_overlay_img_mask_post,
             ]
         ).then(
-            fn=lambda: generate_predicted_overlay_pre([]),  # 👈 default: blurred-only pre overlay
+            fn=lambda: generate_predicted_overlay_pre([]),
             outputs=[pred_overlay_img_pre]
         ).then(
-            fn=lambda: generate_predicted_overlay_post([]),  # 👈 default: blurred-only post overlay
+            fn=lambda: generate_predicted_overlay_post([]),
             outputs=[pred_overlay_img]
+        ).then(
+            fn=lambda: generate_predicted_overlay_mask([]),
+            outputs=[pred_overlay_img_mask]
+        ).then(
+            fn=lambda: generate_predicted_overlay_mask_post([]),
+            outputs=[pred_overlay_img_mask_post]
         )
 
         pred_overlay_selection_pre.change(
@@ -316,10 +330,17 @@ def build_ui():
                                                 inputs=[pred_overlay_selection_mask_post],
                                                 outputs=[pred_overlay_img_mask_post])
 
-        svg_gallery_mask.select(fn=lambda evt: [SESSION.get("pred_image_to_json_mask", {}).keys()[evt.index]],
-                                inputs=[], outputs=[pred_overlay_selection_mask])
-        svg_gallery_mask_post.select(fn=lambda evt: [SESSION.get("pred_image_to_json_mask_post", {}).keys()[evt.index]],
-                                     inputs=[], outputs=[pred_overlay_selection_mask_post])
+        svg_gallery_mask.select(
+            fn=select_prediction_from_gallery_mask,
+            inputs=[],
+            outputs=[pred_overlay_selection_mask]
+        )
+
+        svg_gallery_mask_post.select(
+            fn=select_prediction_from_gallery_mask_post,
+            inputs=[],
+            outputs=[pred_overlay_selection_mask_post]
+        )
 
         run_stitch_btn.click(
             fn=run_stitching_from_prediction,

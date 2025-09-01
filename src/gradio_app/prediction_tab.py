@@ -287,3 +287,25 @@ def select_prediction_from_gallery_post(evt: gr.SelectData):
     if 0 <= evt.index < len(svg_files):
         return [svg_files[evt.index]]
     return []
+
+def select_prediction_from_gallery_mask(evt: gr.SelectData):
+    """
+    Map mask-gallery click to its filename for single-selection.
+    """
+    mapping = SESSION.get("pred_image_to_json_mask", {})
+    svg_files = sorted(mapping.keys())
+    if 0 <= evt.index < len(svg_files):
+        return [svg_files[evt.index]]
+    return []
+
+
+def select_prediction_from_gallery_mask_post(evt: gr.SelectData):
+    """
+    Map mask+post-gallery click to its filename for single-selection.
+    """
+    mapping = SESSION.get("pred_image_to_json_mask_post", {})
+    svg_files = sorted(mapping.keys())
+    if 0 <= evt.index < len(svg_files):
+        return [svg_files[evt.index]]
+    return []
+

@@ -51,7 +51,7 @@ def save_selected_axes(image_name, selected_coords):
         json.dump(filtered_data, f, indent=4)
 
     SESSION["line_json"] = filtered_path
-    return f"✅ Saved filtered coordinates for {image_name}."
+    return f"Saved filtered coordinates for {image_name}."
 
 def update_coordinate_selector():
     coord_map = SESSION.get("all_detected_coords", {})
@@ -101,12 +101,13 @@ def process_input(file_or_folder, json_file, aperture_size, min_line_length, max
         coords_map = extract_coords_from_metadata(json_file)
 
         # Save in the same structure as detection output (list of dicts)
-        converted = [{"image_name": name, "x_coordinates": coords}
+        converted = [{"image_name": name, "x_coordinates": [int(x) for x in coords]}
                      for name, coords in coords_map.items()]
 
         with open(SESSION["line_json"], "w") as f:
             json.dump(converted, f, indent=4)
 
+        SESSION["metadata_json"] = Path(json_file)
         SESSION["all_detected_coords"] = coords_map
         # 🔎 NEW: draw preview with vertical lines
         for img_name, coords in coords_map.items():
