@@ -20,3 +20,5 @@ cairocffi>=1.4.2
 vl-convert-python
 opencv-python
 tensorboardx
+docopt
+pyyaml
