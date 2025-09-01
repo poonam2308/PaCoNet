@@ -206,7 +206,7 @@ class CategorySeparator:
             all_output.extend(result)
             all_colors.extend(colors)
 
-        with open(os.path.join(output_dir, "all_output.json"), "w") as f:
+        with open(os.path.join(output_dir, "all_data.json"), "w") as f:
             json.dump(all_output, f, indent=4)
         with open(os.path.join(output_dir, "all_colors.json"), "w") as f:
             json.dump(all_colors, f, indent=4)
