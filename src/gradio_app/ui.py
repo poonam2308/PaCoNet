@@ -21,7 +21,7 @@ def build_ui():
 
         with gr.Tabs():
             # --- TAB 1: Line Detection ---
-            with gr.TabItem("1️⃣ Detection"):
+            with gr.TabItem("1️⃣ Detection & Cropping"):
                 with gr.Row():
                     file_input = gr.File(file_types=[".png", ".jpg", ".jpeg"], file_count="multiple",
                                          label="Upload Image(s)")
@@ -48,7 +48,8 @@ def build_ui():
                 #     save_coords_status = gr.Textbox(label="Save Status", interactive=False)
 
             # --- TAB 2: Cropping ---
-            with gr.TabItem("2️⃣ Cropping") as cropping_tab:
+            # with gr.TabItem("2️⃣ Cropping") as cropping_tab:
+                gr.Markdown("### ✂️ Cropping")
                 # original_input_img = gr.Image(label="Original Image", type="filepath")
                 crop_btn = gr.Button("Crop Images")
                 cropped_output = gr.Gallery(label="Cropped Images", columns=[4], height=300)
@@ -60,7 +61,7 @@ def build_ui():
                 crop_overlay_img = gr.Image(label="Overlay with Crop Highlight", type="filepath")
 
             # --- TAB 3: Category Separation ---
-            with gr.TabItem("3️⃣ Category Separation") as sep_tab:
+            with gr.TabItem("2️⃣ Category Separation") as sep_tab:
                 method_dropdown = gr.Dropdown(
                     choices=["peaks", "topk"],
                     value="topk",
@@ -83,7 +84,7 @@ def build_ui():
                                                 visible=True)
 
             # --- TAB 4: Denoising ---
-            with gr.TabItem("4️⃣ Denoising"):
+            with gr.TabItem("3️⃣ Denoising"):
                 run_denoise_btn = gr.Button("Run UNet Denoising", visible=False)
                 denoise_gallery = gr.Gallery(label="Denoised Images", columns=[4], visible=False)
                 denoise_status = gr.Textbox(label="Denoising Status", interactive=False, visible=False)
@@ -94,7 +95,7 @@ def build_ui():
                     visible=True
                 )
 
-            with gr.TabItem("5️⃣ Line Prediction"):
+            with gr.TabItem("4️⃣ Line Prediction"):
                 line_threshold_slider = gr.Slider(
                     minimum=0.0,
                     maximum=1.0,
@@ -154,7 +155,7 @@ def build_ui():
                 pred_overlay_img_mask_post = gr.Image(label="Overlay: Mask+Post Predicted Lines", type="filepath",
                                                       visible=True)
 
-            with gr.TabItem("6️⃣ Stitch & View CSVs"):
+            with gr.TabItem("5️⃣ Stitch & View CSVs"):
                 threshold_input = gr.Slider(minimum=1.0, maximum=50.0, step=1.0, value=10.0, label="Matching Threshold")
                 use_hsv_checkbox = gr.Checkbox(label="Use Custom HSV Colors", value=True)
                 run_stitch_btn = gr.Button("Run Stitching from Predictions")
