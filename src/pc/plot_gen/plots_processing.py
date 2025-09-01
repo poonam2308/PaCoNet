@@ -17,8 +17,8 @@ import src.pc.data_gen.data_generator as dgen
 from src.pc.data_gen.real_dist_info import extract_distributions_from_excel, extract_dist_plots_from_excel
 from src.pc.plot_gen.multi_cat import MultiCatPCPGenerator
 from src.pc.plot_gen.axes_crop import CroppingProcessor
-from src.pc.plot_gen.cat_sep import CategorySeparator
-from src.pc.plot_gen.plot_utils import split_json_data
+from src.pc.plot_gen.category_separation import CategorySeparator
+from src.pc.plot_gen.plot_utils import split_data
 
 class PlotsPipeline:
     def __init__(self):
@@ -89,48 +89,32 @@ class PlotsPipeline:
 
         print("cropped SVG plot and saved as pngs ...")
 
-    def separate_by_color(self, method='dbscan'):
+    def separate_by_color(self, method='hist_enhanced'):
         print(f"🎨 Separating by color using {method} method...")
-        sep = CategorySeparator(input_dir=self.paths['m_crops'], line_coords_json=self.paths['m_all_json'])
+        sep = CategorySeparator()
 
-        if method == 'hist':
-            sep.separate_by_hist_peaks(
+        if method == 'hist_enhanced':
+            sep.process_batch(
+                input_dir=self.paths['m_crops'],
+                json_dir=self.paths['m_plots'],
                 output_dir=self.paths['m_color_sep_plots'],
-                output_json=self.paths['m_color_all_json'],
-                color_json=self.paths['m_color_line_color']
+                method="hist_enhanced"
             )
-        elif method == 'dbscan':
-            sep.separate_by_dbscan(
+        elif method == 'hist':
+            sep.process_batch(
+                input_dir=self.paths['m_crops'],
+                json_dir=self.paths['m_plots'],
                 output_dir=self.paths['m_cluster_sep_plots'],
-                output_json=self.paths['m_cluster_all_json'],
-                color_json=self.paths['m_cluster_line_color']
+                method='hist'
             )
 
         # Optionally split into train/val
-        if 'm_cluster_train_json' in self.paths:
-            split_json_data(
-                input_json=self.paths['m_cluster_all_json'],
-                train_json=self.paths['m_cluster_train_json'],
-                valid_json=self.paths['m_cluster_valid_json']
+        if 'm_color_all_json' in self.paths:
+            split_data(
+                input_file=self.paths['m_color_all_json'],
+                train_file=self.paths['m_color_train_json'],
+                valid_file=self.paths['m_color_valid_json']
             )
-
-    def generate_plots_single(self):
-        print("Generating SVG plots...")
-        input_dir = self.paths['input_dir']
-        plot_dir = self.paths['s_plots']
-        scat = SingleCatPCPGenerator(show_labels=False)
-        scat.generate_batch(input_dir, plot_dir, self.args.num_files)
-        print("Generated SVG plots...")
-
-    def crop_plots_single(self):
-        print(" Cropping SVGs...")
-        cropper = CroppingProcessor()
-        cropper.create_crops(self.paths['s_plots'], self.paths['s_crops'])
-        print("cropped SVG plot and saved as pngs ...")
-
-    def run_single(self):
-        self.generate_plots_single()
-        self.crop_plots_single()
 
     def run_dist(self):
         self.generate_data_from_excel_distribution()

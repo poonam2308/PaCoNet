@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 from PIL import Image, ImageDraw, ImageFilter, ImageChops
 import gradio as gr
-from src.pc.plot_gen.category_separation import CategorySeparatorPerImage
+from src.pc.plot_gen.category_separation import CategorySeparator
 import json
 from .session import SESSION, SESSION_LOG
 
@@ -20,7 +20,7 @@ def run_category_separation(method, top_k):
     if not input_dir.exists() or not any(input_dir.iterdir()):
         return [], "No selected crops found."
 
-    sep = CategorySeparatorPerImage()
+    sep = CategorySeparator()
 
     # For your case, match UI dropdowns with methods in category_separation.py
     if method == "peaks":

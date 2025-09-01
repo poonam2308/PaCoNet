@@ -52,20 +52,29 @@ def extract_number(filename):
     match = re.search(r'(\d+)', filename)
     return int(match.group(1)) if match else 0
 
-def split_json_data(input_json, train_json, valid_json, train_ratio=0.8):
-    with open(input_json, 'r') as file:
-        data = json.load(file)
-    np.random.shuffle(data)
-    split_idx = int(len(data) * train_ratio)
+def split_data(input_file, train_file, valid_file, train_ratio=0.8):
+    with open(input_file, 'r') as f:
+        all_data = json.load(f)
+    # Group data by images (e.g., image_1, image_2)
+    grouped_data = {}
+    for item in all_data:
+        image_key = item['filename'].split('_crop')[0]
+        if image_key not in grouped_data:
+            grouped_data[image_key] = []
+        grouped_data[image_key].append(item)
 
-    train_data = data[:split_idx]
-    valid_data = data[split_idx:]
+    grouped_list = list(grouped_data.values())
+    np.random.shuffle(grouped_list)
 
-    with open(train_json, 'w') as train_file:
-        json.dump(train_data, train_file, indent=4)
+    train_size = int(len(grouped_list) * train_ratio)
+    train_data = [item for group in grouped_list[:train_size] for item in group]
+    valid_data = [item for group in grouped_list[train_size:] for item in group]
 
-    with open(valid_json, 'w') as valid_file:
-        json.dump(valid_data, valid_file, indent=4)
+    with open(train_file, 'w') as f:
+        json.dump(train_data, f, indent=4)
+
+    with open(valid_file, 'w') as f:
+        json.dump(valid_data, f, indent=4)
 
 def safe_join(base_dir, file_path):
     if not os.path.isabs(file_path) and not os.path.dirname(file_path):

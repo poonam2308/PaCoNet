@@ -34,6 +34,7 @@ paths:
   m_color_all_json: "data/synthetic_plots/multi_cat/training/color/all_data.json"
   m_color_train_json: "data/synthetic_plots/multi_cat/training/color/train.json"
   m_color_valid_json: "data/synthetic_plots/multi_cat/training/color/valid.json"
+
   m_color_all_json_merged: "data/synthetic_plots/multi_cat/training/color/merged_all_data.json"
   m_color_train_json_merged: "data/synthetic_plots/multi_cat/training/color/merged_train.json"
   m_color_valid_json_merged: "data/synthetic_plots/multi_cat/training/color/merged_valid.json"

@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from scipy.signal import find_peaks
 from sklearn.cluster import DBSCAN
 
-class CategorySeparatorPerImage:
+class CategorySeparator:
     def __init__(self):
         random.seed(0)
         np.random.seed(0)
@@ -182,7 +182,7 @@ class CategorySeparatorPerImage:
         return cat_lines_data, color_data
 
     def process_batch(self, input_dir, json_dir, output_dir,
-                      method="hist", **kwargs):
+                      method="hist_enhanced", **kwargs):
         os.makedirs(output_dir, exist_ok=True)
         all_output, all_colors = [], []
 
@@ -192,7 +192,7 @@ class CategorySeparatorPerImage:
 
             image_path = os.path.join(input_dir, f)
             base = re.sub(r'_crop_\d+', '', Path(f).stem)  # strip _crop_x
-            json_path = os.path.join(json_dir, base + ".json")
+            json_path = os.path.join(json_dir, base + ".json") # meta data json dir
 
             if method == "hist_enhanced":
                 result, colors = self.process_single_image_enhanced(
