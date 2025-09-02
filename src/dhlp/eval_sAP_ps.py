@@ -225,9 +225,9 @@ def process_multiple_files(gt_dir, pred_dir, mask_dir):
     return avg_map
 
 
-# Example Usage
-gt_dir = "clst/"
-pred_dir = "clst/clst_pred/"
-mask_dir = "clst/mask/"
-
-average_map = process_multiple_files(gt_dir, pred_dir, mask_dir)
+# # Example Usage
+# gt_dir = "clst/"
+# pred_dir = "clst/clst_pred/"
+# mask_dir = "clst/mask/"
+#
+# average_map = process_multiple_files(gt_dir, pred_dir, mask_dir)

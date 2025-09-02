@@ -31,7 +31,7 @@ import skimage.io
 import matplotlib.pyplot as plt
 from docopt import docopt
 import scipy.io as sio
-import src.dhlp.lcnn
+from src.dhlp import lcnn
 from src.dhlp.lcnn.utils import recursive_to
 from src.dhlp.lcnn.config import C, M
 from src.dhlp.lcnn.datasets import WireframeDataset, collate

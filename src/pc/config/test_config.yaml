@@ -1,6 +1,6 @@
 paths:
   # CSV-style input
-  real_dist_file:  "data/real_world_dis_info.xlsx"
+  real_dist_file:  "data/real_world_dis_info_rgb.xlsx"
   input_dir: "data/raw_synthetic/testing_data/data_1k"
 
   # Single-category plots

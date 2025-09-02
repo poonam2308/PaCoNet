@@ -1,4 +1,18 @@
 import pandas as pd
+import ast
+
+def parse_rgb(val):
+    if pd.isna(val):
+        return None
+    if isinstance(val, tuple):
+        return val
+    if isinstance(val, str):
+        try:
+            return tuple(ast.literal_eval(val))  # safely parse "(255, 255, 255)"
+        except:
+            return None
+    return None
+
 
 def extract_distributions_from_excel(excel_path):
 
@@ -43,6 +57,7 @@ def extract_dist_plots_from_excel(excel_path):
     df["Grid"] = df["Grid"].apply(to_bool)
     df["Presence of Ticks, labels"] = df["Presence of Ticks, labels"].apply(to_bool)
 
+    df["Background RGB"] = df["Background RGB"].apply(parse_rgb)
     background_distribution = df["Background RGB"].value_counts(normalize=True).sort_index()
     grid_distribution = df["Grid"].value_counts(normalize=True).sort_index()
     ticks_labels_distribution = df["Presence of Ticks, labels"].value_counts(normalize=True).sort_index()

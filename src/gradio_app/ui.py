@@ -13,6 +13,7 @@ from .prediction_tab import trigger_line_prediction_all, generate_predicted_over
     select_prediction_from_gallery_mask_post
 from .stitching_tab import run_stitching_from_prediction
 from .session import save_session_log, SESSION
+from .quantitative_tab import perform_quantitative_evaluation
 
 
 def build_ui():
@@ -168,9 +169,22 @@ def build_ui():
                 svg_viewer = gr.Image(label="Redesigned Plot", type="filepath")
                 csv_status = gr.Textbox(label="Status", interactive=False)
 
+
+            with gr.TabItem("6️⃣ Quantitative Evaluation"):
+                kind_dropdown = gr.Dropdown(
+                    choices=["pre", "mask", "post", "mask_post"],
+                    value="post",
+                    label="Prediction Variant"
+                )
+                eval_btn = gr.Button("Perform Quantitative Evaluation")
+                eval_status = gr.Textbox(label="Evaluation Status", interactive=False)
+                eval_score = gr.Number(label="Average mAP", interactive=False)
+
         with gr.Row():
             download_log_btn = gr.Button("📥 Download Session Log")
             log_file_output = gr.File(label="Downloadable Session Summary")
+
+
 
         # --- Hook up logic ---
         # run_btn.click(fn=process_input,
@@ -347,6 +361,12 @@ def build_ui():
             fn=run_stitching_from_prediction,
             inputs=[threshold_input, use_hsv_checkbox],
             outputs=[csv_list_output, svg_viewer, csv_status]
+        )
+
+        eval_btn.click(
+            fn=perform_quantitative_evaluation,
+            inputs=[kind_dropdown],
+            outputs=[eval_status, eval_score]
         )
 
         download_log_btn.click(fn=save_session_log, outputs=[log_file_output])

@@ -8,6 +8,7 @@ import skimage.transform
 import json
 import matplotlib.pyplot as plt
 from src.dhlp import lcnn
+from src.dhlp.dataset.gen_mask import generate_binary_mask
 from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
@@ -16,14 +17,6 @@ from src.dhlp.lcnn.config import C, M
 
 
 import cv2  # NEW
-
-def generate_binary_mask(image_path, white_thresh=250):
-    image = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    if image is None:
-        raise ValueError(f"Unable to read image: {image_path}")
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    mask = (image_gray < white_thresh).astype(np.uint8)  # 1=keep, 0=discard
-    return mask
 
 def line_passes_mask(a, b, mask, min_frac=0.6, samples=50):
     """

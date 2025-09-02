@@ -111,10 +111,18 @@ class MultiCatPCPGenerator:
             stroke=None
         )
 
-        if background_value is not None and int(background_value) < 255:
-            background_rgb = f"rgb({background_value},{background_value},{background_value})"
-            chart = chart.configure(background=background_rgb)
+        # if background_value is not None and int(background_value) < 255:
+        #     background_rgb = f"rgb({background_value},{background_value},{background_value})"
+        #     chart = chart.configure(background=background_rgb)
 
+        if background_value is not None:
+            if isinstance(background_value, (tuple, list)) and len(background_value) == 3:
+                r, g, b = background_value
+                background_rgb = f"rgb({r},{g},{b})"
+            else:  # fallback for legacy numeric values
+                v = int(background_value)
+                background_rgb = f"rgb({v},{v},{v})"
+            chart = chart.configure(background=background_rgb)
 
         base, _ = os.path.splitext(filename)
         basename = os.path.basename(base)
@@ -139,11 +147,11 @@ class MultiCatPCPGenerator:
                 str(cat): hsv_to_rgb(hsv["h"], hsv["s"], hsv["v"])
                 for cat, hsv in category_hsv_map.items()
             }
-            # lines_by_region = self.extractor.extract_line_coordinates_by_category(
-            #     svg_filename, category_colors=rgb_category_colors
-            # )["lines"]
+            lines_by_region = self.extractor.extract_line_coordinates_by_category(
+                svg_filename, category_colors=rgb_category_colors
+            )["lines"]
 
-            lines_by_region = self.extractor.extract_line_coordinates(svg_filename)["lines"]
+            # lines_by_region = self.extractor.extract_line_coordinates(svg_filename)["lines"]
 
             ann = {
                 "filename": basename + ".png",
@@ -156,18 +164,18 @@ class MultiCatPCPGenerator:
                     }
                     for cat, hsv in category_hsv_map.items()
                 },
-                # "lines": {
-                #     crop: {
-                #         cat: [[round(float(a), 2) for a in line] for line in lines]
-                #         for cat, lines in categories.items()
-                #     }
-                #     for crop, categories in lines_by_region.items()
-                # },
-
                 "lines": {
-                    crop: [[round(float(a), 2) for a in line] for line in lines]
-                    for crop, lines in lines_by_region.items()
-                }
+                    crop: {
+                        cat: [[round(float(a), 2) for a in line] for line in lines]
+                        for cat, lines in categories.items()
+                    }
+                    for crop, categories in lines_by_region.items()
+                },
+
+                # "lines": {
+                #     crop: [[round(float(a), 2) for a in line] for line in lines]
+                #     for crop, lines in lines_by_region.items()
+                # }
 
             }
             with open(json_filename, "w") as jf:
@@ -249,8 +257,17 @@ class MultiCatPCPGenerator:
                 stroke=None
             )
 
-            if background_value is not None and int(background_value) < 255:
-                background_rgb = f"rgb({background_value},{background_value},{background_value})"
+            # if background_value is not None and int(background_value) < 255:
+            #     background_rgb = f"rgb({background_value},{background_value},{background_value})"
+            #     chart = chart.configure(background=background_rgb)
+
+            if background_value is not None:
+                if isinstance(background_value, (tuple, list)) and len(background_value) == 3:
+                    r, g, b = background_value
+                    background_rgb = f"rgb({r},{g},{b})"
+                else:  # fallback for legacy numeric values
+                    v = int(background_value)
+                    background_rgb = f"rgb({v},{v},{v})"
                 chart = chart.configure(background=background_rgb)
 
             chart.save(output_filename)
@@ -335,7 +352,8 @@ class MultiCatPCPGenerator:
             image_annotation = {
                 'image_name': file_name,
                 'image_style': {
-                    'background_rgb': int(background_value) if background_value is not None else None,
+                    # 'background_rgb': int(background_value) if background_value is not None else None,
+                    'background_rgb': background_value if background_value is not None else None,
                     'grid': grid_on,
                     'ticks_labels': show_ticks_labels
                 },

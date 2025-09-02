@@ -1,4 +1,6 @@
 import os, re, json
+
+import numpy as np
 from PIL import ImageFilter, ImageDraw, Image, ImageChops
 from pathlib import Path
 from src.dhlp.line_prediction import run_line_prediction_on_images_all, run_line_prediction_on_images_mask
@@ -95,6 +97,19 @@ def trigger_line_prediction_all(score_threshold):
 
     SESSION_LOG["inputs"]["line_score_threshold"] = score_threshold
     SESSION_LOG["steps"].append("Line Prediction Completed (4 variants)")
+
+    # Save predicted lines as npz for quantitative eval
+    # pred_jsons = []
+    # for kind in ["pre", "mask", "post", "mask_post"]:
+    #     pred_jsons.extend(SESSION_LOG["results"].get(f"line_jsons_{kind}", []))
+    # npz_files = save_predictions_as_npz(pred_jsons)
+    # SESSION_LOG["results"]["pred_npz_files"] = npz_files
+
+    for kind in ["pre", "mask", "post", "mask_post"]:
+        jsons = SESSION_LOG["results"].get(f"line_jsons_{kind}", [])
+        if jsons:
+            npz_files = save_predictions_as_npz(jsons, kind)
+            SESSION_LOG["results"][f"pred_npz_files_{kind}"] = npz_files
 
     return (
         *prep("pre", "pred_image_to_json_pre"),
@@ -309,3 +324,42 @@ def select_prediction_from_gallery_mask_post(evt: gr.SelectData):
         return [svg_files[evt.index]]
     return []
 
+
+def save_predictions_as_npz_old(json_files, out_dir="outputs/reals/pred_npz"):
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    saved = []
+    for jf in json_files:
+        with open(jf, "r") as f:
+            data = json.load(f)
+
+        # Expect JSON to contain "lines" and optionally "score"
+        lines = np.array(data.get("lines", []), dtype=float).reshape(-1, 2, 2)
+        scores = np.array(data.get("score", [1.0] * len(lines)), dtype=float)
+
+        prefix = out_dir / Path(jf).stem
+        np.savez_compressed(
+            str(prefix) + ".npz",
+            lines=lines,
+            score=scores
+        )
+        saved.append(str(prefix) + ".npz")
+    return saved
+
+
+
+def save_predictions_as_npz(json_files, kind, out_root="outputs/reals/pred_npz"):
+    out_dir = Path(out_root) / kind
+    out_dir.mkdir(parents=True, exist_ok=True)
+    saved = []
+    for jf in json_files:
+        with open(jf, "r") as f:
+            data = json.load(f)
+
+        lines = np.array(data.get("lines", []), dtype=float).reshape(-1, 2, 2)
+        scores = np.array(data.get("score", [1.0] * len(lines)), dtype=float)
+
+        prefix = out_dir / Path(jf).stem
+        np.savez_compressed(str(prefix) + ".npz", lines=lines, score=scores)
+        saved.append(str(prefix) + ".npz")
+    return saved
