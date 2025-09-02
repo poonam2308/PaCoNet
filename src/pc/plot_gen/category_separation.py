@@ -16,16 +16,16 @@ class CategorySeparator:
         random.seed(0)
         np.random.seed(0)
 
-    def remove_black_background(img_np, method=1, v_thresh=40):
-        hsv = cv2.cvtColor(img_np, cv2.COLOR_RGB2HSV)
-        v = hsv[:, :, 2]
-        mask = v < v_thresh
-        if method == 1:
-            img_np[mask] = [255, 255, 255]
-        elif method == 2:
-            mask_uint8 = mask.astype(np.uint8) * 255
-            img_np = cv2.inpaint(img_np, mask_uint8, 3, cv2.INPAINT_TELEA)
-        return img_np
+    def _closest_category(self, hsv_val, category_colors):
+        # hsv_val: (h, s, v) with h in [0,1], s,v in [0,1]
+        best_cat, best_dist = None, float("inf")
+        for cat, ref in category_colors.items():
+            ref_h, ref_s, ref_v = ref["h"], ref["s"], ref["v"]
+            dist = (hsv_val[0] - ref_h) ** 2 + (hsv_val[1] - ref_s) ** 2 + (hsv_val[2] - ref_v) ** 2
+            if dist < best_dist:
+                best_cat, best_dist = cat, dist
+        return best_cat
+
 
     def _load_lines(self, json_path, crop_filename):
         if not os.path.exists(json_path):
@@ -41,9 +41,19 @@ class CategorySeparator:
 
         crop_key = f"crop_{m.group(1)}"
         lines_dict = data.get("lines", {})
-        return lines_dict.get(crop_key, [])
 
-    def _process_masks(self, crop, image, color_masks, lines, output_dir):
+        crop_lines = lines_dict.get(crop_key, [])
+        if isinstance(crop_lines, dict):
+            # New format → merge all category lists
+            merged = []
+            for cat, coords in crop_lines.items():
+                merged.extend(coords)
+            return merged
+        else:
+            # Old format → already a list
+            return crop_lines
+
+    def _process_masks_(self, crop, image, color_masks, lines, output_dir):
         output_data, color_data = [], []
         cat_coords = {k: [] for k, *_ in color_masks}
 
@@ -72,6 +82,66 @@ class CategorySeparator:
             color_data.append({
                 "filename": out_name,
                 "color_hsv": {"h": round(hue_val / 180, 2), "s": 1, "v": 1}
+            })
+
+        return output_data, color_data
+
+    def _process_masks(self, crop, image, color_masks, lines, output_dir, category_colors=None):
+        output_data, color_data = [], []
+        cat_coords = {cat: [] for cat in (category_colors or {})}
+        cat_masks = {cat: np.zeros(image.shape[:2], dtype=np.uint8) for cat in (category_colors or {})}
+
+        # Assign lines and build category masks
+        for line in lines:
+            x1, y1, x2, y2 = map(int, line)
+            mid_x, mid_y = int((x1 + x2) / 2), int((y1 + y2) / 2)
+            for peak, mask, *rest in color_masks:
+                if mask[mid_y, mid_x] > 0:
+                    hue_val = rest[0] if rest else peak
+                    hsv_val = (hue_val / 180, 1, 1)
+                    cat = self._closest_category(hsv_val, category_colors) if category_colors else str(peak)
+
+                    cat_coords.setdefault(cat, []).append(line)
+                    cat_masks[cat] = cv2.bitwise_or(cat_masks[cat], mask)  # accumulate mask
+                    break
+
+        # Save per-category results
+        for cat, coords in cat_coords.items():
+            if not coords:
+                continue
+
+            mask = cat_masks[cat]
+
+            # Step 1: Identify background pixels (everything not in ANY category)
+            all_mask = np.zeros(image.shape[:2], dtype=np.uint8)
+            for m in cat_masks.values():
+                all_mask = cv2.bitwise_or(all_mask, m)
+            background_pixels = image[all_mask == 0]
+
+            # Step 2: Estimate background color by majority (mode)
+            if len(background_pixels) > 0:
+                # round to nearest int for majority
+                pixels = background_pixels.reshape(-1, 3)
+                vals, counts = np.unique(pixels, axis=0, return_counts=True)
+                bg_color = vals[np.argmax(counts)]
+            else:
+                bg_color = np.array([255, 255, 255], dtype=np.uint8)  # fallback white
+
+            # Step 3: Build result
+            result = np.full_like(image, bg_color)  # start with background
+            result[mask > 0] = image[mask > 0]  # overlay only this category
+
+            out_name = f"{Path(crop).stem}_{cat}.png"
+            out_path = os.path.join(output_dir, out_name)
+            cv2.imwrite(out_path, result)
+
+            output_data.append({
+                "filename": out_name,
+                "lines": coords
+            })
+            color_data.append({
+                "filename": out_name,
+                "color_hsv": category_colors[cat]
             })
 
         return output_data, color_data
@@ -117,7 +187,14 @@ class CategorySeparator:
                     if np.any(mask):
                         masks.append((cid, mask, hue_avg))
 
-        cat_lines_data, color_data = self._process_masks(image_path, image, masks, lines, output_dir)
+        # cat_lines_data, color_data = self._process_masks(image_path, image, masks, lines, output_dir)
+        with open(json_path, "r") as f:
+            data = json.load(f)
+        category_colors = data.get("category_colors", {})
+
+        cat_lines_data, color_data = self._process_masks(
+            image_path, image, masks, lines, output_dir, category_colors
+        )
 
         # 🔹 Save JSONs
         if save_per_file:  # 🔹 only save if flag is True
@@ -129,15 +206,11 @@ class CategorySeparator:
 
         return cat_lines_data, color_data
 
-    def process_single_image_enhanced(self, image_path, json_path, output_dir,
-                                      bg_method=None, sat_thresh=50, save_per_file=False,
+    def process_single_image_enhanced(self, image_path, json_path, output_dir, sat_thresh=50, save_per_file=False,
                                       show_plot=False):
         os.makedirs(output_dir, exist_ok=True)
         img = Image.open(image_path).convert("RGB")
         img_np = np.array(img)
-
-        if bg_method in [1, 2]:
-            img_np = self.remove_black_background(img_np, method=bg_method)
 
         img_hsv = cv2.cvtColor(img_np, cv2.COLOR_RGB2HSV)
 
@@ -147,7 +220,7 @@ class CategorySeparator:
         hue_filtered = hue[mask]
 
         hist, bins = np.histogram(hue_filtered, bins=180, range=(0, 180))
-        peaks, _ = find_peaks(hist, height=np.max(hist) * 0.05, distance=10)
+        peaks, _ = find_peaks(hist, height=np.max(hist) * 0.07, distance=5)
 
         masks = []
         for p in peaks:
@@ -158,9 +231,16 @@ class CategorySeparator:
             masks.append((p, mask))
 
         lines = self._load_lines(json_path, Path(image_path).name)
+        # cat_lines_data, color_data = self._process_masks(
+        #     image_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR),
+        #     masks, lines, output_dir
+        # )
+        with open(json_path, "r") as f:
+            data = json.load(f)
+        category_colors = data.get("category_colors", {})
+
         cat_lines_data, color_data = self._process_masks(
-            image_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR),
-            masks, lines, output_dir
+            image_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR), masks, lines, output_dir, category_colors
         )
 
         if show_plot:
