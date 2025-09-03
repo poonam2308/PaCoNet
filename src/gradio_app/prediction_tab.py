@@ -77,7 +77,68 @@ def trigger_line_prediction_both(score_threshold):
         *_prep_gallery_payload(post_svgs, post_jsons, "pred_image_to_json_post"),
     )
 
+
 def trigger_line_prediction_all(score_threshold):
+    denoised_dir_path = SESSION.get("denoised_dir") or Path("outputs/reals/denoised")
+
+    if not denoised_dir_path.exists() or not any(denoised_dir_path.glob("*.png")):
+        return [], "", gr.update(choices=[], visible=False), gr.update(visible=True), \
+            [], "", gr.update(choices=[], visible=False), gr.update(visible=True), \
+            [], "", gr.update(choices=[], visible=False), gr.update(visible=True), \
+            [], "", gr.update(choices=[], visible=False), gr.update(visible=True)
+
+    # Call the line prediction function
+    # NOTE: This function likely saves files to disk but returns nothing or an empty result
+    result = run_line_prediction_on_images_all(
+        [str(p) for p in denoised_dir_path.glob("*.png")],
+        score_threshold=score_threshold
+    )
+
+    # After the prediction runs, manually find the generated JSON files
+    # This is the crucial fix to get the file paths
+    pred_dir = Path("outputs/reals/redesigned")
+    if not pred_dir.exists():
+        print("Prediction directory not found.")
+        return [], "", gr.update(choices=[], visible=False), gr.update(visible=True), \
+            [], "", gr.update(choices=[], visible=False), gr.update(visible=True), \
+            [], "", gr.update(choices=[], visible=False), gr.update(visible=True), \
+            [], "", gr.update(choices=[], visible=False), gr.update(visible=True)
+
+    # Find the JSON files for each 'kind' of prediction
+    jsons_by_kind = {
+        "pre": list(pred_dir.glob("*_pre.json")),
+        "mask": list(pred_dir.glob("*_mask.json")),
+        "post": list(pred_dir.glob("*_post.json")),
+        "mask_post": list(pred_dir.glob("*_mask_post.json")),
+    }
+
+    # Populate the SESSION_LOG and save the NPZ files
+    for kind, json_files in jsons_by_kind.items():
+        if json_files:
+            SESSION_LOG["results"][f"line_jsons_{kind}"] = [str(j) for j in json_files]
+            npz_files = save_predictions_as_npz(json_files, kind)
+            SESSION_LOG["results"][f"pred_npz_files_{kind}"] = npz_files
+        else:
+            print(f"No JSONs generated for '{kind}'. Skipping NPZ saving.")
+
+    # Now, process the results for display in the gallery
+    def prep_display(kind):
+        jsons = SESSION_LOG["results"].get(f"line_jsons_{kind}", [])
+        svgs = [j.replace(".json", ".svg") for j in jsons]  # Assumes SVGs are also generated
+
+        # NOTE: You'll need to manually sort them if necessary, or ensure `line_prediction` does
+        return _prep_gallery_payload(svgs, jsons, f"pred_image_to_json_{kind}")
+
+    SESSION_LOG["inputs"]["line_score_threshold"] = score_threshold
+    SESSION_LOG["steps"].append("Line Prediction Completed (4 variants)")
+
+    return (
+        *prep_display("pre"),
+        *prep_display("mask"),
+        *prep_display("post"),
+        *prep_display("mask_post"),
+    )
+def trigger_line_prediction_all_old(score_threshold):
     result = run_line_prediction_on_images_all(
         [str(p) for p in (SESSION.get("denoised_dir") or Path("outputs/reals/denoised")).glob("*.png")],
         score_threshold=score_threshold
@@ -98,18 +159,14 @@ def trigger_line_prediction_all(score_threshold):
     SESSION_LOG["inputs"]["line_score_threshold"] = score_threshold
     SESSION_LOG["steps"].append("Line Prediction Completed (4 variants)")
 
-    # Save predicted lines as npz for quantitative eval
-    # pred_jsons = []
-    # for kind in ["pre", "mask", "post", "mask_post"]:
-    #     pred_jsons.extend(SESSION_LOG["results"].get(f"line_jsons_{kind}", []))
-    # npz_files = save_predictions_as_npz(pred_jsons)
-    # SESSION_LOG["results"]["pred_npz_files"] = npz_files
-
     for kind in ["pre", "mask", "post", "mask_post"]:
         jsons = SESSION_LOG["results"].get(f"line_jsons_{kind}", [])
         if jsons:
             npz_files = save_predictions_as_npz(jsons, kind)
             SESSION_LOG["results"][f"pred_npz_files_{kind}"] = npz_files
+        else:
+            # Provide feedback if a particular prediction kind failed to generate JSONs
+            print(f"No JSONs generated for '{kind}'. Skipping NPZ saving.")
 
     return (
         *prep("pre", "pred_image_to_json_pre"),
@@ -323,29 +380,6 @@ def select_prediction_from_gallery_mask_post(evt: gr.SelectData):
     if 0 <= evt.index < len(svg_files):
         return [svg_files[evt.index]]
     return []
-
-
-def save_predictions_as_npz_old(json_files, out_dir="outputs/reals/pred_npz"):
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    saved = []
-    for jf in json_files:
-        with open(jf, "r") as f:
-            data = json.load(f)
-
-        # Expect JSON to contain "lines" and optionally "score"
-        lines = np.array(data.get("lines", []), dtype=float).reshape(-1, 2, 2)
-        scores = np.array(data.get("score", [1.0] * len(lines)), dtype=float)
-
-        prefix = out_dir / Path(jf).stem
-        np.savez_compressed(
-            str(prefix) + ".npz",
-            lines=lines,
-            score=scores
-        )
-        saved.append(str(prefix) + ".npz")
-    return saved
-
 
 
 def save_predictions_as_npz(json_files, kind, out_root="outputs/reals/pred_npz"):

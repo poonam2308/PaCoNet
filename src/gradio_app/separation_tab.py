@@ -45,6 +45,7 @@ def run_category_separation(method, top_k):
             choices.append(f)
 
     SESSION["separated_dir"] = output_dir
+    SESSION["separated_data_json"] = output_dir / "all_data.json"  # <--- Add this line
     SESSION["denoised_dir"] = Path("outputs/reals/denoised")
 
     SESSION_LOG["inputs"]["category_method"] = method

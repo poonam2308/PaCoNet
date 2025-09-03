@@ -13,7 +13,7 @@ from .prediction_tab import trigger_line_prediction_all, generate_predicted_over
     select_prediction_from_gallery_mask_post
 from .stitching_tab import run_stitching_from_prediction
 from .session import save_session_log, SESSION
-from .quantitative_tab import perform_quantitative_evaluation
+from .quantitative_tab import perform_quantitative_evaluation_in_memory
 
 
 def build_ui():
@@ -156,7 +156,7 @@ def build_ui():
                 pred_overlay_img_mask_post = gr.Image(label="Overlay: Mask+Post Predicted Lines", type="filepath",
                                                       visible=True)
 
-            with gr.TabItem("5️⃣ Stitch & View CSVs"):
+            with gr.TabItem("5️⃣ Stitching"):
                 threshold_input = gr.Slider(minimum=1.0, maximum=50.0, step=1.0, value=10.0, label="Matching Threshold")
                 use_hsv_checkbox = gr.Checkbox(label="Use Custom HSV Colors", value=True)
                 run_stitch_btn = gr.Button("Run Stitching from Predictions")
@@ -175,6 +175,11 @@ def build_ui():
                     choices=["pre", "mask", "post", "mask_post"],
                     value="post",
                     label="Prediction Variant"
+                )
+                mode_dropdown = gr.Dropdown(
+                    choices=["npz", "in-memory"],
+                    value="npz",
+                    label="Evaluation Mode"
                 )
                 eval_btn = gr.Button("Perform Quantitative Evaluation")
                 eval_status = gr.Textbox(label="Evaluation Status", interactive=False)
@@ -364,7 +369,7 @@ def build_ui():
         )
 
         eval_btn.click(
-            fn=perform_quantitative_evaluation,
+            fn=perform_quantitative_evaluation_in_memory,
             inputs=[kind_dropdown],
             outputs=[eval_status, eval_score]
         )

@@ -6,6 +6,7 @@ SESSION = {
     "line_output_dir": None,
     "line_json": None,
     "metadata_json": None,
+    "separated_data_json": None,
     "cropped_dir": None,
     "selected_dir": None,
     "separated_dir": None,
