@@ -114,7 +114,7 @@ def generate_denoised_overlay(selected_filenames):
         if len(parts) != 2:
             continue
         img_id, rest = parts
-        crop_idx = rest.split("_cat_")[0]
+        crop_idx = rest.split("_")[0]
         by_img.setdefault(img_id, set()).add(f"{img_id}_crop_{crop_idx}.png")
 
     if not by_img:
@@ -184,7 +184,7 @@ def generate_denoised_overlay(selected_filenames):
 
         crop_idx = re.search(r"_crop_(\d+)", crop_fname).group(1)
         # Collect selected categories for this crop (from the user's list)
-        matching = [n for n in selected_filenames if n.startswith(f"{image_id}_crop_{crop_idx}_cat_")]
+        matching = [n for n in selected_filenames if n.startswith(f"{image_id}_crop_{crop_idx}_")]
         if not matching:
             continue
 

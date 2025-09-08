@@ -23,6 +23,7 @@ from docopt import docopt
 
 import src.dhlp.lcnn.utils
 import src.dhlp.lcnn.metric
+from src.dhlp import lcnn
 
 # GT = "data/pcwireframe_test/test/*.npz"
 # MASK_PATH = "data/pcwireframe_test/masks/*.npz"

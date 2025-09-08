@@ -112,7 +112,7 @@ def generate_category_overlay(selected_filenames):
         if len(parts) != 2:
             continue
         img_id, rest = parts
-        crop_idx = rest.split("_cat_")[0]
+        crop_idx = rest.split("_")[0]
         by_img.setdefault(img_id, set()).add(f"{img_id}_crop_{crop_idx}.png")
 
     if not by_img:
@@ -165,7 +165,9 @@ def generate_category_overlay(selected_filenames):
 
         # find all separated category files that match this crop index
         crop_idx = re.search(r"_crop_(\d+)", crop_fname).group(1)
-        matching = [name for name in selected_filenames if name.startswith(f"{image_id}_crop_{crop_idx}_cat_")]
+        matching = [name for name in selected_filenames
+                    if name.startswith(f"{image_id}_crop_{crop_idx}_")]
+
         if not matching:
             continue
 

@@ -35,6 +35,15 @@ paths:
   m_color_train_json: "data/synthetic_plots/multi_cat/training/color/train.json"
   m_color_valid_json: "data/synthetic_plots/multi_cat/training/color/valid.json"
 
+
+  # Category separation - color with white background
+  m_color_sep_plots_wbg: "data/synthetic_plots/multi_cat/training/color_wbg/images"
+  m_color_wbg_all_json: "data/synthetic_plots/multi_cat/training/color_wbg/images/all_data.json"
+  m_color_wbg_train_json: "data/synthetic_plots/multi_cat/training/color_wbg/train.json"
+  m_color_wbg_valid_json: "data/synthetic_plots/multi_cat/training/color_wbg/valid.json"
+
+
+
   m_color_all_json_merged: "data/synthetic_plots/multi_cat/training/color/merged_all_data.json"
   m_color_train_json_merged: "data/synthetic_plots/multi_cat/training/color/merged_train.json"
   m_color_valid_json_merged: "data/synthetic_plots/multi_cat/training/color/merged_valid.json"

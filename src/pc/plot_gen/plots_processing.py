@@ -96,7 +96,7 @@ class PlotsPipeline:
                 input_dir=self.paths['m_crops'],
                 json_dir=self.paths['m_plots'],
                 output_dir=self.paths['m_color_sep_plots'],
-                method="hist_enhanced"
+                method="hist_enhanced",
             )
         elif method == 'hist':
             sep.process_batch(
@@ -105,6 +105,18 @@ class PlotsPipeline:
                 output_dir=self.paths['m_cluster_sep_plots'],
                 method='hist'
             )
+
+    def separate_by_color_wbg(self, method='hist_enhanced'):
+        print(f"🎨 Separating by color using {method} method...")
+        sep = CategorySeparator()
+        sep.process_batch(
+                input_dir=self.paths['m_crops'],
+                json_dir=self.paths['m_plots'],
+                output_dir=self.paths['m_color_sep_plots_wbg'],
+                method="hist_enhanced",
+                force_white_bg=True
+            )
+
     def split_data(self):
         # Optionally split into train/val
         if 'm_color_all_json' in self.paths:
@@ -112,6 +124,15 @@ class PlotsPipeline:
                 input_file=self.paths['m_color_all_json'],
                 train_file=self.paths['m_color_train_json'],
                 valid_file=self.paths['m_color_valid_json']
+            )
+
+    def split_data_wbg(self):
+        # Optionally split into train/val
+        if 'm_color_wbg_all_json' in self.paths:
+            split_data(
+                input_file=self.paths['m_color_wbg_all_json'],
+                train_file=self.paths['m_color_wbg_train_json'],
+                valid_file=self.paths['m_color_wbg_valid_json']
             )
 
     def run_dist(self):

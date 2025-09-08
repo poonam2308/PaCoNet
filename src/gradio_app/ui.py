@@ -173,13 +173,8 @@ def build_ui():
             with gr.TabItem("6️⃣ Quantitative Evaluation"):
                 kind_dropdown = gr.Dropdown(
                     choices=["pre", "mask", "post", "mask_post"],
-                    value="post",
+                    value="pre",
                     label="Prediction Variant"
-                )
-                mode_dropdown = gr.Dropdown(
-                    choices=["npz", "in-memory"],
-                    value="npz",
-                    label="Evaluation Mode"
                 )
                 eval_btn = gr.Button("Perform Quantitative Evaluation")
                 eval_status = gr.Textbox(label="Evaluation Status", interactive=False)

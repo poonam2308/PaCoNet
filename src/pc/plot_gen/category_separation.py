@@ -86,7 +86,7 @@ class CategorySeparator:
 
         return output_data, color_data
 
-    def _process_masks(self, crop, image, color_masks, lines, output_dir, category_colors=None):
+    def _process_masks(self, crop, image, color_masks, lines, output_dir, category_colors=None, force_white_bg=False):
         output_data, color_data = [], []
         cat_coords = {cat: [] for cat in (category_colors or {})}
         cat_masks = {cat: np.zeros(image.shape[:2], dtype=np.uint8) for cat in (category_colors or {})}
@@ -112,20 +112,20 @@ class CategorySeparator:
 
             mask = cat_masks[cat]
 
-            # Step 1: Identify background pixels (everything not in ANY category)
-            all_mask = np.zeros(image.shape[:2], dtype=np.uint8)
-            for m in cat_masks.values():
-                all_mask = cv2.bitwise_or(all_mask, m)
-            background_pixels = image[all_mask == 0]
-
-            # Step 2: Estimate background color by majority (mode)
-            if len(background_pixels) > 0:
-                # round to nearest int for majority
-                pixels = background_pixels.reshape(-1, 3)
-                vals, counts = np.unique(pixels, axis=0, return_counts=True)
-                bg_color = vals[np.argmax(counts)]
+            if force_white_bg:
+                bg_color = np.array([255, 255, 255], dtype=np.uint8)
             else:
-                bg_color = np.array([255, 255, 255], dtype=np.uint8)  # fallback white
+                all_mask = np.zeros(image.shape[:2], dtype=np.uint8)
+                for m in cat_masks.values():
+                    all_mask = cv2.bitwise_or(all_mask, m)
+                background_pixels = image[all_mask == 0]
+
+                if len(background_pixels) > 0:
+                    pixels = background_pixels.reshape(-1, 3)
+                    vals, counts = np.unique(pixels, axis=0, return_counts=True)
+                    bg_color = vals[np.argmax(counts)]
+                else:
+                    bg_color = np.array([255, 255, 255], dtype=np.uint8)
 
             # Step 3: Build result
             result = np.full_like(image, bg_color)  # start with background
@@ -206,7 +206,7 @@ class CategorySeparator:
 
         return cat_lines_data, color_data
 
-    def process_single_image_enhanced(self, image_path, json_path, output_dir, sat_thresh=50, save_per_file=False,
+    def process_single_image_enhanced(self, image_path, json_path, output_dir, sat_thresh=50, force_white_bg= False, save_per_file=False,
                                       show_plot=False):
         os.makedirs(output_dir, exist_ok=True)
         img = Image.open(image_path).convert("RGB")
@@ -240,8 +240,8 @@ class CategorySeparator:
         category_colors = data.get("category_colors", {})
 
         cat_lines_data, color_data = self._process_masks(
-            image_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR), masks, lines, output_dir, category_colors
-        )
+            image_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR), masks,
+            lines, output_dir, category_colors, force_white_bg)
 
         if show_plot:
             plt.figure(figsize=(10, 4))
@@ -263,7 +263,7 @@ class CategorySeparator:
 
         return cat_lines_data, color_data
 
-    def process_batch(self, input_dir, json_dir, output_dir,
+    def process_batch(self, input_dir, json_dir, output_dir, force_white_bg=False,
                       method="hist_enhanced", **kwargs):
         os.makedirs(output_dir, exist_ok=True)
         all_output, all_colors = [], []
@@ -278,7 +278,7 @@ class CategorySeparator:
 
             if method == "hist_enhanced":
                 result, colors = self.process_single_image_enhanced(
-                    image_path, json_path, output_dir, **kwargs)
+                    image_path, json_path, output_dir,force_white_bg **kwargs)
             else:
                 result, colors = self.process_single_image(
                     image_path, json_path, output_dir, method, **kwargs)

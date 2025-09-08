@@ -6,6 +6,7 @@ from ..dhlp.dataset.gen_mask import generate_binary_mask
 from ..dhlp.dataset.wireframe_test import save_heatmap
 from ..dhlp.evaluation import  process_line_detection_arrays
 
+from glob import glob
 
 def generate_npz_from_denoised():
     denoised_dir = SESSION.get("denoised_dir")
@@ -48,6 +49,7 @@ def generate_npz_from_denoised():
         prefix = out_dir / img_path.stem
 
         # --- (1) Save wireframe npz ---
+        coords = np.round(coords, 2)
         save_heatmap(str(prefix), im, coords)
         results.append(str(prefix) + "_label.npz")
 
@@ -64,12 +66,7 @@ def generate_npz_from_denoised():
     return results, f"Conversion complete: {len(results)} files (wireframes + masks)."
 
 
-
 def perform_quantitative_evaluation_in_memory(kind="post"):
-    """
-    In-memory evaluation (no intermediate NPZ).
-    Uses arrays directly with process_line_detection_arrays.
-    """
     denoised_dir = SESSION.get("denoised_dir")
     lines_data = SESSION.get("separated_data_json")
     if not denoised_dir or not lines_data:
@@ -78,6 +75,7 @@ def perform_quantitative_evaluation_in_memory(kind="post"):
     with open(lines_data, "r") as f:
         linesdata = json.load(f)
 
+    target_size = 224  # <<< keep everything at 224×224
     total_map, count = 0, 0
     for img_path in sorted(denoised_dir.glob("*.png")):
         im = cv2.imread(str(img_path))
@@ -91,29 +89,43 @@ def perform_quantitative_evaluation_in_memory(kind="post"):
 
         coords = np.array(entry["lines"], dtype=float).reshape(-1, 2, 2)
 
-        orig_h, orig_w = entry.get("height"), entry.get("width")
-        new_h, new_w = im.shape[:2]
-        if orig_h and orig_w:
-            sx, sy = new_w / orig_w, new_h / orig_h
-            coords[:, :, 0] *= sx
-            coords[:, :, 1] *= sy
+        # Dynamically infer original width/height from coordinates
+        max_x = coords[:, :, 0].max()
+        max_y = coords[:, :, 1].max()
+        orig_w = max_x if max_x > 0 else 1
+        orig_h = max_y if max_y > 0 else 1
 
+        # Scale coordinates into 224×224
+        coords[:, :, 0] = coords[:, :, 0] / orig_w * target_size
+        coords[:, :, 1] = coords[:, :, 1] / orig_h * target_size
+        coords = np.round(coords, 2)
+        # --- Prepare mask in 224×224 ---
         mask = generate_binary_mask(str(img_path))
-        mask_resized = cv2.resize(mask, (128, 128), interpolation=cv2.INTER_NEAREST)
+        mask_resized = cv2.resize(mask, (target_size, target_size), interpolation=cv2.INTER_NEAREST)
 
-        pred_path = Path(f"outputs/reals/pred_npz/{kind}/{img_path.stem}.npz")
-        if not pred_path.exists():
+        # --- Load predictions ---
+        pattern = f"outputs/reals/pred_npz/{kind}/{img_path.stem}_*.npz"
+        pred_files = glob(pattern)
+        if not pred_files:
+            print("No preds for:", pattern)
             continue
-        pred_data = np.load(pred_path)
-        print(pred_data)
-        predicted_lines = pred_data["lines"]
 
+        for pf in pred_files:
+            pred_data = np.load(pf)
+            predicted_lines = pred_data["lines"]
 
-        map_score = process_line_detection_arrays(coords, predicted_lines, mask_resized)
-        print(map_score)
-        total_map += map_score
-        count += 1
-        print(f"Processed {img_path.name}: {map_score:.2f}")
+            # --- Normalize preds into 224×224 ---
+            h_pred, w_pred = im.shape[:2]   # prediction is over denoised image size
+            predicted_lines[:, :, 0] = predicted_lines[:, :, 0] / w_pred * target_size
+            predicted_lines[:, :, 1] = predicted_lines[:, :, 1] / h_pred * target_size
+
+            # --- Evaluate ---
+            map_score = process_line_detection_arrays(coords, predicted_lines, mask_resized)
+            total_map += map_score
+            count += 1
+            print(f"Processed {img_path.name} from {pf}: {map_score:.2f}")
 
     avg_map = total_map / count if count > 0 else 0
     return f"Average mAP ({kind}): {avg_map:.2f}", avg_map
+
+

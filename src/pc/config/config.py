@@ -20,7 +20,7 @@ def get_args():
     #plots generated tasks
     parse.add_argument('--task', type=str, default='run', help="Which method to run",
                        choices=['run_dist', 'run', 'run_single', 'generate_data', 'generate_plots', 'crop_plots',
-                                'extract_lines', 'separate_by_color', 'split_data'])
+                                'extract_lines', 'separate_by_color', 'separate_by_color_wbg', 'split_data', 'split_data_wbg'])
 
     # Network Training Parameters
     parse.add_argument('--reg_model', type =str, default='lenet6', choices=['lenet4', 'lenet6', 'lenet', 'resnet18'])
