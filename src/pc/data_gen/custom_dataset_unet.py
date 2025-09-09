@@ -1,7 +1,8 @@
 import json
 import os
 from torch.utils.data import Dataset
-from PIL import Image
+from PIL import Image, ImageOps
+import numpy as np
 import torchvision.transforms as transforms
 from scipy.spatial.distance import euclidean
 
@@ -11,105 +12,149 @@ def load_json(json_path):
         return json.load(file)
 
 
-class CustomTestDatasetSD(Dataset):
-    def __init__(self, input_dir, transform=None):
+def extract_base_name(filename: str):
+    """
+    Extracts a canonical base name from a filename by keeping only
+    the image ID (e.g., image_1) and crop ID (e.g., crop_1).
+    Example:
+        image_1_crop_1_cat.png -> image_1_crop_1
+        image_1_cat_crop_1.png -> image_1_crop_1
+        image_1_crop_1.png     -> image_1_crop_1
+    """
+    name = filename.replace(".png", "").replace(".jpg", "").replace(".jpeg", "")
+    parts = name.split("_")
+
+    image_id = None
+    crop_id = None
+
+    for i, part in enumerate(parts):
+        # detect image number (e.g., "image_1")
+        if part.startswith("image"):
+            if i + 1 < len(parts) and parts[i+1].isdigit():
+                image_id = f"{part}_{parts[i+1]}"
+            else:
+                image_id = part
+        # detect crop number (e.g., "crop_1")
+        if part.startswith("crop"):
+            if i + 1 < len(parts) and parts[i+1].isdigit():
+                crop_id = f"{part}_{parts[i+1]}"
+            else:
+                crop_id = part
+
+    base = []
+    if image_id: base.append(image_id)
+    if crop_id: base.append(crop_id)
+    return "_".join(base)
+
+
+class CustomDatasetUnetSD(Dataset):
+    def __init__(self, input_json=None, input_dir=None,
+                 ground_truth_json=None, ground_truth_dir=None,
+                 transform=None, hsv_tolerance=0.1, remove_background=False):
+
+        # Load input data (from JSON or directory)
+        if input_json:
+            self.input_data = load_json(input_json)
+            self.input_filenames = [item["filename"] for item in self.input_data]
+        else:
+            self.input_data = None
+            self.input_filenames = [f for f in os.listdir(input_dir) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
+
         self.input_dir = input_dir
-        self.transform = transform
-
-        # Get list of all image files in the directory
-        self.image_files = [
-            f for f in os.listdir(input_dir)
-            if os.path.isfile(os.path.join(input_dir, f)) and f.lower().endswith(('.png', '.jpg', '.jpeg'))
-        ]
-
-    def __len__(self):
-        return len(self.image_files)
-
-    def __getitem__(self, idx):
-        input_filename = self.image_files[idx]
-        input_path = os.path.join(self.input_dir, input_filename)
-
-        try:
-            input_image = Image.open(input_path).convert("RGB")
-
-            if self.transform:
-                input_image = self.transform(input_image)
-
-            return input_image, input_filename  # Returning only image and filename
-        except Exception as e:
-            print(f"Error loading image {input_filename}: {e}")
-            return None  # Return None to indicate an issue
-
-
-
-class CustomHSVMatchingDataset(Dataset):
-    def __init__(self, input_json, ground_truth_json, input_dir, ground_truth_dir, transform=None, hsv_tolerance=0.1):
-        self.input_data = load_json(input_json)
-        self.ground_truth_data = load_json(ground_truth_json)
-        self.input_dir = input_dir
+        self.ground_truth_data = load_json(ground_truth_json) if ground_truth_json else None
         self.ground_truth_dir = ground_truth_dir
         self.transform = transform
         self.hsv_tolerance = hsv_tolerance
+        self.remove_background = remove_background
+
         self.pairs = self.match_pairs()
 
     def match_pairs(self):
         pairs = []
-        for input_item in self.input_data:
-            input_filename = input_item["filename"]
-            input_hsv = input_item["color_hsv"]
 
-            best_match = None
-            best_hsv_distance = float('inf')
+        # Case 1: ground truth JSON exists -> do HSV matching
+        if self.input_data and self.ground_truth_data:
+            for input_item in self.input_data:
+                input_filename = input_item["filename"]
+                input_hsv = input_item["color_hsv"]
 
-            for gt_item in self.ground_truth_data:
-                gt_filename = gt_item["filename"]
-                gt_hsv = gt_item["color_hsv"]
+                best_match = None
+                best_hsv_distance = float('inf')
 
-                # Extract base names for partial matching
-                base_name_input = "_".join(input_filename.split('_')[:4])# e.g., image_1_crop_1
-                # base_name_gt = "_".join(gt_filename.split('_')[:2])  # e.g., image_1
-                base_name_gt = "_".join(gt_filename.split('_')[0:2] +
-                                        gt_filename.split('_')[-2:])  # e.g., image_1_crop_1
-                if base_name_gt.endswith('.png'):
-                    base_name_gt = base_name_gt[:-4]
+                for gt_item in self.ground_truth_data:
+                    gt_filename = gt_item["filename"]
+                    gt_hsv = gt_item["color_hsv"]
 
-                if base_name_input.startswith(base_name_gt):  # Refined partial match
-                    # Calculate HSV distance
-                    hsv_distance = euclidean(
-                        [input_hsv['h'], input_hsv['s'], input_hsv['v']],
-                        [gt_hsv['h'], gt_hsv['s'], gt_hsv['v']]
-                    )
+                    # Extract base names
+                    base_name_input = extract_base_name(input_filename)
+                    base_name_gt = extract_base_name(gt_filename)
 
-                    if hsv_distance < self.hsv_tolerance and hsv_distance < best_hsv_distance:
-                        best_match = gt_filename
+                    if base_name_input.startswith(base_name_gt):
+                        hsv_distance = euclidean(
+                            [input_hsv['h'], input_hsv['s'], input_hsv['v']],
+                            [gt_hsv['h'], gt_hsv['s'], gt_hsv['v']]
+                        )
 
-                        best_hsv_distance = hsv_distance
+                        if hsv_distance < self.hsv_tolerance and hsv_distance < best_hsv_distance:
+                            best_match = gt_filename
+                            best_hsv_distance = hsv_distance
 
-            if best_match:
-                pairs.append((input_filename, best_match))
-            else:
-                # Skip unmatched files and log a warning
-                print(f"Warning: No match found for {input_filename}. Skipping.")
+                if best_match:
+                    pairs.append((input_filename, best_match))
+                else:
+                    print(f"Warning: No match found for {input_filename}. Skipping.")
+
+        # Case 2: No ground truth JSON -> match by filename
+        else:
+            for fname in self.input_filenames:
+                if self.ground_truth_dir:
+                    base_name_input = extract_base_name(fname)
+                    match_found = False
+                    for gt_filename in os.listdir(self.ground_truth_dir):
+                        if extract_base_name(gt_filename) == base_name_input:
+                            pairs.append((fname, gt_filename))
+                            match_found =True
+                            break
+                    if not match_found:
+                        print(f"Warning:No GT file found for {fname}. Skipping.")
+                else:
+                    pairs.append((fname, None))
 
         return pairs
 
     def __len__(self):
         return len(self.pairs)
 
+    def remove_bg(self, image):
+        """Replace non-white background with pure white"""
+        img_array = np.array(image)
+        # Mask for non-white pixels
+        mask = np.any(img_array < 250, axis=-1)
+        white_bg = np.ones_like(img_array) * 255
+        white_bg[mask] = img_array[mask]
+        return Image.fromarray(white_bg.astype(np.uint8))
+
     def __getitem__(self, idx):
         input_filename, gt_filename = self.pairs[idx]
         input_path = os.path.join(self.input_dir, input_filename)
-        gt_path = os.path.join(self.ground_truth_dir, gt_filename)
-
         input_image = Image.open(input_path).convert("RGB")
-        gt_image = Image.open(gt_path).convert("RGB")
+
+        gt_image = None
+        if gt_filename:
+            gt_path = os.path.join(self.ground_truth_dir, gt_filename)
+            gt_image = Image.open(gt_path).convert("RGB")
+
+        # Background removal if flag is set
+        if self.remove_background:
+            input_image = self.remove_bg(input_image)
+            if gt_image:
+                gt_image = self.remove_bg(gt_image)
 
         if self.transform:
             input_image = self.transform(input_image)
-            gt_image = self.transform(gt_image)
-
+            if gt_image:
+                gt_image = self.transform(gt_image)
         return input_image, gt_image
-
 
 
 class CustomHSVMatchingDatasetSD(Dataset):
@@ -180,7 +225,73 @@ class CustomHSVMatchingDatasetSD(Dataset):
 
         return input_image, gt_image, input_filename
 
+class CustomHSVMatchingDataset(Dataset):
+    def __init__(self, input_json, ground_truth_json, input_dir, ground_truth_dir, transform=None, hsv_tolerance=0.1):
+        self.input_data = load_json(input_json)
+        self.ground_truth_data = load_json(ground_truth_json)
+        self.input_dir = input_dir
+        self.ground_truth_dir = ground_truth_dir
+        self.transform = transform
+        self.hsv_tolerance = hsv_tolerance
+        self.pairs = self.match_pairs()
 
+    def match_pairs(self):
+        pairs = []
+        for input_item in self.input_data:
+            input_filename = input_item["filename"]
+            input_hsv = input_item["color_hsv"]
+
+            best_match = None
+            best_hsv_distance = float('inf')
+
+            for gt_item in self.ground_truth_data:
+                gt_filename = gt_item["filename"]
+                gt_hsv = gt_item["color_hsv"]
+
+                # Extract base names for partial matching
+                base_name_input = "_".join(input_filename.split('_')[:4])# e.g., image_1_crop_1
+                # base_name_gt = "_".join(gt_filename.split('_')[:2])  # e.g., image_1
+                base_name_gt = "_".join(gt_filename.split('_')[0:2] +
+                                        gt_filename.split('_')[-2:])  # e.g., image_1_crop_1
+                if base_name_gt.endswith('.png'):
+                    base_name_gt = base_name_gt[:-4]
+
+                if base_name_input.startswith(base_name_gt):  # Refined partial match
+                    # Calculate HSV distance
+                    hsv_distance = euclidean(
+                        [input_hsv['h'], input_hsv['s'], input_hsv['v']],
+                        [gt_hsv['h'], gt_hsv['s'], gt_hsv['v']]
+                    )
+
+                    if hsv_distance < self.hsv_tolerance and hsv_distance < best_hsv_distance:
+                        best_match = gt_filename
+
+                        best_hsv_distance = hsv_distance
+
+            if best_match:
+                pairs.append((input_filename, best_match))
+            else:
+                # Skip unmatched files and log a warning
+                print(f"Warning: No match found for {input_filename}. Skipping.")
+
+        return pairs
+
+    def __len__(self):
+        return len(self.pairs)
+
+    def __getitem__(self, idx):
+        input_filename, gt_filename = self.pairs[idx]
+        input_path = os.path.join(self.input_dir, input_filename)
+        gt_path = os.path.join(self.ground_truth_dir, gt_filename)
+
+        input_image = Image.open(input_path).convert("RGB")
+        gt_image = Image.open(gt_path).convert("RGB")
+
+        if self.transform:
+            input_image = self.transform(input_image)
+            gt_image = self.transform(gt_image)
+
+        return input_image, gt_image
 
 class CustomTestDatasetSD1(Dataset):
     def __init__(self, input_json, input_dir, transform=None):

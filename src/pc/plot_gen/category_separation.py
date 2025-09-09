@@ -278,7 +278,7 @@ class CategorySeparator:
 
             if method == "hist_enhanced":
                 result, colors = self.process_single_image_enhanced(
-                    image_path, json_path, output_dir,force_white_bg **kwargs)
+                    image_path, json_path, output_dir,force_white_bg, **kwargs)
             else:
                 result, colors = self.process_single_image(
                     image_path, json_path, output_dir, method, **kwargs)
