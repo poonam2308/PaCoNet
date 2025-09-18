@@ -9,7 +9,7 @@ from src.pc.config import config
 from src.pc.config.config import get_args, load_config
 from src.pc.utils import ensure_directory_exists, save_loss_plot, unet_transformation
 from src.pc.models.unet import UNetSD
-from src.pc.data_gen.custom_dataset_unet import CustomHSVMatchingDataset
+from src.pc.data_gen.custom_dataset_unet import CustomHSVMatchingDataset, CustomDatasetUnetSD
 from src.pc.run_epoch_unet import train_epoch_unet_womo, validate_epoch_unet_womo
 
 
@@ -42,12 +42,21 @@ class UNetTrainer:
         self.transform = unet_transformation(self.args)
 
     def _load_dataset(self):
-        dataset = CustomHSVMatchingDataset(
+        dataset_old = CustomHSVMatchingDataset(
             input_json=self.cfg['paths']['m_color_line_color'],
             ground_truth_json=self.cfg['paths']['m_gt_line_color'],
             input_dir=self.cfg['paths']['m_color_sep_plots'],
             ground_truth_dir=self.cfg['paths']['m_gt_crops'],
             transform=self.transform
+        )
+
+        dataset = CustomDatasetUnetSD(
+            input_json=self.cfg['paths']['m_color_line_color'],
+            ground_truth_dir=self.cfg['paths']['m_gt_plots_cat_crops'],
+            transform=self.transform,
+            hsv_tolerance=0.15,
+            remove_background=True
+
         )
 
         train_size = int(0.8 * len(dataset))
