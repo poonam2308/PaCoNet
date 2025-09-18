@@ -48,7 +48,7 @@ class UNetTrainer:
     def _load_dataset(self):
 
         dataset = CustomDatasetUnetSD(
-            input_json=self.cfg['paths']['m_color_line_color'],
+            input_dir=self.cfg['paths']['m_color_sep_plots'],
             ground_truth_dir=self.cfg['paths']['m_gt_plots_cat_crops'],
             transform=self.transform,
             hsv_tolerance=0.15,
