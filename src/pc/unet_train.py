@@ -46,13 +46,6 @@ class UNetTrainer:
         self.transform = unet_transformation(self.args)
 
     def _load_dataset(self):
-        dataset_old = CustomHSVMatchingDataset(
-            input_json=self.cfg['paths']['m_color_line_color'],
-            ground_truth_json=self.cfg['paths']['m_gt_line_color'],
-            input_dir=self.cfg['paths']['m_color_sep_plots'],
-            ground_truth_dir=self.cfg['paths']['m_gt_crops'],
-            transform=self.transform
-        )
 
         dataset = CustomDatasetUnetSD(
             input_json=self.cfg['paths']['m_color_line_color'],
