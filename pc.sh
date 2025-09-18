@@ -17,8 +17,8 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data
 
 # category separation where the background is white
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_color_wbg
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_wbg
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_color_wbg
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_wbg
 
 
 # unet training with noisy images

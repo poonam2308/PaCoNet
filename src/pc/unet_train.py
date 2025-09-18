@@ -6,7 +6,7 @@ import torch.optim as optim
 import sys
 from torch.utils.data import DataLoader, random_split
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 
 from src.pc.config import config
