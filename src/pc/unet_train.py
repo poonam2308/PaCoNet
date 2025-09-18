@@ -3,7 +3,11 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
+import sys
 from torch.utils.data import DataLoader, random_split
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
 
 from src.pc.config import config
 from src.pc.config.config import get_args, load_config
