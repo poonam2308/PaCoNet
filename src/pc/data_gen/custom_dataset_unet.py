@@ -46,8 +46,134 @@ def extract_base_name(filename: str):
     if crop_id: base.append(crop_id)
     return "_".join(base)
 
-
 class CustomDatasetUnetSD(Dataset):
+    def __init__(self, input_json=None, input_dir=None,
+                 ground_truth_json=None, ground_truth_dir=None,
+                 transform=None, hsv_tolerance=0.1, remove_background=False):
+
+        # Load input data (from JSON or directory)
+        if input_json:
+            self.input_data = load_json(input_json)
+            self.input_filenames = [item["filename"] for item in self.input_data]
+        else:
+            # Build minimal records so match_pairs can iterate safely
+            self.input_filenames = [f for f in os.listdir(input_dir)
+                                    if f.lower().endswith((".png", ".jpg", ".jpeg"))]
+            self.input_data = [{"filename": f} for f in self.input_filenames]
+
+        self.input_dir = input_dir
+
+        # Load GT (if provided)
+        self.ground_truth_data = load_json(ground_truth_json) if ground_truth_json else None
+        self.ground_truth_dir = ground_truth_dir
+
+        self.transform = transform
+        self.hsv_tolerance = hsv_tolerance
+        self.remove_background = remove_background
+
+        self.pairs = self.match_pairs()
+
+    def match_pairs(self):
+        pairs = []
+
+        # Index ground truths by base name if JSON is given
+        gt_dict = {}
+        if self.ground_truth_data:
+            for gt_item in self.ground_truth_data:
+                base = extract_base_name(gt_item["filename"])
+                gt_dict.setdefault(base, []).append(gt_item)
+
+        # If no GT JSON, but a GT directory exists, build a filename index by base name
+        gt_dir_index = {}
+        if not self.ground_truth_data and self.ground_truth_dir and os.path.isdir(self.ground_truth_dir):
+            for f in os.listdir(self.ground_truth_dir):
+                if f.lower().endswith((".png", ".jpg", ".jpeg")):
+                    base = extract_base_name(f)
+                    gt_dir_index.setdefault(base, []).append(f)
+
+        for input_item in self.input_data:
+            input_filename = input_item["filename"]
+            base_name_input = extract_base_name(input_filename)
+
+            input_hsv = input_item.get("color_hsv", None)
+
+            best_match = None
+            best_hsv_distance = float("inf")
+
+            # Prefer JSON GT if available
+            candidate_gts = []
+            if base_name_input in gt_dict:
+                candidate_gts = gt_dict[base_name_input]
+            elif base_name_input in gt_dir_index:
+                # Convert directory filenames into minimal records to unify logic
+                candidate_gts = [{"filename": f, "color_hsv": None} for f in gt_dir_index[base_name_input]]
+
+            # Try HSV-based selection if both sides have HSV; otherwise fall back to first candidate
+            if candidate_gts:
+                if input_hsv is not None and any("color_hsv" in g and g["color_hsv"] is not None for g in candidate_gts):
+                    from scipy.spatial.distance import euclidean
+                    for gt_item in candidate_gts:
+                        gt_hsv = gt_item.get("color_hsv")
+                        if gt_hsv is None:
+                            continue  # skip HSV-less candidates in HSV mode
+                        hsv_distance = euclidean(
+                            [input_hsv['h'], input_hsv['s'], input_hsv['v']],
+                            [gt_hsv['h'], gt_hsv['s'], gt_hsv['v']]
+                        )
+                        if hsv_distance < self.hsv_tolerance and hsv_distance < best_hsv_distance:
+                            best_match = gt_item["filename"]
+                            best_hsv_distance = hsv_distance
+                    # If none within tolerance, still take the closest if any were computed
+                    if best_match is None and best_hsv_distance < float("inf"):
+                        # choose the candidate with min distance (already tracked)
+                        # Nothing to do: best_match stays None if we never set it; handle below
+                        pass
+                # Fallback: no HSV available or no within-tolerance -> take first candidate
+                if best_match is None:
+                    best_match = candidate_gts[0]["filename"]
+
+            # If still nothing found, pair with None (your __getitem__ checks this)
+            if best_match:
+                pairs.append((input_filename, best_match))
+            else:
+                print(f"Warning: No match found for {input_filename}. Pairing with None.")
+                pairs.append((input_filename, None))
+
+        return pairs
+
+    def __len__(self):
+        return len(self.pairs)
+
+    def remove_bg(self, image):
+        img_array = np.array(image)
+        mask = np.any(img_array < 250, axis=-1)
+        white_bg = np.ones_like(img_array) * 255
+        white_bg[mask] = img_array[mask]
+        return Image.fromarray(white_bg.astype(np.uint8))
+
+    def __getitem__(self, idx):
+        input_filename, gt_filename = self.pairs[idx]
+        input_path = os.path.join(self.input_dir, input_filename)
+        input_image = Image.open(input_path).convert("RGB")
+
+        gt_image = None
+        if gt_filename:
+            gt_path = os.path.join(self.ground_truth_dir, gt_filename)
+            gt_image = Image.open(gt_path).convert("RGB")
+
+        if self.remove_background:
+            input_image = self.remove_bg(input_image)
+            if gt_image:
+                gt_image = self.remove_bg(gt_image)
+
+        if self.transform:
+            input_image = self.transform(input_image)
+            if gt_image:
+                gt_image = self.transform(gt_image)
+
+        return input_image, gt_image
+
+class CustomDatasetUnetSD_useless(Dataset):
     def __init__(self, input_json=None, input_dir=None,
                  ground_truth_json=None, ground_truth_dir=None,
                  transform=None, hsv_tolerance=0.1, remove_background=False):
