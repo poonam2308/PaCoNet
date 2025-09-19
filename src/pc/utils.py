@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 
 def unet_transformation(args):
-    transforms.Compose([
+    return transforms.Compose([
         transforms.Resize((args.new_width, args.new_width)),
         transforms.ToTensor(),
         transforms.Normalize(mean=args.mean * 3, std=args.std * 3)
