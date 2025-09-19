@@ -72,53 +72,39 @@ class CustomDatasetUnetSD(Dataset):
     def match_pairs(self):
         pairs = []
 
-        # Case 1: ground truth JSON exists -> do HSV matching
-        if self.input_data and self.ground_truth_data:
-            for input_item in self.input_data:
-                input_filename = input_item["filename"]
-                input_hsv = input_item["color_hsv"]
+        # Pre-index ground truths by base name
+        gt_dict = {}
+        if self.ground_truth_data:
+            for gt_item in self.ground_truth_data:
+                base = extract_base_name(gt_item["filename"])
+                if base not in gt_dict:
+                    gt_dict[base] = []
+                gt_dict[base].append(gt_item)
 
-                best_match = None
-                best_hsv_distance = float('inf')
+        for input_item in self.input_data:
+            input_filename = input_item["filename"]
+            input_hsv = input_item["color_hsv"]
+            base_name_input = extract_base_name(input_filename)
 
-                for gt_item in self.ground_truth_data:
-                    gt_filename = gt_item["filename"]
+            best_match = None
+            best_hsv_distance = float("inf")
+
+            # Only compare against ground truths with the same base name
+            if base_name_input in gt_dict:
+                for gt_item in gt_dict[base_name_input]:
                     gt_hsv = gt_item["color_hsv"]
+                    hsv_distance = euclidean(
+                        [input_hsv['h'], input_hsv['s'], input_hsv['v']],
+                        [gt_hsv['h'], gt_hsv['s'], gt_hsv['v']]
+                    )
+                    if hsv_distance < self.hsv_tolerance and hsv_distance < best_hsv_distance:
+                        best_match = gt_item["filename"]
+                        best_hsv_distance = hsv_distance
 
-                    # Extract base names
-                    base_name_input = extract_base_name(input_filename)
-                    base_name_gt = extract_base_name(gt_filename)
-
-                    if base_name_input.startswith(base_name_gt):
-                        hsv_distance = euclidean(
-                            [input_hsv['h'], input_hsv['s'], input_hsv['v']],
-                            [gt_hsv['h'], gt_hsv['s'], gt_hsv['v']]
-                        )
-
-                        if hsv_distance < self.hsv_tolerance and hsv_distance < best_hsv_distance:
-                            best_match = gt_filename
-                            best_hsv_distance = hsv_distance
-
-                if best_match:
-                    pairs.append((input_filename, best_match))
-                else:
-                    print(f"Warning: No match found for {input_filename}. Skipping.")
-
-        # Case 2: No ground truth JSON -> match by filename
-        else:
-            for fname in self.input_filenames:
-                if self.ground_truth_dir:
-                    base_name_input = extract_base_name(fname)
-                    match_found = False
-                    for gt_filename in os.listdir(self.ground_truth_dir):
-                        if extract_base_name(gt_filename) == base_name_input:
-                            pairs.append((fname, gt_filename))
-                            match_found =True
-                            break
-                    if not match_found:
-                        print(f"Warning:No GT file found for {fname}. Skipping.")
-                else:
-                    pairs.append((fname, None))
+            if best_match:
+                pairs.append((input_filename, best_match))
+            else:
+                print(f"Warning: No match found for {input_filename}. Skipping.")
 
         return pairs
 
