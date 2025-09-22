@@ -27,4 +27,4 @@
 #
 #python unet_inference.py --cfg configs/test_config.yaml
 
-python src/pc/unet_train.py --cfg src/pc/config/train_config.yaml
+python src/pc/unet_train.py --cfg src/pc/config/train_config.yaml --num_epochs 50
