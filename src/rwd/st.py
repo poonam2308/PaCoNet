@@ -19,11 +19,16 @@ def extract_image_id(filename):
     return match.group(1) if match else None
 
 
-def extract_crop_number(path):
-    """Extracts the crop number from a file path."""
-    match = re.search(r'crop_(\d+)_cat', path)
-    return int(match.group(1)) if match else -1
+# def extract_crop_number(path):
+#     """Extracts the crop number from a file path."""
+#     match = re.search(r'crop_(\d+)_cat', path)
+#     return int(match.group(1)) if match else -1
 
+
+def extract_crop_number(path):
+    # BEFORE: match = re.search(r'crop_(\d+)_cat', path)
+    match = re.search(r'crop_(\d+)_', path)
+    return int(match.group(1)) if match else -1
 
 def extract_category(path):
     """Extracts the category ID from a file path."""
@@ -34,8 +39,86 @@ def extract_category(path):
 # -----------------------------
 # Step 1: JSON to CSV Conversion (MODIFIED FOR COLUMN ORDER)
 # -----------------------------
-
 def convert_json_to_csv(json_dir):
+    """
+    Converts JSON files containing line segments into CSV files.
+    Accepts filenames like:
+      image_1_crop_2_cat_7_post.json
+      image_1_crop_2_SOXR_post.json
+      image_1_crop_2_y1hE7_mask_post.json
+    """
+    json_dir = Path(json_dir)
+    print(f"🔄 Converting JSON files in: {json_dir}")
+
+    # Accept both legacy and new patterns
+    pat_old = re.compile(r'_crop_(?P<crop>\d+)_cat_(?P<cat>\d+)_(?P<tag>pre|mask|post|mask_post)$')
+    pat_new = re.compile(r'_crop_(?P<crop>\d+)_(?P<label>[A-Za-z0-9]+)_(?P<tag>pre|mask|post|mask_post)$')
+
+    # Persist a mapping from string labels → numeric cat IDs so runs are consistent
+    label_map_path = json_dir / "_label_to_cat.json"
+    if label_map_path.exists():
+        try:
+            label_to_cat = json.loads(label_map_path.read_text(encoding="utf-8"))
+        except Exception:
+            label_to_cat = {}
+    else:
+        label_to_cat = {}
+
+    next_cat_id = (max([int(v) for v in label_to_cat.values()], default=-1) + 1)
+
+    json_files_found = False
+    for json_file in json_dir.glob("*.json"):
+        json_files_found = True
+        print(f"   Attempting to load: {json_file.name}")
+
+        try:
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            print(f"❌ Error decoding JSON from {json_file.name}: {e}")
+            continue
+
+        lines = data.get("lines", [])
+
+        stem = json_file.stem
+        m = pat_old.search(stem) or pat_new.search(stem)
+        if not m:
+            print(f"⚠️ Warning: Filename '{json_file.name}' does not match expected pattern. Skipping.")
+            continue
+
+        crop_num = int(m.group("crop"))
+        if "cat" in m.groupdict() and m.group("cat") is not None:
+            cat_id = int(m.group("cat"))
+        else:
+            label = m.group("label")
+            # stable mapping for alphanumeric labels
+            if label not in label_to_cat:
+                label_to_cat[label] = str(next_cat_id)
+                next_cat_id += 1
+            cat_id = int(label_to_cat[label])
+
+        rows = []
+        for p1, p2 in lines:
+            x1, y1 = p1
+            x2, y2 = p2
+            rows.append({
+                "crop_num": crop_num,
+                "x1": x1, "y1": y1,
+                "x2": x2, "y2": y2,
+                "cat": cat_id
+            })
+
+        df = pd.DataFrame(rows)
+        csv_path = json_file.with_name(f"{json_file.stem}_xy.csv")
+        df.to_csv(csv_path, index=False)
+        print(f"✅ JSON converted to XY CSV: {csv_path}")
+
+    if json_files_found:
+        # Save/refresh the mapping for transparency & reproducibility
+        label_map_path.write_text(json.dumps(label_to_cat, indent=2), encoding="utf-8")
+    else:
+        print(f"⚠️ No JSON files found in {json_dir}. Please ensure your JSONs are in this directory.")
+
+def convert_json_to_csv_old(json_dir):
     """
     Converts JSON files containing line segments into CSV files.
     Each line segment's start (x1, y1) and end (x2, y2) coordinates,
@@ -121,7 +204,7 @@ def stitch_xy_coordinates(base_dir, image_id, crop_width=224.0, threshold_distan
     # Get all unique crop numbers and sort them to ensure correct processing order
     # This is important because glob might not return files in numerical order
     all_xy_csv_files = sorted(
-        base_dir.glob(f"{image_id}_crop_*_cat_*_xy.csv"),
+        base_dir.glob(f"{image_id}_crop_*_*_xy.csv"),
         key=lambda f: extract_crop_number(str(f))
     )
 

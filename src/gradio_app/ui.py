@@ -10,7 +10,7 @@ from .denoising_tab import run_denoising, generate_denoised_overlay, select_deno
 from .prediction_tab import trigger_line_prediction_all, generate_predicted_overlay_pre, \
     generate_predicted_overlay_post, select_prediction_from_gallery_pre, select_prediction_from_gallery_post, \
     generate_predicted_overlay_mask, generate_predicted_overlay_mask_post, select_prediction_from_gallery_mask, \
-    select_prediction_from_gallery_mask_post
+    select_prediction_from_gallery_mask_post, trigger_line_prediction_selected
 from .stitching_tab import run_stitching_from_prediction
 from .session import save_session_log, SESSION
 from .quantitative_tab import perform_quantitative_evaluation_in_memory
@@ -103,6 +103,14 @@ def build_ui():
                     step=0.01,
                     value=0.5,
                     label="Line Confidence Threshold"
+                )
+
+
+                # NEW: choose which variants to run
+                pred_kind_selector = gr.CheckboxGroup(
+                    label="Which predictions to run?",
+                    choices=["pre", "mask", "post", "mask_post"],
+                    value=["pre", "post"],  # sensible default
                 )
 
                 predict_btn = gr.Button("Run Line Prediction")
@@ -288,9 +296,36 @@ def build_ui():
             outputs=[denoise_overlay_img]
         )
 
+        # predict_btn.click(
+        #     fn=trigger_line_prediction_all,
+        #     inputs=[line_threshold_slider],
+        #     outputs=[
+        #         # PRE
+        #         svg_gallery_pre, json_output_pre, pred_overlay_selection_pre, pred_overlay_img_pre,
+        #         # MASK
+        #         svg_gallery_mask, json_output_mask, pred_overlay_selection_mask, pred_overlay_img_mask,
+        #         # POST
+        #         svg_gallery, json_output, pred_overlay_selection, pred_overlay_img,
+        #         # MASK+POST
+        #         svg_gallery_mask_post, json_output_mask_post, pred_overlay_selection_mask_post,
+        #         pred_overlay_img_mask_post,
+        #     ]
+        # ).then(
+        #     fn=lambda: generate_predicted_overlay_pre([]),
+        #     outputs=[pred_overlay_img_pre]
+        # ).then(
+        #     fn=lambda: generate_predicted_overlay_post([]),
+        #     outputs=[pred_overlay_img]
+        # ).then(
+        #     fn=lambda: generate_predicted_overlay_mask([]),
+        #     outputs=[pred_overlay_img_mask]
+        # ).then(
+        #     fn=lambda: generate_predicted_overlay_mask_post([]),
+        #     outputs=[pred_overlay_img_mask_post]
+        # )
         predict_btn.click(
-            fn=trigger_line_prediction_all,
-            inputs=[line_threshold_slider],
+            fn=trigger_line_prediction_selected,  # NEW function
+            inputs=[line_threshold_slider, pred_kind_selector],
             outputs=[
                 # PRE
                 svg_gallery_pre, json_output_pre, pred_overlay_selection_pre, pred_overlay_img_pre,
@@ -315,6 +350,7 @@ def build_ui():
             fn=lambda: generate_predicted_overlay_mask_post([]),
             outputs=[pred_overlay_img_mask_post]
         )
+
 
         pred_overlay_selection_pre.change(
             fn=generate_predicted_overlay_pre,

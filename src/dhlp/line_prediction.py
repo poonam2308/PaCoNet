@@ -167,7 +167,7 @@ def run_line_prediction_on_images_all(
     config_path="./src/dhlp/config/clust5kdenoisednew.yaml",
     checkpoint_path="./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth",
     output_dir="./outputs/reals/redesigned",
-    score_threshold=0.5,
+    score_threshold=0.5, kinds=None
 ):
     """
     Run line prediction with 4 result types:
@@ -176,6 +176,10 @@ def run_line_prediction_on_images_all(
     3. post      = postprocess only
     4. mask_post = postprocess + mask filtering
     """
+    if kinds is None or len(kinds) == 0:
+        kinds = ["pre", "mask", "post", "mask_post"]
+    kinds = set(kinds)
+
     os.makedirs(output_dir, exist_ok=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -284,23 +288,53 @@ def run_line_prediction_on_images_all(
         base_name = osp.basename(im_path)
         mask = generate_binary_mask(im_path, white_thresh=250)
 
+        # # --- PRE ---
+        # svg, js = save_outputs(im, lines, scores, base_name, "pre", thr=effective_thr)
+        # results["pre"]["svgs"].append(svg); results["pre"]["jsons"].append(js)
+        #
+        # # --- MASK ---
+        # svg, js = save_outputs(im, lines, scores, base_name, "mask", thr=effective_thr, mask=mask)
+        # results["mask"]["svgs"].append(svg); results["mask"]["jsons"].append(js)
+        #
+        # # --- POST ---
+        # diag = (im.shape[0]**2 + im.shape[1]**2)**0.5
+        # nlines, nscores = postprocess(lines, scores, diag*0.01, 0, False)
+        # svg, js = save_outputs(im, nlines, nscores, base_name, "post", thr=effective_thr)
+        # results["post"]["svgs"].append(svg); results["post"]["jsons"].append(js)
+        #
+        # # --- MASK + POST ---
+        # svg, js = save_outputs(im, nlines, nscores, base_name, "mask_post", thr=effective_thr, mask=mask)
+        # results["mask_post"]["svgs"].append(svg); results["mask_post"]["jsons"].append(js)
+
         # --- PRE ---
-        svg, js = save_outputs(im, lines, scores, base_name, "pre", thr=effective_thr)
-        results["pre"]["svgs"].append(svg); results["pre"]["jsons"].append(js)
+        if "pre" in kinds:
+            svg, js = save_outputs(im, lines, scores, base_name, "pre", thr=effective_thr)
+            results["pre"]["svgs"].append(svg);
+            results["pre"]["jsons"].append(js)
 
         # --- MASK ---
-        svg, js = save_outputs(im, lines, scores, base_name, "mask", thr=effective_thr, mask=mask)
-        results["mask"]["svgs"].append(svg); results["mask"]["jsons"].append(js)
+        if "mask" in kinds:
+            mask = mask if 'mask' in locals() else generate_binary_mask(im_path, white_thresh=250)
+            svg, js = save_outputs(im, lines, scores, base_name, "mask", thr=effective_thr, mask=mask)
+            results["mask"]["svgs"].append(svg);
+            results["mask"]["jsons"].append(js)
 
         # --- POST ---
-        diag = (im.shape[0]**2 + im.shape[1]**2)**0.5
-        nlines, nscores = postprocess(lines, scores, diag*0.01, 0, False)
-        svg, js = save_outputs(im, nlines, nscores, base_name, "post", thr=effective_thr)
-        results["post"]["svgs"].append(svg); results["post"]["jsons"].append(js)
+        if ("post" in kinds) or ("mask_post" in kinds):
+            diag = (im.shape[0] ** 2 + im.shape[1] ** 2) ** 0.5
+            nlines, nscores = postprocess(lines, scores, diag * 0.01, 0, False)
+
+        if "post" in kinds:
+            svg, js = save_outputs(im, nlines, nscores, base_name, "post", thr=effective_thr)
+            results["post"]["svgs"].append(svg);
+            results["post"]["jsons"].append(js)
 
         # --- MASK + POST ---
-        svg, js = save_outputs(im, nlines, nscores, base_name, "mask_post", thr=effective_thr, mask=mask)
-        results["mask_post"]["svgs"].append(svg); results["mask_post"]["jsons"].append(js)
+        if "mask_post" in kinds:
+            mask = mask if 'mask' in locals() else generate_binary_mask(im_path, white_thresh=250)
+            svg, js = save_outputs(im, nlines, nscores, base_name, "mask_post", thr=effective_thr, mask=mask)
+            results["mask_post"]["svgs"].append(svg);
+            results["mask_post"]["jsons"].append(js)
 
     return results
 

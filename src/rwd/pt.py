@@ -144,8 +144,9 @@ def process_stitched_xy_csvs(input_dir, output_dir, crop_width_val, hsv_json_pat
         except Exception as e:
             print(f"❌ Error reading {csv_filename}: {e}")
             continue
-
-        match = re.match(r"(\d+)_stitched_xy\.csv", csv_filename)
+        #
+        # match = re.match(r"(\d+)_stitched_xy\.csv", csv_filename)
+        match = re.match(r"(.+)_stitched_xy\.csv", csv_filename)
         image_id = match.group(1) if match else "Unknown"
         output_svg = os.path.join(output_dir, f"{image_id}_stitched_xy_plot.svg")
 

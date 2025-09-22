@@ -80,6 +80,59 @@ def trigger_line_prediction_both(score_threshold):
         *_prep_gallery_payload(post_svgs, post_jsons, "pred_image_to_json_post"),
     )
 
+def trigger_line_prediction_selected(score_threshold, kinds):
+    # Normalize selection; fall back to all 4 if nothing was ticked
+    kinds = set(kinds or ["pre", "mask", "post", "mask_post"])
+
+    denoised_dir_path = SESSION.get("denoised_dir") or Path("outputs/reals/denoised")
+    if not denoised_dir_path.exists() or not any(denoised_dir_path.glob("*.png")):
+        # return 4 empty sections in the same order: pre, mask, post, mask_post
+        empty = ([], "", gr.update(choices=[], visible=False), gr.update(visible=True))
+        return (*empty, *empty, *empty, *empty)
+
+    # 👉 pass `kinds` down so we only compute what was selected
+    _ = run_line_prediction_on_images_all(
+        [str(p) for p in denoised_dir_path.glob("*.png")],
+        score_threshold=score_threshold,
+        kinds=list(kinds),                   # NEW
+    )
+
+    # Collect whatever was generated
+    pred_dir = Path("outputs/reals/redesigned")
+    if not pred_dir.exists():
+        empty = ([], "", gr.update(choices=[], visible=False), gr.update(visible=True))
+        return (*empty, *empty, *empty, *empty)
+
+    jsons_by_kind = {
+        "pre": list(pred_dir.glob("*_pre.json")),
+        "mask": list(pred_dir.glob("*_mask.json")),
+        "post": list(pred_dir.glob("*_post.json")),
+        "mask_post": list(pred_dir.glob("*_mask_post.json")),
+    }
+
+    # Save to SESSION_LOG + NPZs (only for the ones present)
+    for kind, json_files in jsons_by_kind.items():
+        if json_files:
+            SESSION_LOG["results"][f"line_jsons_{kind}"] = [str(j) for j in json_files]
+            npz_files = save_predictions_as_npz(json_files, kind)
+            SESSION_LOG["results"][f"pred_npz_files_{kind}"] = npz_files
+
+    def prep_display(kind):
+        jsons = SESSION_LOG["results"].get(f"line_jsons_{kind}", [])
+        svgs = [j.replace(".json", ".svg") for j in jsons]
+        return _prep_gallery_payload(svgs, jsons, f"pred_image_to_json_{kind}")
+
+    SESSION_LOG["inputs"]["line_score_threshold"] = score_threshold
+    SESSION_LOG["steps"].append(f"Line Prediction Completed ({', '.join(sorted(kinds))})")
+
+    # Always return 4 blocks in fixed order; unselected ones will be empty
+    return (
+        *prep_display("pre"),
+        *prep_display("mask"),
+        *prep_display("post"),
+        *prep_display("mask_post"),
+    )
+
 
 def trigger_line_prediction_all(score_threshold):
     denoised_dir_path = SESSION.get("denoised_dir") or Path("outputs/reals/denoised")
