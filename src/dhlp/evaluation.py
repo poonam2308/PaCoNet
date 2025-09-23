@@ -68,7 +68,7 @@ def msTPFP1(line_pred, line_gt, threshold):
     return tp, fp
 
 
-def compute_ap(tp, fp):
+def compute_ap1(tp, fp):
     """Compute Average Precision (AP) from TP/FP arrays."""
     recall = np.cumsum(tp) / max(len(tp), 1)
     precision = np.cumsum(tp) / np.maximum(np.cumsum(tp) + np.cumsum(fp), 1e-9)
@@ -82,6 +82,42 @@ def compute_ap(tp, fp):
 
     i = np.where(recall[1:] != recall[:-1])[0]
     return np.sum((recall[i + 1] - recall[i]) * precision[i + 1])
+
+def compute_ap(tp, fp, num_gt):
+    """
+    Average Precision with recall normalized by the number of ground-truth lines.
+
+    Args:
+        tp (array-like): 1 for each prediction counted as a true positive (ranked order).
+        fp (array-like): 1 for each prediction counted as a false positive (ranked order).
+        num_gt (int):     Count of ground-truth lines you are evaluating against
+                          (after any GT filtering you applied earlier).
+    Returns:
+        float: AP in [0, 1].
+    """
+    tp = np.asarray(tp, dtype=np.float32)
+    fp = np.asarray(fp, dtype=np.float32)
+
+    if num_gt <= 0:
+        # No ground truth → nothing to recall; define AP as 0.0
+        return 0.0
+
+    tp_cum = np.cumsum(tp)
+    fp_cum = np.cumsum(fp)
+
+    recall = tp_cum / float(num_gt)
+    precision = tp_cum / np.maximum(tp_cum + fp_cum, 1.0)
+
+    # precision envelope (monotonic non-increasing)
+    mrec = np.concatenate(([0.0], recall, [1.0]))
+    mpre = np.concatenate(([0.0], precision, [0.0]))
+    for i in range(len(mpre) - 1, 0, -1):
+        mpre[i - 1] = max(mpre[i - 1], mpre[i])
+
+    # integrate PR curve where recall changes
+    idx = np.where(mrec[1:] != mrec[:-1])[0]
+    ap = np.sum((mrec[idx + 1] - mrec[idx]) * mpre[idx + 1])
+    return ap
 
 def msTPFP(line_pred, line_gt, threshold, debug=False):
     """
@@ -163,8 +199,9 @@ def process_line_detection_arrays(ground_truth_lines, predicted_lines, mask, thr
         return 0.0
 
     tp, fp = msTPFP(filtered_lines, ground_truth_lines, threshold, debug=False)
+    num_gt = len(ground_truth_lines)
     print("TP:", tp.sum(), "FP:", fp.sum())
-    return compute_ap(tp, fp) * 100
+    return compute_ap(tp, fp,num_gt) * 100
 
 
 

@@ -49,7 +49,7 @@ def extract_base_name(filename: str):
 class CustomDatasetUnetSD(Dataset):
     def __init__(self, input_json=None, input_dir=None,
                  ground_truth_json=None, ground_truth_dir=None,
-                 transform=None, hsv_tolerance=0.1, remove_background=False):
+                 transform=None, channel_mode ="RGB", hsv_tolerance=0.1, remove_background=False):
 
         # Load input data (from JSON or directory)
         if input_json:
@@ -70,6 +70,7 @@ class CustomDatasetUnetSD(Dataset):
         self.transform = transform
         self.hsv_tolerance = hsv_tolerance
         self.remove_background = remove_background
+        self.channel_mode = channel_mode
 
         self.pairs = self.match_pairs()
 
@@ -154,12 +155,12 @@ class CustomDatasetUnetSD(Dataset):
     def __getitem__(self, idx):
         input_filename, gt_filename = self.pairs[idx]
         input_path = os.path.join(self.input_dir, input_filename)
-        input_image = Image.open(input_path).convert("RGB")
+        input_image = Image.open(input_path).convert(self.channel_mode)
 
         gt_image = None
         if gt_filename:
             gt_path = os.path.join(self.ground_truth_dir, gt_filename)
-            gt_image = Image.open(gt_path).convert("RGB")
+            gt_image = Image.open(gt_path).convert(self.channel_mode)
 
         if self.remove_background:
             input_image = self.remove_bg(input_image)

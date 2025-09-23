@@ -10,7 +10,7 @@ from .denoising_tab import run_denoising, generate_denoised_overlay, select_deno
 from .prediction_tab import trigger_line_prediction_all, generate_predicted_overlay_pre, \
     generate_predicted_overlay_post, select_prediction_from_gallery_pre, select_prediction_from_gallery_post, \
     generate_predicted_overlay_mask, generate_predicted_overlay_mask_post, select_prediction_from_gallery_mask, \
-    select_prediction_from_gallery_mask_post, trigger_line_prediction_selected
+    select_prediction_from_gallery_mask_post, trigger_line_prediction_selected, toggle_prediction_sections
 from .stitching_tab import run_stitching_from_prediction
 from .session import save_session_log, SESSION
 from .quantitative_tab import perform_quantitative_evaluation_in_memory
@@ -115,54 +115,100 @@ def build_ui():
 
                 predict_btn = gr.Button("Run Line Prediction")
 
-                # --- NEW: PRE ---
-                gr.Markdown("**Pre-masked filtering predictions**")
-                svg_gallery_pre = gr.Gallery(label="Pre SVGs", columns=3)
-                json_output_pre = gr.Textbox(label="Pre JSON Outputs", lines=10, visible=False)
-                pred_overlay_selection_pre = gr.CheckboxGroup(
-                    label="Select Pre Predicted Lines to Overlay",
-                    choices=[],
-                    visible=False
-                )
-                pred_overlay_img_pre = gr.Image(
-                    label="Overlay: Pre Predicted Lines on Original",
-                    type="filepath",
-                    visible=True
-                )
+                # # --- NEW: PRE ---
+                # gr.Markdown("**Pre-masked filtering predictions**")
+                # svg_gallery_pre = gr.Gallery(label="Pre SVGs", columns=3)
+                # json_output_pre = gr.Textbox(label="Pre JSON Outputs", lines=10, visible=False)
+                # pred_overlay_selection_pre = gr.CheckboxGroup(
+                #     label="Select Pre Predicted Lines to Overlay",
+                #     choices=[],
+                #     visible=False
+                # )
+                # pred_overlay_img_pre = gr.Image(
+                #     label="Overlay: Pre Predicted Lines on Original",
+                #     type="filepath",
+                #     visible=True
+                # )
+                #
+                # # --- EXISTING: POST ---
+                # gr.Markdown("**Post-masked filtering predictions**")
+                # svg_gallery = gr.Gallery(label="Post SVGs", columns=3)
+                # json_output = gr.Textbox(label="Post JSON Outputs", lines=10, visible=False)
+                # pred_overlay_selection = gr.CheckboxGroup(
+                #     label="Select Post Predicted Lines to Overlay",
+                #     choices=[],
+                #     visible=False
+                # )
+                # pred_overlay_img = gr.Image(
+                #     label="Overlay: Post Predicted Lines on Original",
+                #     type="filepath",
+                #     visible=True
+                # )
+                #
+                # # --- NEW: MASK ---
+                # gr.Markdown("**Mask-filtered predictions**")
+                # svg_gallery_mask = gr.Gallery(label="Mask SVGs", columns=3)
+                # json_output_mask = gr.Textbox(label="Mask JSON Outputs", lines=10, visible=False)
+                # pred_overlay_selection_mask = gr.CheckboxGroup(
+                #     label="Select Mask Predicted Lines to Overlay", choices=[], visible=False
+                # )
+                # pred_overlay_img_mask = gr.Image(label="Overlay: Mask Predicted Lines", type="filepath", visible=True)
+                #
+                # # --- NEW: MASK+POST ---
+                # gr.Markdown("**Mask + Postprocess predictions**")
+                # svg_gallery_mask_post = gr.Gallery(label="Mask+Post SVGs", columns=3)
+                # json_output_mask_post = gr.Textbox(label="Mask+Post JSON Outputs", lines=10, visible=False)
+                # pred_overlay_selection_mask_post = gr.CheckboxGroup(
+                #     label="Select Mask+Post Predicted Lines to Overlay", choices=[], visible=False
+                # )
+                # pred_overlay_img_mask_post = gr.Image(label="Overlay: Mask+Post Predicted Lines", type="filepath",
+                #                                       visible=True)
 
-                # --- EXISTING: POST ---
-                gr.Markdown("**Post-masked filtering predictions**")
-                svg_gallery = gr.Gallery(label="Post SVGs", columns=3)
-                json_output = gr.Textbox(label="Post JSON Outputs", lines=10, visible=False)
-                pred_overlay_selection = gr.CheckboxGroup(
-                    label="Select Post Predicted Lines to Overlay",
-                    choices=[],
-                    visible=False
-                )
-                pred_overlay_img = gr.Image(
-                    label="Overlay: Post Predicted Lines on Original",
-                    type="filepath",
-                    visible=True
-                )
+                with gr.Group(visible=False) as group_pre:
+                    gr.Markdown("**Pre-masked filtering predictions**")
+                    svg_gallery_pre = gr.Gallery(label="Pre SVGs", columns=3)
+                    json_output_pre = gr.Textbox(label="Pre JSON Outputs", lines=10, visible=False)
+                    pred_overlay_selection_pre = gr.CheckboxGroup(
+                        label="Select Pre Predicted Lines to Overlay", choices=[], visible=False
+                    )
+                    pred_overlay_img_pre = gr.Image(
+                        label="Overlay: Pre Predicted Lines on Original", type="filepath", visible=True
+                    )
+                # --- POST ---
+                with gr.Group(visible=False) as group_post:
+                    gr.Markdown("**PostPorcessulm"
+                                " predictions**")
+                    svg_gallery = gr.Gallery(label="Post SVGs", columns=3)
+                    json_output = gr.Textbox(label="Post JSON Outputs", lines=10, visible=False)
+                    pred_overlay_selection = gr.CheckboxGroup(
+                        label="Select Post Predicted Lines to Overlay", choices=[], visible=False
+                    )
+                    pred_overlay_img = gr.Image(
+                        label="Overlay: Post Predicted Lines on Original", type="filepath", visible=True
+                    )
+                    # --- MASK ---
+                with gr.Group(visible=False) as group_mask:
+                    gr.Markdown("**Mask-filtered predictions**")
+                    svg_gallery_mask = gr.Gallery(label="Mask SVGs", columns=3)
+                    json_output_mask = gr.Textbox(label="Mask JSON Outputs", lines=10, visible=False)
+                    pred_overlay_selection_mask = gr.CheckboxGroup(
+                        label="Select Mask Predicted Lines to Overlay", choices=[], visible=False
+                    )
+                    pred_overlay_img_mask = gr.Image(
+                        label="Overlay: Mask Predicted Lines", type="filepath", visible=True
+                    )
 
-                # --- NEW: MASK ---
-                gr.Markdown("**Mask-filtered predictions**")
-                svg_gallery_mask = gr.Gallery(label="Mask SVGs", columns=3)
-                json_output_mask = gr.Textbox(label="Mask JSON Outputs", lines=10, visible=False)
-                pred_overlay_selection_mask = gr.CheckboxGroup(
-                    label="Select Mask Predicted Lines to Overlay", choices=[], visible=False
-                )
-                pred_overlay_img_mask = gr.Image(label="Overlay: Mask Predicted Lines", type="filepath", visible=True)
-
-                # --- NEW: MASK+POST ---
-                gr.Markdown("**Mask + Postprocess predictions**")
-                svg_gallery_mask_post = gr.Gallery(label="Mask+Post SVGs", columns=3)
-                json_output_mask_post = gr.Textbox(label="Mask+Post JSON Outputs", lines=10, visible=False)
-                pred_overlay_selection_mask_post = gr.CheckboxGroup(
-                    label="Select Mask+Post Predicted Lines to Overlay", choices=[], visible=False
-                )
-                pred_overlay_img_mask_post = gr.Image(label="Overlay: Mask+Post Predicted Lines", type="filepath",
-                                                      visible=True)
+                    # --- MASK + POST ---
+                with gr.Group(visible=False) as group_mask_post:
+                    gr.Markdown("**Mask + Postprocess predictions**")
+                    svg_gallery_mask_post = gr.Gallery(label="Mask+Post SVGs", columns=3)
+                    json_output_mask_post = gr.Textbox(label="Mask+Post JSON Outputs", lines=10, visible=False)
+                    pred_overlay_selection_mask_post = gr.CheckboxGroup(
+                        label="Select Mask+Post Predicted Lines to Overlay", choices=[], visible=False
+                    )
+                    pred_overlay_img_mask_post = gr.Image(
+                        label="Overlay: Mask+Post Predicted Lines", type="filepath", visible=True
+                    )
 
             with gr.TabItem("5️⃣ Stitching"):
                 threshold_input = gr.Slider(minimum=1.0, maximum=50.0, step=1.0, value=10.0, label="Matching Threshold")
@@ -351,6 +397,11 @@ def build_ui():
             outputs=[pred_overlay_img_mask_post]
         )
 
+        pred_kind_selector.change(
+            fn=toggle_prediction_sections,
+            inputs=[pred_kind_selector],
+            outputs=[group_pre, group_mask, group_post, group_mask_post]
+        )
 
         pred_overlay_selection_pre.change(
             fn=generate_predicted_overlay_pre,

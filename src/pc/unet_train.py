@@ -29,7 +29,8 @@ class UNetTrainer:
         self._prepare_dirs()
         self._prepare_transforms()
 
-        self.model = UNetSD(in_channels=3, out_channels=3).to(self.device)
+        # self.model = UNetSD(in_channels=3, out_channels=3).to(self.device)
+        self.model = UNetSD(in_channels=self.args.in_channels, out_channels=self.args.out_channels).to(self.device)
 
     def _set_seed(self, seed):
         torch.manual_seed(seed)
@@ -51,8 +52,9 @@ class UNetTrainer:
             input_dir=self.cfg['paths']['m_color_sep_plots'],
             ground_truth_dir=self.cfg['paths']['m_gt_plots_cat_crops'],
             transform=self.transform,
+            channel_mode=self.args.channel_mode,
             hsv_tolerance=0.15,
-            remove_background=True
+            remove_background=False
 
         )
 

@@ -608,3 +608,10 @@ def save_predictions_as_npz(json_files, kind, out_root="outputs/reals/pred_npz")
         np.savez_compressed(str(prefix) + ".npz", lines=lines, score=scores)
         saved.append(str(prefix) + ".npz")
     return saved
+
+
+def toggle_prediction_sections(kinds):
+    kinds = set(kinds or [])
+    def vis(name): return gr.update(visible=(name in kinds))
+    # order: pre, mask, post, mask_post
+    return vis("pre"), vis("mask"), vis("post"), vis("mask_post")
