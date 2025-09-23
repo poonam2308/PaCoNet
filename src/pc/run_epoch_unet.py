@@ -6,6 +6,31 @@ import os
 import numpy as np
 import torchvision.transforms as transforms
 
+# --- add near the imports ---
+def _to_pil_ready(arr_uint8):
+    """
+    Accepts a uint8 numpy array shaped (H,W), (H,W,1), (H,W,3) or (H,W,4)
+    Returns (pil_array, mode) suitable for Image.fromarray
+    """
+    if arr_uint8.ndim == 3 and arr_uint8.shape[2] == 1:
+        # Grayscale: drop the singleton channel
+        return arr_uint8[:, :, 0], 'L'
+    elif arr_uint8.ndim == 2:
+        return arr_uint8, 'L'
+    elif arr_uint8.ndim == 3 and arr_uint8.shape[2] in (3, 4):
+        return arr_uint8, None  # let PIL infer RGB/RGBA
+    else:
+        # As a fallback, replicate to 3 channels
+        if arr_uint8.ndim == 3 and arr_uint8.shape[2] > 4:
+            # Unexpected channel count; keep first 3
+            arr_uint8 = arr_uint8[:, :, :3]
+        elif arr_uint8.ndim == 2:
+            arr_uint8 = np.stack([arr_uint8]*3, axis=2)
+        else:
+            # e.g., (H,W,1) or weird shapes
+            arr_uint8 = np.repeat(arr_uint8[:, :, :1], 3, axis=2)
+        return arr_uint8, None
+
 
 def save_visualization(input_img, ground_truth, output_img, epoch, save_dir):
     """ Function to save input, ground truth, and output images """
@@ -70,9 +95,17 @@ def save_batch_visualization(input_batch, ground_truth_batch, output_batch, epoc
         gt_path = os.path.join(batch_save_dir, f"ground_truth_{idx}.png")
         output_path = os.path.join(batch_save_dir, f"output_{idx}.png")
 
-        Image.fromarray(input_img).save(input_path)
-        Image.fromarray(ground_truth).save(gt_path)
-        Image.fromarray(output_img).save(output_path)
+        # Image.fromarray(input_img).save(input_path)
+        # Image.fromarray(ground_truth).save(gt_path)
+        # Image.fromarray(output_img).save(output_path)
+
+        inp_arr, inp_mode = _to_pil_ready(input_img)
+        gt_arr, gt_mode = _to_pil_ready(ground_truth)
+        out_arr, out_mode = _to_pil_ready(output_img)
+
+        Image.fromarray(inp_arr if inp_mode is None else inp_arr, mode=inp_mode).save(input_path)
+        Image.fromarray(gt_arr if gt_mode is None else gt_arr, mode=gt_mode).save(gt_path)
+        Image.fromarray(out_arr if out_mode is None else out_arr, mode=out_mode).save(output_path)
 
         print(f"Saved {input_path}")
         print(f"Saved {gt_path}")
@@ -163,7 +196,10 @@ def save_images(input_images, input_filenames, outputs, output_dir):
         if isinstance(filename, (tuple, list)):
             filename = filename[0]
         output_path = os.path.join(output_dir, filename)
-        img = Image.fromarray(output_img)
+        # img = Image.fromarray(output_img)
+        pil_arr, mode = _to_pil_ready(output_img)
+        img = Image.fromarray(pil_arr if mode is None else pil_arr, mode=mode)
+
         img.save(output_path, format='PNG')  # Save as PNG for lossless quality
 
 
