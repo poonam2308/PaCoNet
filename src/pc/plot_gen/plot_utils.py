@@ -84,3 +84,40 @@ def safe_join(base_dir, file_path):
 def round_half_up(x):
     """Round halves up (0.5 -> 1, -0.5 -> 0) for consistent pixel placement."""
     return int(math.floor(float(x) + 0.5))
+
+
+def update_lines(json_file, output_file):
+    with open(json_file, 'r') as file:
+        data = json.load(file)
+
+    new_data = []
+    new_height = 224
+    original_height = 321
+    scale_y = new_height / original_height  # Fixed scaling factor for height
+
+    for item in data:
+        filename = item["filename"]
+        updated_lines = []
+
+        for line in item["lines"]:
+            original_width = line[2]  # Extract original width from the third element of lines
+            scale_x = new_height / original_width  # Scaling factor for width
+
+            # Apply scaling
+            new_line = [
+                round(line[0] * scale_x,2),
+                round(line[1] * scale_y, 2),
+                round(line[2] * scale_x, 2),
+                round(line[3] * scale_y, 2)
+            ]
+            updated_lines.append(new_line)
+
+        new_data.append({
+            "filename": filename,
+            "lines": updated_lines
+        })
+
+    with open(output_file, 'w') as file:
+        json.dump(new_data, file, indent=4)
+
+    print(f"Updated JSON saved to {output_file}")

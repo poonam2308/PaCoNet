@@ -32,6 +32,8 @@ paths:
   # Category separation - color
   m_color_sep_plots: "data/synthetic_plots/multi_cat/training/color/images"
   m_color_all_json: "data/synthetic_plots/multi_cat/training/color/images/all_data.json"
+  m_color_rescaled_all_json: "data/synthetic_plots/multi_cat/training/color/images/rescaled_all_data.json"
+
   m_color_train_json: "data/synthetic_plots/multi_cat/training/color/train.json"
   m_color_valid_json: "data/synthetic_plots/multi_cat/training/color/valid.json"
 

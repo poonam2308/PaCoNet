@@ -30,9 +30,13 @@ paths:
 
   # Multi-category separated
   m_color_sep_plots: "data/synthetic_plots/multi_cat/testing/color/images"
+  m_color_all_json: "data/synthetic_plots/multi_cat/training/color/images/all_data.json"
+  m_color_rescaled_all_json: "data/synthetic_plots/multi_cat/training/color/rescaled_all_data.json"
+
   m_cluster_sep_plots: "data/synthetic_plots/multi_cat/testing/cluster/images"
   m_color_denoised_plots: "data/synthetic_plots/multi_cat/testing/color_denoised"
   m_cluster_denoised_plots: "data/synthetic_plots/multi_cat/testing/cluster_denoised"
+
 
   # Real-world plots
   real_plots: "data/real_plots/images"

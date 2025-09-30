@@ -16,7 +16,8 @@ from src.pc.data_gen.real_dist_info import extract_distributions_from_excel, ext
 from src.pc.plot_gen.multi_cat import MultiCatPCPGenerator
 from src.pc.plot_gen.axes_crop import CroppingProcessor
 from src.pc.plot_gen.category_separation import CategorySeparator
-from src.pc.plot_gen.plot_utils import split_data
+from src.pc.plot_gen.plot_utils import split_data, update_lines
+
 
 class PlotsPipeline:
     def __init__(self):
@@ -117,11 +118,17 @@ class PlotsPipeline:
                 force_white_bg=True
             )
 
-    def split_data(self):
-        # Optionally split into train/val
+    def rescale_lines(self):
         if 'm_color_all_json' in self.paths:
+            update_lines(
+                json_file=self.paths['m_color_all_json'],
+                output_file=self.paths['m_color_rescaled_all_json']
+            )
+
+    def split_data(self):
+        if 'm_color_rescaled_all_json' in self.paths:
             split_data(
-                input_file=self.paths['m_color_all_json'],
+                input_file=self.paths['m_color_rescaled_all_json'],
                 train_file=self.paths['m_color_train_json'],
                 valid_file=self.paths['m_color_valid_json']
             )
