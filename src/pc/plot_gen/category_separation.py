@@ -1,23 +1,31 @@
-
 import cv2
 import os
 import re
 import json
 import numpy as np
-import random
 from pathlib import Path
 from PIL import Image
 from matplotlib import pyplot as plt
 from scipy.signal import find_peaks
-from sklearn.cluster import DBSCAN
 
 class CategorySeparator:
-    def __init__(self):
-        random.seed(0)
-        np.random.seed(0)
+    """
+    Minimal, opinionated version:
+      - Only process_single_image_enhanced is exposed.
+      - Background is **always white**.
+      - Works with or without a JSON. If JSON has `category_colors`, we map peaks to closest category.
+      - Peak detection: histogram on (optionally saturation-filtered) hue.
+      - Supports `top_k` to keep only the K strongest hue peaks (by histogram height).
+    """
 
-    def _closest_category(self, hsv_val, category_colors):
-        # hsv_val: (h, s, v) with h in [0,1], s,v in [0,1]
+    # ---------- Utilities ----------
+    @staticmethod
+    def _json_exists(json_path):
+        return bool(json_path) and os.path.exists(json_path)
+
+    @staticmethod
+    def _closest_category(hsv_val, category_colors):
+        # hsv_val: (h, s, v) with h in [0,1]
         best_cat, best_dist = None, float("inf")
         for cat, ref in category_colors.items():
             ref_h, ref_s, ref_v = ref["h"], ref["s"], ref["v"]
@@ -26,12 +34,10 @@ class CategorySeparator:
                 best_cat, best_dist = cat, dist
         return best_cat
 
-
     def _load_lines(self, json_path, crop_filename):
-        if not os.path.exists(json_path):
-            print(f"JSON not found: {json_path}")
+        """Load line coordinates for a specific crop file. Returns [] if json missing/unmatched."""
+        if not self._json_exists(json_path):
             return []
-
         with open(json_path, "r") as f:
             data = json.load(f)
 
@@ -46,225 +52,194 @@ class CategorySeparator:
         if isinstance(crop_lines, dict):
             # New format → merge all category lists
             merged = []
-            for cat, coords in crop_lines.items():
+            for _, coords in crop_lines.items():
                 merged.extend(coords)
             return merged
         else:
-            # Old format → already a list
             return crop_lines
 
-    def _process_masks_(self, crop, image, color_masks, lines, output_dir):
+    # ---------- Peak detection (histogram) ----------
+    @staticmethod
+    def _build_peak_masks_from_hist(hsv_img, peaks, tol=10):
+        masks = []
+        for p in peaks:
+            low, high = max(0, int(p) - tol), min(180, int(p) + tol)
+            lower = np.array([low, 50, 50], dtype=np.uint8)
+            upper = np.array([high, 255, 255], dtype=np.uint8)
+            m = cv2.inRange(hsv_img, lower, upper)
+            masks.append((int(p), m))
+        return masks
+
+    # ---------- Mask processing ----------
+    def _process_masks_simple_white_bg(self, crop, image_bgr, color_masks, lines, output_dir):
+        """
+        No JSON categories: save *_cat_#.png with WHITE background.
+        """
         output_data, color_data = [], []
         cat_coords = {k: [] for k, *_ in color_masks}
 
-        for line in lines:
+        for line in lines or []:
             x1, y1, x2, y2 = map(int, line)
             mid_x, mid_y = int((x1 + x2) / 2), int((y1 + y2) / 2)
             for peak, mask, *rest in color_masks:
-                if mask[mid_y, mid_x] > 0:
+                if 0 <= mid_y < mask.shape[0] and 0 <= mid_x < mask.shape[1] and mask[mid_y, mid_x] > 0:
                     cat_coords[peak].append(line)
                     break
-        for  idx, (peak, mask, *rest) in enumerate(color_masks, start=1):
-            hue_val = rest[0] if rest else peak
-            white = np.full_like(image, 255)
-            masked = cv2.bitwise_and(image, image, mask=mask)
+
+        for idx, (peak, mask, *rest) in enumerate(color_masks, start=1):
+            white = np.full_like(image_bgr, 255)
+            fg = cv2.bitwise_and(image_bgr, image_bgr, mask=mask)
             inv = cv2.bitwise_not(mask)
-            result = cv2.bitwise_or(masked, cv2.bitwise_and(white, white, mask=inv))
+            result = cv2.bitwise_or(fg, cv2.bitwise_and(white, white, mask=inv))
 
             out_name = f"{Path(crop).stem}_cat_{idx}.png"
-            out_path = os.path.join(output_dir, out_name)
-            cv2.imwrite(out_path, result)
+            cv2.imwrite(os.path.join(output_dir, out_name), result)
 
-            output_data.append({
-                "filename": out_name,
-                "lines": cat_coords[peak]
-            })
+            output_data.append({"filename": out_name, "lines": cat_coords.get(peak, [])})
             color_data.append({
                 "filename": out_name,
-                "color_hsv": {"h": round(hue_val / 180, 2), "s": 1, "v": 1}
+                "color_hsv": {"h": round(peak / 180, 2), "s": 1, "v": 1}
             })
-
         return output_data, color_data
 
-    def _process_masks(self, crop, image, color_masks, lines, output_dir, category_colors=None, force_white_bg=False):
+    def _process_masks_categories_white_bg(self, crop, image_bgr, color_masks, lines, output_dir, category_colors):
+        """
+        JSON categories present: group by closest configured category, WHITE background only.
+        """
         output_data, color_data = [], []
         cat_coords = {cat: [] for cat in (category_colors or {})}
-        cat_masks = {cat: np.zeros(image.shape[:2], dtype=np.uint8) for cat in (category_colors or {})}
+        cat_masks = {cat: np.zeros(image_bgr.shape[:2], dtype=np.uint8) for cat in (category_colors or {})}
 
-        # Assign lines and build category masks
-        for line in lines:
+        # Assign lines and build cat masks
+        for line in lines or []:
             x1, y1, x2, y2 = map(int, line)
             mid_x, mid_y = int((x1 + x2) / 2), int((y1 + y2) / 2)
             for peak, mask, *rest in color_masks:
-                if mask[mid_y, mid_x] > 0:
-                    hue_val = rest[0] if rest else peak
-                    hsv_val = (hue_val / 180, 1, 1)
-                    cat = self._closest_category(hsv_val, category_colors) if category_colors else str(peak)
-
+                if 0 <= mid_y < mask.shape[0] and 0 <= mid_x < mask.shape[1] and mask[mid_y, mid_x] > 0:
+                    hsv_val = (peak / 180, 1, 1)
+                    cat = self._closest_category(hsv_val, category_colors)
                     cat_coords.setdefault(cat, []).append(line)
-                    cat_masks[cat] = cv2.bitwise_or(cat_masks[cat], mask)  # accumulate mask
+                    cat_masks[cat] = cv2.bitwise_or(cat_masks[cat], mask)
                     break
 
-        # Save per-category results
+        # Save per-category results (white bg)
         for cat, coords in cat_coords.items():
-            if not coords:
+            mask = cat_masks.get(cat, None)
+            if mask is None or np.count_nonzero(mask) == 0:
                 continue
 
-            mask = cat_masks[cat]
-
-            if force_white_bg:
-                bg_color = np.array([255, 255, 255], dtype=np.uint8)
-            else:
-                all_mask = np.zeros(image.shape[:2], dtype=np.uint8)
-                for m in cat_masks.values():
-                    all_mask = cv2.bitwise_or(all_mask, m)
-                background_pixels = image[all_mask == 0]
-
-                if len(background_pixels) > 0:
-                    pixels = background_pixels.reshape(-1, 3)
-                    vals, counts = np.unique(pixels, axis=0, return_counts=True)
-                    bg_color = vals[np.argmax(counts)]
-                else:
-                    bg_color = np.array([255, 255, 255], dtype=np.uint8)
-
-            # Step 3: Build result
-            result = np.full_like(image, bg_color)  # start with background
-            result[mask > 0] = image[mask > 0]  # overlay only this category
+            white = np.full_like(image_bgr, 255)
+            fg = cv2.bitwise_and(image_bgr, image_bgr, mask=mask)
+            inv = cv2.bitwise_not(mask)
+            result = cv2.bitwise_or(fg, cv2.bitwise_and(white, white, mask=inv))
 
             out_name = f"{Path(crop).stem}_{cat}.png"
-            out_path = os.path.join(output_dir, out_name)
-            cv2.imwrite(out_path, result)
+            cv2.imwrite(os.path.join(output_dir, out_name), result)
 
-            output_data.append({
-                "filename": out_name,
-                "lines": coords
-            })
-            color_data.append({
-                "filename": out_name,
-                "color_hsv": category_colors[cat]
-            })
-
+            output_data.append({"filename": out_name, "lines": coords})
+            color_data.append({"filename": out_name, "color_hsv": category_colors[cat]})
         return output_data, color_data
 
-    def process_single_image(self, image_path, json_path, output_dir, method="hist",save_per_file=False, **kwargs):
+    # ---------- Public API (only this) ----------
+    def process_single_image_enhanced(
+        self,
+        image_path,
+        json_path=None,
+        output_dir=".",
+        sat_thresh=50,
+        save_per_file=False,
+        show_plot=False,
+        top_k=None,                 # <-- NEW: limit number of peaks to keep
+        peak_height_frac=0.05,      # keep defaults aligned with previous enhanced flow
+        peak_distance=5,
+        tolerance=10
+    ):
+        """
+        Enhanced variant with saturation filtering. Always uses WHITE background.
+        Works with or without json. If `category_colors` exists in JSON, results are grouped by category.
+
+        Peak detection:
+          - Build hue histogram (0..179) from saturation-filtered pixels
+          - Detect peaks with height = peak_height_frac * max(hist) and distance = peak_distance
+          - Optionally keep only top_k peaks by histogram height
+          - Build masks with ±tolerance around each peak
+        """
         os.makedirs(output_dir, exist_ok=True)
-        image = cv2.imread(image_path)
 
-        if image is None:
-            print(f"Could not read {image_path}")
-            return [], []
+        # Load and convert
+        pil_img = Image.open(image_path).convert("RGB")
+        img_rgb = np.array(pil_img)
+        img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+        hsv = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2HSV)
 
-        lines = self._load_lines(json_path, Path(image_path).name)
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        masks = []
+        # Optional JSON inputs
+        lines = self._load_lines(json_path, Path(image_path).name) if self._json_exists(json_path) else []
+        category_colors = None
+        if self._json_exists(json_path):
+            with open(json_path, "r") as f:
+                data = json.load(f)
+            category_colors = data.get("category_colors", None)
 
-        if method == "hist":
-            hue = hsv[:, :, 0]
-            hist, _ = np.histogram(hue, bins=180, range=(0, 180))
-            peaks, _ = find_peaks(hist, height=0.05 * np.max(hist), distance=10)
-            for peak in peaks:
-                lower_bound = np.array([max(0, peak - 10), 50, 50], dtype=np.uint8)
-                upper_bound = np.array([min(180, peak + 10), 255, 255], dtype=np.uint8)
-                mask = cv2.inRange(hsv, lower_bound, upper_bound)
-                masks.append((peak, mask))
+        # Saturation filter then histogram on hue
+        hue = hsv[:, :, 0].flatten()
+        sat = hsv[:, :, 1].flatten()
+        valid = sat > sat_thresh
+        hue_filtered = hue[valid]
 
-        elif method == "dbscan":
-            eps = kwargs.get("eps", 5)
-            min_samples = kwargs.get("min_samples", 200)
-            resize_factor = 0.3 if image.shape[1] >= 200 else 0.325
-            hsv_small = cv2.resize(hsv, (0, 0), fx=resize_factor, fy=resize_factor)
-            hue = hsv_small[:, :, 0].flatten().reshape(-1, 1)
-            clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(hue)
-            cluster_ids = set(clustering.labels_);
-            cluster_ids.discard(-1)
-            for cid in cluster_ids:
-                hues = hue[clustering.labels_ == cid]
-                if len(hues) > 0:
-                    low, high = int(np.min(hues)), int(np.max(hues))
-                    mask = cv2.inRange(hsv, (max(0, low - 5), 50, 50),
-                                       (min(180, high + 5), 255, 255))
-                    hue_avg = (low + high) / 2
-                    if np.any(mask):
-                        masks.append((cid, mask, hue_avg))
+        hist, _ = np.histogram(hue_filtered, bins=180, range=(0, 180))
+        peaks = np.array([], dtype=int)
+        if np.max(hist) > 0:
+            peaks, _ = find_peaks(hist, height=np.max(hist) * float(peak_height_frac), distance=int(peak_distance))
 
-        # cat_lines_data, color_data = self._process_masks(image_path, image, masks, lines, output_dir)
-        with open(json_path, "r") as f:
-            data = json.load(f)
-        category_colors = data.get("category_colors", {})
+            # If top_k specified, keep the strongest K by histogram height
+            if top_k is not None:
+                try:
+                    k = int(top_k)
+                except Exception:
+                    k = None
+                if k is not None and k > 0 and len(peaks) > k:
+                    # sort peaks by their histogram heights descending
+                    order = np.argsort(hist[peaks])[::-1]
+                    peaks = peaks[order[:k]]
 
-        cat_lines_data, color_data = self._process_masks(
-            image_path, image, masks, lines, output_dir, category_colors
-        )
+        masks = self._build_peak_masks_from_hist(hsv, peaks, tol=int(tolerance))
 
-        # 🔹 Save JSONs
-        if save_per_file:  # 🔹 only save if flag is True
-            base_name = Path(image_path).stem
-            with open(os.path.join(output_dir, f"{base_name}_output.json"), "w") as f:
-                json.dump(cat_lines_data, f, indent=4)
-            with open(os.path.join(output_dir, f"{base_name}_colors.json"), "w") as f:
-                json.dump(color_data, f, indent=4)
-
-        return cat_lines_data, color_data
-
-    def process_single_image_enhanced(self, image_path, json_path, output_dir, sat_thresh=50, force_white_bg= False, save_per_file=False,
-                                      show_plot=False):
-        os.makedirs(output_dir, exist_ok=True)
-        img = Image.open(image_path).convert("RGB")
-        img_np = np.array(img)
-
-        img_hsv = cv2.cvtColor(img_np, cv2.COLOR_RGB2HSV)
-
-        hue = img_hsv[:, :, 0].flatten()
-        sat = img_hsv[:, :, 1].flatten()
-        mask = sat > sat_thresh
-        hue_filtered = hue[mask]
-
-        hist, bins = np.histogram(hue_filtered, bins=180, range=(0, 180))
-        peaks, _ = find_peaks(hist, height=np.max(hist) * 0.07, distance=5)
-
-        masks = []
-        for p in peaks:
-            low, high = max(0, p - 10), min(180, p + 10)
-            lower = np.array([low, 50, 50], dtype=np.uint8)
-            upper = np.array([high, 255, 255], dtype=np.uint8)
-            mask = cv2.inRange(img_hsv, lower, upper)
-            masks.append((p, mask))
-
-        lines = self._load_lines(json_path, Path(image_path).name)
-        # cat_lines_data, color_data = self._process_masks(
-        #     image_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR),
-        #     masks, lines, output_dir
-        # )
-        with open(json_path, "r") as f:
-            data = json.load(f)
-        category_colors = data.get("category_colors", {})
-
-        cat_lines_data, color_data = self._process_masks(
-            image_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR), masks,
-            lines, output_dir, category_colors, force_white_bg)
+        # Process with white background only
+        if category_colors:
+            out_data, color_data = self._process_masks_categories_white_bg(
+                image_path, img_bgr, masks, lines, output_dir, category_colors
+            )
+        else:
+            out_data, color_data = self._process_masks_simple_white_bg(
+                image_path, img_bgr, masks, lines, output_dir
+            )
 
         if show_plot:
             plt.figure(figsize=(10, 4))
             plt.plot(hist, label="Hue Histogram")
-            plt.plot(peaks, hist[peaks], "rx", label="Detected Peaks")
+            if len(peaks) > 0:
+                plt.plot(peaks, hist[peaks], "rx", label="Detected Peaks")
             plt.title(f"Hue Histogram with Peaks – {Path(image_path).name}")
-            plt.xlabel("Hue Value (0-179)")
+            plt.xlabel("Hue Value (0–179)")
             plt.ylabel("Frequency")
             plt.legend()
             plt.show()
 
-        # 🔹 Save JSONs
-        if save_per_file:  # 🔹 only save if flag is True
-            base_name = Path(image_path).stem
-            with open(os.path.join(output_dir, f"{base_name}_output.json"), "w") as f:
-                json.dump(cat_lines_data, f, indent=4)
-            with open(os.path.join(output_dir, f"{base_name}_colors.json"), "w") as f:
+        if save_per_file:
+            base = Path(image_path).stem
+            with open(os.path.join(output_dir, f"{base}_output.json"), "w") as f:
+                json.dump(out_data, f, indent=4)
+            with open(os.path.join(output_dir, f"{base}_colors.json"), "w") as f:
                 json.dump(color_data, f, indent=4)
 
-        return cat_lines_data, color_data
+        return out_data, color_data
 
-    def process_batch(self, input_dir, json_dir, output_dir, force_white_bg=False,
-                      method="hist_enhanced", **kwargs):
+    def process_batch(self, input_dir, json_dir=None, output_dir=".", **kwargs):
+        """
+        Batch version using ONLY the enhanced method and WHITE background.
+        If json_dir provided, we try to find a matching base JSON per file. Otherwise we run without JSON.
+        Pass-through for parameters like `top_k`, `sat_thresh`, etc.
+        """
         os.makedirs(output_dir, exist_ok=True)
         all_output, all_colors = [], []
 
@@ -274,15 +249,18 @@ class CategorySeparator:
 
             image_path = os.path.join(input_dir, f)
             base = re.sub(r'_crop_\d+', '', Path(f).stem)  # strip _crop_x
-            json_path = os.path.join(json_dir, base + ".json") # meta data json dir
+            json_path = None
+            if json_dir:
+                cand = os.path.join(json_dir, base + ".json")
+                if os.path.exists(cand):
+                    json_path = cand
 
-            if method == "hist_enhanced":
-                result, colors = self.process_single_image_enhanced(
-                    image_path, json_path, output_dir,force_white_bg, **kwargs)
-            else:
-                result, colors = self.process_single_image(
-                    image_path, json_path, output_dir, method, **kwargs)
-
+            result, colors = self.process_single_image_enhanced(
+                image_path=image_path,
+                json_path=json_path,
+                output_dir=output_dir,
+                **kwargs
+            )
             all_output.extend(result)
             all_colors.extend(colors)
 
@@ -292,6 +270,3 @@ class CategorySeparator:
             json.dump(all_colors, f, indent=4)
 
         print(f"Saved batch results in {output_dir}")
-        # return all_output, all_colors
-
-

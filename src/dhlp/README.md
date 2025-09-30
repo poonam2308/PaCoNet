@@ -4,6 +4,15 @@
 ### config folder
     - configuration yaml file contains the path and model details 
 
+### dimension detail 
+    - when unet denoise the cropped images - they are of size 224*224
+    - lines are scaled to 224*224 
+    - when this input and lines are passed to DHLP - images are scaled to 512*512 but the position maps are saved as 128*128
+    - how are the predictions in 224*224 
+    - are they changed back to this scale?
+    - let's save the predictions as the input lines are saved after processing with DHLP 
+
+
 ### evaluation 
     - line matching 
         - msTPFP() matches predicted lines to ground truth lines based on the distance between midpoints 

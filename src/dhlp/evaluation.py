@@ -335,12 +335,366 @@ def msTPFP_sampels(line_pred, line_gt, threshold, debug=False):
 
     return tp, fp
 
+def msTPFP_endpt_mae_sequential(line_pred, line_gt, mae_thresh_px=5.0, debug=False):
+    """
+    Sequential greedy TP/FP using endpoint MAE.
+    For each predicted line in order, choose the GT with the minimum MAE (order-invariant endpoints).
+    If that min MAE <= threshold and the GT is unused, it's a TP; otherwise FP.
 
+    Args:
+        line_pred: (N_pred, 2, 2) float array  [[(x0,y0),(x1,y1)], ...]
+        line_gt:   (N_gt,   2, 2) float array
+        mae_thresh_px: float threshold on the MAE over (x0,y0,x1,y1)
+        debug: print allocation details
+    Returns:
+        tp: (N_pred,) float in {0,1}
+        fp: (N_pred,) float in {0,1}
+    """
+    Np = len(line_pred)
+    Ng = len(line_gt)
+    tp = np.zeros(Np, dtype=float)
+    fp = np.ones(Np, dtype=float)
+    if Np == 0:
+        return tp, fp if Ng > 0 else (tp, fp)  # both zeros if no preds
 
+    if Ng == 0:
+        return tp, np.ones(Np, dtype=float)
+
+    used_gt = np.zeros(Ng, dtype=bool)
+
+    # small helper: order-invariant endpoint MAE
+    def pair_mae(p, g):
+        # p, g: shape (2,2)
+        p12 = p.reshape(-1)
+        g12 = g.reshape(-1)
+        g21 = g[::-1].reshape(-1)
+        mae_straight = np.mean(np.abs(p12 - g12))
+        mae_swapped = np.mean(np.abs(p12 - g21))
+        return min(mae_straight, mae_swapped)
+
+    for i in range(Np):
+        p = line_pred[i].astype(float)
+        # compute MAE to every *unused* GT
+        best_j = None
+        best_c = np.inf
+        for j in range(Ng):
+            if used_gt[j]:
+                continue
+            c = pair_mae(p, line_gt[j].astype(float))
+            if c < best_c:
+                best_c, best_j = c, j
+
+        if best_j is not None and best_c <= mae_thresh_px:
+            tp[i] = 1.0
+            fp[i] = 0.0
+            used_gt[best_j] = True
+            if debug:
+                print(f"[TP] Pred {i} -> GT {best_j} | MAE={best_c:.2f}")
+        else:
+            # either no unused GT left or min cost above threshold
+            if debug:
+                reason = "no GT left" if best_j is None else f"min MAE {best_c:.2f} > {mae_thresh_px}"
+                print(f"[FP] Pred {i} | {reason}")
+
+    return tp, fp
+
+import numpy as np
+
+def msTPFP_endpt_mae_global(line_pred, line_gt, mae_thresh_px=5.0, debug=False, use_hungarian=False):
+    """
+    Order-invariant TP/FP using endpoint MAE with one-to-one matching.
+    Builds a full (Np x Ng) MAE cost matrix (endpoint order-invariant),
+    applies a threshold gate, then matches:
+      - if use_hungarian=True and SciPy is available: Hungarian assignment
+      - else: greedy over all valid pairs sorted by increasing cost (order-invariant)
+
+    Returns:
+        tp: (N_pred,) float in {0,1}
+        fp: (N_pred,) float in {0,1}
+    """
+    Np, Ng = len(line_pred), len(line_gt)
+    tp = np.zeros(Np, dtype=float)
+    fp = np.ones(Np, dtype=float)
+
+    if Np == 0:
+        return tp, (np.ones(0, float) if Ng > 0 else fp)
+    if Ng == 0:
+        return tp, np.ones(Np, dtype=float)
+
+    # --- helper: endpoint-order-invariant MAE (same logic as your sequential version)
+    def pair_mae(p, g):
+        p12 = p.reshape(-1)
+        g12 = g.reshape(-1)
+        g21 = g[::-1].reshape(-1)
+        mae_straight = np.mean(np.abs(p12 - g12))
+        mae_swapped  = np.mean(np.abs(p12 - g21))
+        return mae_straight if mae_straight <= mae_swapped else mae_swapped
+
+    # Build cost matrix with gating by threshold
+    cost = np.full((Np, Ng), np.inf, dtype=float)
+    for i in range(Np):
+        pi = line_pred[i].astype(float)
+        for j in range(Ng):
+            c = pair_mae(pi, line_gt[j].astype(float))
+            if c <= mae_thresh_px:
+                cost[i, j] = c  # valid match
+
+    # Nothing valid → all FP
+    if not np.isfinite(cost).any():
+        if debug:
+            print("[INFO] No pred–GT pairs under threshold; all predictions are FP.")
+        return tp, fp
+
+    used_p = np.zeros(Np, dtype=bool)
+    used_g = np.zeros(Ng, dtype=bool)
+
+    if use_hungarian:
+        try:
+            from scipy.optimize import linear_sum_assignment
+            # Replace inf with a large sentinel; we will drop those after assignment
+            big = 1e9
+            cost_safe = np.where(np.isfinite(cost), cost, big)
+            row_ind, col_ind = linear_sum_assignment(cost_safe)
+            for i, j in zip(row_ind, col_ind):
+                if used_p[i] or used_g[j]:
+                    continue
+                c = cost[i, j]
+                if np.isfinite(c) and c <= mae_thresh_px:
+                    tp[i] = 1.0
+                    fp[i] = 0.0
+                    used_p[i] = True
+                    used_g[j] = True
+                    if debug:
+                        print(f"[TP] Pred {i} ↔ GT {j} | MAE={c:.2f}")
+            # Unmatched remain FP
+            return tp, fp
+        except Exception as e:
+            if debug:
+                print(f"[WARN] Hungarian path unavailable ({e}); falling back to greedy.")
+
+    # Greedy over all finite-cost pairs (order-invariant w.r.t. prediction order)
+    pairs = np.argwhere(np.isfinite(cost))
+    order = np.argsort(cost[pairs[:, 0], pairs[:, 1]], kind="mergesort")  # stable tie-break
+    for k in order:
+        i, j = pairs[k]
+        if used_p[i] or used_g[j]:
+            continue
+        c = cost[i, j]
+        tp[i] = 1.0
+        fp[i] = 0.0
+        used_p[i] = True
+        used_g[j] = True
+        if debug:
+            print(f"[TP] Pred {i} ↔ GT {j} | MAE={c:.2f}")
+
+    # Others remain FP
+    if debug:
+        for i in range(Np):
+            if not used_p[i]:
+                # show nearest even if above threshold, for context
+                j_best = np.argmin(cost[i]) if np.any(np.isfinite(cost[i])) else None
+                reason = "no valid GT under threshold" if j_best is None else f"lost to GT {j_best}"
+                print(f"[FP] Pred {i}: {reason}")
+    return tp, fp
 
 # -------------------------------------------------------------------
 #   New array-based version (no .npz needed)
 # -------------------------------------------------------------------
+
+def greedy_match_by_y_endpoints(
+    pred_lines: np.ndarray,
+    gt_lines: np.ndarray,
+    max_y_mae: float | None = None,
+    print_first: int = 5
+):
+    """
+    Greedy GT→Pred assignment using y-endpoint absolute differences.
+
+    Cost for a (pred, gt) pair (after left→right orientation):
+        cost = |y0_pred - y0_gt| + |y1_pred - y1_gt|
+    (i.e., sum of absolute differences on the y-values at the start/end points).
+    If `max_y_mae` is set, a match is accepted only if (cost/2) <= max_y_mae.
+
+    Args:
+        pred_lines: (Np, 2, 2) [(x0,y0),(x1,y1)] after your filtering.
+        gt_lines:   (Ng, 2, 2) [(x0,y0),(x1,y1)] (can be raw; we orient inside).
+        max_y_mae:  optional threshold in px (on the mean abs error over y’s).
+        print_first: how many example matches to print.
+
+    Returns:
+        matches:   list of dicts {gt_idx, pred_idx, y_err0, y_err1, mae_y}
+        mapped_gt: int, number of GTs that got a pred assigned (and passed threshold)
+        unused_pred_indices: np.ndarray of remaining prediction indices
+    """
+    if len(gt_lines) == 0:
+        return [], 0, np.arange(len(pred_lines))
+    if len(pred_lines) == 0:
+        return [], 0, np.array([], dtype=int)
+
+    # Ensure consistent orientation so y0=left endpoint, y1=right endpoint
+    from copy import deepcopy
+    gt_lr   = ensure_left_to_right(gt_lines)       # in your file
+    pred_lr = ensure_left_to_right(pred_lines)     # in your file
+
+    Np, Ng = len(pred_lr), len(gt_lr)
+    available = set(range(Np))
+    matches = []
+
+    # Pre-extract the y-columns for speed
+    pred_y = np.stack([pred_lr[:, 0, 1], pred_lr[:, 1, 1]], axis=1)  # (Np, 2)
+    gt_y   = np.stack([gt_lr[:, 0, 1],   gt_lr[:, 1, 1]],   axis=1)  # (Ng, 2)
+
+    for j in range(Ng):
+        if not available:
+            break
+        # compute cost to all available preds for this GT
+        ay = np.array(sorted(list(available)))  # stable order
+        print("predicted points ", pred_y[ay] , "ground truth points ", gt_y[j])
+        diff = np.abs(pred_y[ay] - gt_y[j])     # (Na,2) elementwise |Δy|
+        cost = diff.sum(axis=1)                 # sum of |Δy| at start/end
+        k = int(np.argmin(cost))                # index into ay
+        i_best = int(ay[k])
+        yerr0, yerr1 = float(diff[k, 0]), float(diff[k, 1])
+        mae_y = 0.5 * (yerr0 + yerr1)
+
+        # threshold gate (optional)
+        accepted = True
+        if accepted:
+            matches.append({
+                "gt_idx": j,
+                "pred_idx": i_best,
+                "y_err0": yerr0,
+                "y_err1": yerr1,
+                "mae_y": mae_y
+            })
+            available.remove(i_best)
+        # if not accepted, we leave the pred available for other GTs
+
+    # ---- Pretty print a few examples
+    if print_first > 0 and matches:
+        print(f"\n[greedy_match_by_y_endpoints] Showing first {min(print_first, len(matches))} matches:")
+        for m in matches[:print_first]:
+            j = m["gt_idx"]; i = m["pred_idx"]
+            print(f"  GT {j:>3}  ⇐  Pred {i:>3} | y_errs=({m['y_err0']:.2f}, {m['y_err1']:.2f})  mae_y={m['mae_y']:.2f}")
+
+    mapped_gt = len(matches)
+    unused_pred_indices = np.array(sorted(list(available)), dtype=int)
+    return matches, mapped_gt, unused_pred_indices
+import numpy as np
+
+def greedy_match_by_y_endpoints(
+    pred_lines: np.ndarray,
+    gt_lines: np.ndarray,
+    max_y_mae: float | None = None,   # unused (kept for signature compatibility)
+    print_first: int = 5
+):
+    """
+    Greedy GT→Pred assignment using y-endpoint absolute differences.
+
+    Behavior (per your spec):
+      • Assumes caller already oriented lines left→right.
+      • Sort both GT and Pred by start-point y (index [:,0,1]).
+      • For each GT (in that sorted order), consider ALL remaining preds and
+        pick the one with minimum cost:
+            cost = |y0_pred - y0_gt| + |y1_pred - y1_gt|
+      • No threshold: every GT gets the best currently-available pred.
+      • Returns ORIGINAL indices for both GT and Pred.
+
+    IMPORTANT: pred_lines and gt_lines must be in the same coordinate space.
+    If your predictions are in 224×224, rescale them to GT space before calling.
+
+    Args:
+        pred_lines: (Np, 2, 2)  [(x0,y0),(x1,y1)] already left→right.
+        gt_lines:   (Ng, 2, 2)  [(x0,y0),(x1,y1)] already left→right.
+        max_y_mae:  kept only for API compatibility; ignored.
+        print_first: how many example matches to print.
+
+    Returns:
+        matches: list of dicts {
+            gt_idx, pred_idx, y_err0, y_err1, mae_y,
+            gt_idx_sorted, pred_idx_sorted
+        }   # gt_idx / pred_idx are ORIGINAL indices
+        mapped_gt: int  (number of GTs that got a pred assigned)
+        unused_pred_indices: np.ndarray of ORIGINAL pred indices not used
+    """
+    Ng = len(gt_lines)
+    Np = len(pred_lines)
+
+    if Ng == 0:
+        return [], 0, np.arange(Np, dtype=int)
+    if Np == 0:
+        return [], 0, np.array([], dtype=int)
+
+    # ---- sort both sets by start-point y (y at left endpoint)
+    gt_sort_idx   = np.argsort(gt_lines[:, 0, 1])
+    pred_sort_idx = np.argsort(pred_lines[:, 0, 1])
+
+    gt_s   = gt_lines[gt_sort_idx]
+    pred_s = pred_lines[pred_sort_idx]
+
+    # y-only views: (start_y, end_y)
+    gt_y   = np.stack([gt_s[:, 0, 1],   gt_s[:, 1, 1]], axis=1)   # (Ng, 2)
+    pred_y = np.stack([pred_s[:, 0, 1], pred_s[:, 1, 1]], axis=1) # (Np, 2)
+
+    # availability tracked in SORTED index space
+    available = list(range(Np))
+    matches = []
+
+    for j_sorted in range(Ng):
+        if not available:
+            break
+
+        ay = np.array(available, dtype=int)
+
+        # Print current pool vs the GT under consideration (as requested)
+        print("predicted points ", pred_y[ay], "ground truth points ", gt_y[j_sorted])
+
+        # compute costs to all available preds for this GT
+        diff = np.abs(pred_y[ay] - gt_y[j_sorted])  # (Na, 2)
+        cost = diff.sum(axis=1)                     # (Na,)
+        k = int(np.argmin(cost))
+        p_sorted = int(ay[k])
+
+        yerr0, yerr1 = float(diff[k, 0]), float(diff[k, 1])
+        mae_y = 0.5 * (yerr0 + yerr1)
+
+        # map back to ORIGINAL indices
+        gt_orig   = int(gt_sort_idx[j_sorted])
+        pred_orig = int(pred_sort_idx[p_sorted])
+
+        matches.append({
+            "gt_idx": gt_orig,
+            "pred_idx": pred_orig,
+            "y_err0": yerr0,
+            "y_err1": yerr1,
+            "mae_y": mae_y,
+            "gt_idx_sorted": j_sorted,
+            "pred_idx_sorted": p_sorted,
+        })
+
+        # remove chosen pred from the pool
+        available.remove(p_sorted)
+
+    # ---- Pretty print a few examples (using ORIGINAL indices)
+    if print_first > 0 and matches:
+        print(f"\n[greedy_match_by_y_endpoints] Showing first {min(print_first, len(matches))} matches:")
+        for m in matches[:print_first]:
+            print(
+                f"  GT(orig:{m['gt_idx']:>3}, sort:{m['gt_idx_sorted']:>3})  "
+                f"⇐  Pred(orig:{m['pred_idx']:>3}, sort:{m['pred_idx_sorted']:>3})  "
+                f"| y_errs=({m['y_err0']:.2f}, {m['y_err1']:.2f})  mae_y={m['mae_y']:.2f}"
+            )
+
+    mapped_gt = len(matches)
+
+    # remaining preds → ORIGINAL indices
+    if len(available):
+        unused_sorted = np.array(sorted(available), dtype=int)
+        unused_pred_indices = pred_sort_idx[unused_sorted]
+    else:
+        unused_pred_indices = np.array([], dtype=int)
+
+    return matches, mapped_gt, unused_pred_indices
 
 
 def process_line_detection_arrays(ground_truth_lines, predicted_lines, mask, threshold=10, eps=1.0):
@@ -366,11 +720,207 @@ def process_line_detection_arrays(ground_truth_lines, predicted_lines, mask, thr
         print("⚠️ Skipping: no valid lines to compare")
         return 0.0
 
+    def rescale_lines_yx(lines, src_hw, dst_hw):
+        lines = lines.astype(float).copy()
+        sy = dst_hw[0] / float(src_hw[0]);
+        sx = dst_hw[1] / float(src_hw[1])
+        lines[:, :, 0] *= sx  # x
+        lines[:, :, 1] *= sy  # y
+        return lines
+
+    pred_in_gt_space = rescale_lines_yx(filtered_lines, (224, 224), (128, 128))
+    matches, mapped_gt, unused = greedy_match_by_y_endpoints(pred_in_gt_space, ground_truth_lines, print_first=5)
+
+    # Y_MAE_THRESH = 3.0  # tweak as you like, or set to None
+    #
+    # matches, mapped_gt, unused_pred = greedy_match_by_y_endpoints(
+    #     filtered_lines,
+    #     ground_truth_lines,
+    #     max_y_mae=Y_MAE_THRESH,
+    #     print_first=5
+    # )
+    print(f"\nTotal GT mapped by y-endpoints: {mapped_gt} / {len(ground_truth_lines)}")
+    print(f"Unused predictions left: {len(unused)}")
+
+
     tp, fp = msTPFP_sampels(filtered_lines, ground_truth_lines, threshold, debug=False)
+    # tp, fp = msTPFP_endpt_mae_sequential(filtered_lines, ground_truth_lines,
+    #                                      mae_thresh_px=threshold, debug=False)
+
+    # tp, fp = msTPFP_endpt_mae_global(filtered_lines, ground_truth_lines,
+    #                                  mae_thresh_px=threshold, debug=False, use_hungarian=False)
+
     num_gt = len(ground_truth_lines)
     print("TP:", tp.sum(), "FP:", fp.sum())
     return compute_ap(tp, fp,num_gt) * 100
 
 
 
+# --- put this near the bottom of evaluation.py ---
 
+from typing import Callable, Dict, List, Tuple
+
+MatcherFn = Callable[[np.ndarray, np.ndarray, float], Tuple[np.ndarray, np.ndarray]]
+
+def eval_sAP_dataset(
+    dataset: List[Dict],
+    thresholds=(5.0, 10.0, 15.0),
+    matcher: MatcherFn = msTPFP_sampels,          # or msTPFP_oriented / msTPFP_endpt_mae_*
+    use_masks: bool = True
+) -> Dict[float, float]:
+    """
+    LCNN-style evaluation across a dataset.
+
+    dataset: list of dict per image with keys:
+      {
+        "gt_lines":   (Ng, 2, 2) float32 in [x,y] (same coord frame across all images),
+        "pred_lines": (Np, 2, 2) float32 in [x,y],
+        "scores":     (Np,)      float32,
+        "mask":       (H,W) uint8, 1=valid (optional; used only for pre-filtering)
+      }
+
+    thresholds: pixel tolerances (same units as your line coords).
+    matcher:    returns (tp, fp) *in the SAME ORDER as pred_lines* for a given threshold.
+    use_masks:  if True, we drop predicted lines whose endpoints fail the mask test you use elsewhere.
+    """
+    def passes_mask(line, mask, min_frac=0.6, samples=50):
+        # Same logic as line_prediction.line_passes_mask (endpoints are [y,x] there),
+        # but here our lines are [x,y], so we swap accordingly.
+        if mask is None:
+            return True
+        (x0, y0), (x1, y1) = line
+        H, W = mask.shape
+        xs = np.linspace(x0, x1, samples)
+        ys = np.linspace(y0, y1, samples)
+        inside = valid = 0
+        for xx, yy in zip(xs, ys):
+            x = int(round(xx)); y = int(round(yy))
+            if 0 <= y < H and 0 <= x < W:
+                valid += 1
+                inside += int(mask[y, x] > 0)
+        return (valid > 0) and (inside / max(valid, 1)) >= min_frac
+
+    # Collect GT size once for normalizing recall (sum over all images)
+    n_gt_total = 0
+    # For each threshold, we’ll accumulate TP/FP and Scores, then rank globally.
+    out = {}
+    for T in thresholds:
+        all_tp = []
+        all_fp = []
+        all_scores = []
+        n_gt_total = 0
+
+        for item in dataset:
+            gt = np.asarray(item["gt_lines"], dtype=float)
+            pred = np.asarray(item["pred_lines"], dtype=float)
+            s = np.asarray(item["scores"], dtype=float)
+            mask = item.get("mask", None) if use_masks else None
+
+            n_gt_total += len(gt)
+
+            # (optional) pre-filter predictions by mask
+            if mask is not None and len(pred) > 0:
+                keep = [i for i, L in enumerate(pred) if passes_mask(L, mask)]
+                if len(keep) == 0:
+                    continue
+                pred = pred[keep]
+                s = s[keep]
+
+            if len(pred) == 0 or len(gt) == 0:
+                # no preds or no GT → all predictions are FP; add their scores so ranking is preserved
+                all_tp.append(np.zeros(len(pred), float))
+                all_fp.append(np.ones(len(pred), float))
+                all_scores.append(s)
+                continue
+
+            # Compute TP/FP for this image at tolerance T (order = input order)
+            tp_i, fp_i = matcher(pred, gt, T, debug=False)  # uses your existing matcher
+            all_tp.append(tp_i)
+            all_fp.append(fp_i)
+            all_scores.append(s)
+
+        # Concatenate over images and do the global sort by score (descending)
+        if len(all_scores) == 0 or n_gt_total == 0:
+            out[T] = 0.0
+            continue
+
+        tp = np.concatenate(all_tp) if len(all_tp) else np.zeros(0, float)
+        fp = np.concatenate(all_fp) if len(all_fp) else np.zeros(0, float)
+        scores = np.concatenate(all_scores) if len(all_scores) else np.zeros(0, float)
+
+        order = np.argsort(-scores)
+        tp = np.cumsum(tp[order]) / float(n_gt_total)
+        fp = np.cumsum(fp[order]) / float(n_gt_total)
+
+        # exactly the same AP as LCNN (monotone precision envelope)
+        ap_T = compute_ap(tp, fp, num_gt=1)  # tp/fp are already normalized by n_gt_total
+        out[T] = float(ap_T) * 100.0
+
+    return out
+
+import glob
+from pathlib import Path
+
+def load_gt_lines_from_label_npz(label_npz_path: str) -> np.ndarray:
+    """
+    Try to read GT lines from a *_label.npz produced by save_heatmap().
+    If your NPZ uses a different key name, adapt here.
+    """
+    data = np.load(label_npz_path, allow_pickle=True)
+    # Common patterns: 'lpos' (LCNN), or you may have stored 'lines'
+    if "lines" in data.files:
+        return data["lines"].astype(float).reshape(-1, 2, 2)
+    if "lpos" in data.files:
+        return data["lpos"].astype(float)[:, :, :2]  # (N,2,2) and drop extra dims if present
+    raise KeyError(f"Could not find GT lines in {label_npz_path}. Available keys: {data.files}")
+
+def build_dataset_from_folders(
+    pred_npz_dir: str,       # e.g. "outputs/reals/pred_npz/post"
+    gt_npz_dir: str,         # e.g. "outputs/reals/npz_data"
+    use_masks=True
+) -> List[Dict]:
+    """
+    Match prediction NPZs to GT/mask NPZs by shared stem.
+    Returns a list of dict items ready for eval_sAP_dataset().
+    """
+    pred_files = sorted(glob.glob(str(Path(pred_npz_dir) / "*.npz")))
+    items = []
+    for pf in pred_files:
+        stem = Path(pf).stem   # matches JSON stem you saved earlier
+        # prediction
+        P = np.load(pf)
+        pred_lines = P["lines"].astype(float)  # [x,y]
+        scores = P["score"].astype(float)
+
+        # ground truth
+        label_npz = str(Path(gt_npz_dir) / f"{stem}_label.npz")
+        if not Path(label_npz).exists():
+            # fall back: maybe your saved GT used the pre-crop stem (before suffixes)
+            # adapt this if your stems differ.
+            continue
+        gt_lines = load_gt_lines_from_label_npz(label_npz)
+
+        # optional mask
+        mask_npz = str(Path(gt_npz_dir) / f"{stem}_mask_label.npz")
+        mask = None
+        if use_masks and Path(mask_npz).exists():
+            M = np.load(mask_npz)
+            mask = M["mask"].astype(np.uint8)
+
+        items.append({
+            "gt_lines": gt_lines,
+            "pred_lines": pred_lines,
+            "scores": scores,
+            "mask": mask
+        })
+    return items
+
+def eval_sAP_from_folders(
+    pred_npz_dir: str,
+    gt_npz_dir: str,
+    thresholds=(5.0,10.0,15.0),
+    matcher: MatcherFn = msTPFP_sampels,
+    use_masks=True
+):
+    dataset = build_dataset_from_folders(pred_npz_dir, gt_npz_dir, use_masks=use_masks)
+    return eval_sAP_dataset(dataset, thresholds=thresholds, matcher=matcher, use_masks=use_masks)

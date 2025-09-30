@@ -30,11 +30,11 @@ def run_category_separation(method, top_k):
     #meta_dir = SESSION["metadata_json"].parent if SESSION.get("metadata_json") else SESSION["line_json"].parent
 
     if method == "peaks":
-        sep.process_batch(input_dir, meta_dir, output_dir, method="hist_enhanced", sat_thresh=50)
+        sep.process_batch(input_dir, meta_dir, output_dir, sat_thresh=50)
     elif method == "topk":
-        sep.process_batch(input_dir, meta_dir, output_dir, method="hist", top_k=top_k)
+        sep.process_batch(input_dir, meta_dir, output_dir, top_k=top_k)
     else:
-        sep.process_batch(input_dir, meta_dir, output_dir, method=method)
+        sep.process_batch(input_dir, meta_dir, output_dir)
 
     # Now collect output images
     image_items, choices = [], []
