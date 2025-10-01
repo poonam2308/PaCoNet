@@ -88,35 +88,14 @@ class PlotsPipeline:
 
         print("cropped SVG plot and saved as pngs ...")
 
-    def separate_by_color(self, method='hist_enhanced'):
-        print(f"🎨 Separating by color using {method} method...")
-        sep = CategorySeparator()
-
-        if method == 'hist_enhanced':
-            sep.process_batch(
-                input_dir=self.paths['m_crops'],
-                json_dir=self.paths['m_plots'],
-                output_dir=self.paths['m_color_sep_plots'],
-                method="hist_enhanced",
-            )
-        elif method == 'hist':
-            sep.process_batch(
-                input_dir=self.paths['m_crops'],
-                json_dir=self.paths['m_plots'],
-                output_dir=self.paths['m_cluster_sep_plots'],
-                method='hist'
-            )
-
-    def separate_by_color_wbg(self, method='hist_enhanced'):
+    def separate_by_color(self):
         print(f"🎨 Separating by color using {method} method...")
         sep = CategorySeparator()
         sep.process_batch(
-                input_dir=self.paths['m_crops'],
-                json_dir=self.paths['m_plots'],
-                output_dir=self.paths['m_color_sep_plots_wbg'],
-                method="hist_enhanced",
-                force_white_bg=True
-            )
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_color_sep_plots_wbg']
+        )
 
     def rescale_lines(self):
         if 'm_color_all_json' in self.paths:
