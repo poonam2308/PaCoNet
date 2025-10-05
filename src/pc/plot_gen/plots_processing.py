@@ -94,7 +94,7 @@ class PlotsPipeline:
         sep.process_batch(
             input_dir=self.paths['m_crops'],
             json_dir=self.paths['m_plots'],
-            output_dir=self.paths['m_color_sep_plots_wbg']
+            output_dir=self.paths['m_color_sep_plots']
         )
 
     def rescale_lines(self):
