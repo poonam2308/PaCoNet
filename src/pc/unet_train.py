@@ -53,9 +53,7 @@ class UNetTrainer:
             ground_truth_dir=self.cfg['paths']['m_gt_plots_cat_crops'],
             transform=self.transform,
             channel_mode=self.args.channel_mode,
-            hsv_tolerance=0.15,
-            remove_background=False
-
+            hsv_tolerance=0.15
         )
 
         train_size = int(0.8 * len(dataset))
