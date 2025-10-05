@@ -208,15 +208,29 @@ class MultiCatPCPGenerator:
             ).properties(width=self.width, height=self.height)
 
             lines = base.mark_line(opacity=0.4).encode(
-                x='key:N',
-                y=alt.Y('value:Q', axis=None),
-                color=alt.value(f'rgb({category_colors[category][0]},'
-                                f'{category_colors[category][1]},'
-                                f'{category_colors[category][2]})'),
-                detail="index:N"
+                x=alt.X('key:N', axis=alt.Axis(
+                    title=None,
+                    domain=False,
+                    labels=show_ticks_labels,
+                    labelAngle=0,
+                    ticks=False)),
+                y=alt.Y('value:Q', axis=alt.Axis(
+                    title=None,
+                    domain=False,
+                    labels=False,
+                    ticks=False,
+                    grid=grid_on)),
+                color=alt.Color(f"{color_column}:N", scale=alt.Scale(
+                    domain=list(category_colors.keys()),
+                    range=['rgb({},{},{})'.format(*color) for color in category_colors.values()]
+                ), legend=None),
+                detail="index:N",
+                tooltip=column_names
             )
 
-            rules = base.mark_rule(color="#ccc", tooltip=None).encode(x="key:N")
+            rules = base.mark_rule(color="#ccc", tooltip=None).encode(
+                x=alt.X('key:N', axis=alt.Axis(title=None, labels=False, ticks=False))
+            )
 
             # Shared tick labels
             tick_dfs = [create_ticks_labels(df, norm_col, orig_col)

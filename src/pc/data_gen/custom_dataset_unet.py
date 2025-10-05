@@ -49,7 +49,9 @@ def extract_base_name(filename: str):
 class CustomDatasetUnetSD(Dataset):
     def __init__(self, input_json=None, input_dir=None,
                  ground_truth_json=None, ground_truth_dir=None,
-                 transform=None, channel_mode ="RGB", hsv_tolerance=0.1, remove_background=False):
+                 transform=None, channel_mode ="RGB", hsv_tolerance=0.1, remove_background=False,
+                 # >>> NEW:
+                 binarize=False, binarize_method="otsu", binarize_threshold=128):
 
         # Load input data (from JSON or directory)
         if input_json:
@@ -71,6 +73,13 @@ class CustomDatasetUnetSD(Dataset):
         self.hsv_tolerance = hsv_tolerance
         self.remove_background = remove_background
         self.channel_mode = channel_mode
+
+        # >>> NEW:
+        self.binarize = binarize
+        self.binarize_method = binarize_method
+        self.binarize_threshold = binarize_threshold
+        #>>>>
+
 
         self.pairs = self.match_pairs()
 
@@ -152,6 +161,44 @@ class CustomDatasetUnetSD(Dataset):
         white_bg[mask] = img_array[mask]
         return Image.fromarray(white_bg.astype(np.uint8))
 
+    # >>> NEW:
+    def _otsu_threshold(self, gray_np):
+        """Compute Otsu threshold (0-255) for a uint8 grayscale np array."""
+        hist = np.bincount(gray_np.ravel(), minlength=256).astype(np.float64)
+        total = gray_np.size
+        cum_weights = np.cumsum(hist)
+        cum_means = np.cumsum(hist * np.arange(256))
+        global_mean = cum_means[-1] / total
+
+        # Between-class variance
+        denom = cum_weights * (total - cum_weights)
+        denom[denom == 0] = 1.0
+        var_between = (global_mean * cum_weights - cum_means) ** 2 / denom
+        return int(np.argmax(var_between))
+
+    # >>> NEW:
+    def to_binary(self, image):
+        """
+        Convert PIL image to binary with white background (255) and black lines (0).
+        Uses Otsu by default, or a fixed threshold.
+        """
+        gray = image.convert("L")
+        arr = np.array(gray)
+
+        if self.binarize_method.lower() == "otsu":
+            t = self._otsu_threshold(arr)
+        else:
+            t = int(self.binarize_threshold)
+
+        bin_arr = (arr > t).astype(np.uint8) * 255  # dark lines → 0, light bg → 255
+
+        bin_img_L = Image.fromarray(bin_arr, mode="L")
+        if self.channel_mode.upper() == "L":
+            return bin_img_L
+        else:
+            # replicate to 3 channels if caller wants "RGB"
+            return Image.merge("RGB", (bin_img_L, bin_img_L, bin_img_L))
+
     def __getitem__(self, idx):
         input_filename, gt_filename = self.pairs[idx]
         input_path = os.path.join(self.input_dir, input_filename)
@@ -166,6 +213,11 @@ class CustomDatasetUnetSD(Dataset):
             input_image = self.remove_bg(input_image)
             if gt_image:
                 gt_image = self.remove_bg(gt_image)
+        # >>> NEW: binarize before transforms
+        if self.binarize:
+            input_image = self.to_binary(input_image)
+            if gt_image:
+                gt_image = self.to_binary(gt_image)
 
         if self.transform:
             input_image = self.transform(input_image)
