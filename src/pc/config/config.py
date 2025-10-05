@@ -38,9 +38,9 @@ def get_args():
     parse.add_argument('--std', type=float, default=0.5)
 
     parse.add_argument('--out_features', type=int, default=1)
-    parse.add_argument('--out_channels', type=int, default=1)
-    parse.add_argument('--in_channels', type=int, default=1)
-    parse.add_argument('--channel_mode', type=str, default="L")
+    parse.add_argument('--out_channels', type=int, default=3)
+    parse.add_argument('--in_channels', type=int, default=3)
+    parse.add_argument('--channel_mode', type=str, default="RGB")
     parse.add_argument('--swin_out_features', type=int, default=3)
 
     parse.add_argument('--max_lines', type=int, default=100)

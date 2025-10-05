@@ -19,7 +19,7 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --num_files 1000 --seed 0 --task run
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task separate_by_color
 
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines
 
 
 # unet training with noisy images
@@ -28,7 +28,7 @@ python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml 
 #
 #python unet_inference.py --cfg configs/test_config.yaml
 
-#python src/pc/unet_train.py --cfg src/pc/config/train_config.yaml --batch_size 8 --num_epochs 50
+python src/pc/unet_train.py --cfg src/pc/config/train_config.yaml --batch_size 8 --num_epochs 50
 
 
 

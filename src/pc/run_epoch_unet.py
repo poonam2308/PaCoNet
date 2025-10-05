@@ -95,17 +95,17 @@ def save_batch_visualization(input_batch, ground_truth_batch, output_batch, epoc
         gt_path = os.path.join(batch_save_dir, f"ground_truth_{idx}.png")
         output_path = os.path.join(batch_save_dir, f"output_{idx}.png")
 
-        # Image.fromarray(input_img).save(input_path)
-        # Image.fromarray(ground_truth).save(gt_path)
-        # Image.fromarray(output_img).save(output_path)
+        Image.fromarray(input_img).save(input_path)
+        Image.fromarray(ground_truth).save(gt_path)
+        Image.fromarray(output_img).save(output_path)
 
-        inp_arr, inp_mode = _to_pil_ready(input_img)
-        gt_arr, gt_mode = _to_pil_ready(ground_truth)
-        out_arr, out_mode = _to_pil_ready(output_img)
-
-        Image.fromarray(inp_arr if inp_mode is None else inp_arr, mode=inp_mode).save(input_path)
-        Image.fromarray(gt_arr if gt_mode is None else gt_arr, mode=gt_mode).save(gt_path)
-        Image.fromarray(out_arr if out_mode is None else out_arr, mode=out_mode).save(output_path)
+        # inp_arr, inp_mode = _to_pil_ready(input_img)
+        # gt_arr, gt_mode = _to_pil_ready(ground_truth)
+        # out_arr, out_mode = _to_pil_ready(output_img)
+        #
+        # Image.fromarray(inp_arr if inp_mode is None else inp_arr, mode=inp_mode).save(input_path)
+        # Image.fromarray(gt_arr if gt_mode is None else gt_arr, mode=gt_mode).save(gt_path)
+        # Image.fromarray(out_arr if out_mode is None else out_arr, mode=out_mode).save(output_path)
 
         print(f"Saved {input_path}")
         print(f"Saved {gt_path}")
