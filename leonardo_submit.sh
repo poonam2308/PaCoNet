@@ -38,14 +38,13 @@ VENV_PATH="$VENV_ROOT/$VENV_NAME"
 mkdir -p "$VENV_ROOT"
 if [ ! -d "$VENV_PATH" ]; then
   echo "Creating venv at $VENV_PATH"
-  python -m venv "$VENV_PATH"
+  "$PYTHON" -m venv "$VENV_PATH"
   source "$VENV_PATH/bin/activate"
-  python -m pip install --upgrade pip
-  pip install -r requirements.txt
+  "$VENV_PATH/bin/python" -m pip install --upgrade pip
+  "$VENV_PATH/bin/pip" install -r requirements.txt
 else
   echo "Reusing existing venv at $VENV_PATH"
   source "$VENV_PATH/bin/activate"
-  # Optional: ensure deps are up to date for this run
   pip install -r requirements.txt
 fi
 
