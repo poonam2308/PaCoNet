@@ -51,6 +51,12 @@ class CustomDatasetUnetSD(Dataset):
                  ground_truth_json=None, ground_truth_dir=None,
                  transform=None, channel_mode ="RGB", hsv_tolerance=0.1, remove_background=False,
                  # >>> NEW:
+                 bg_border=5,  # pixels sampled from each border to estimate bg color
+                 bg_dist_thresh=45,  # RGB distance to bg color that counts as background
+                 bg_soften=10,  # soft band around threshold for anti-aliased edges
+                 v_black_thresh=0.18,  # HSV 'Value' below this → dark bg
+                 v_white_thresh=0.80,  # HSV 'Value' above this + low sat → white/gray bg
+                 s_low_thresh=0.18,
                  binarize=False, binarize_method="otsu", binarize_threshold=128):
 
         # Load input data (from JSON or directory)
@@ -78,6 +84,13 @@ class CustomDatasetUnetSD(Dataset):
         self.binarize = binarize
         self.binarize_method = binarize_method
         self.binarize_threshold = binarize_threshold
+
+        self.bg_border = bg_border
+        self.bg_dist_thresh = bg_dist_thresh
+        self.bg_soften = bg_soften
+        self.v_black_thresh = v_black_thresh
+        self.v_white_thresh = v_white_thresh
+        self.s_low_thresh = s_low_thresh
         #>>>>
 
 
@@ -155,11 +168,52 @@ class CustomDatasetUnetSD(Dataset):
         return len(self.pairs)
 
     def remove_bg(self, image):
-        img_array = np.array(image)
-        mask = np.any(img_array < 250, axis=-1)
-        white_bg = np.ones_like(img_array) * 255
-        white_bg[mask] = img_array[mask]
-        return Image.fromarray(white_bg.astype(np.uint8))
+        """
+        Make a mostly-uniform background pure white (black, white, gray, tan, etc.)
+        while keeping colored strokes unchanged. Uses:
+          1) border sampling to estimate bg color,
+          2) soft RGB distance threshold to that color,
+          3) HSV helpers for very dark or very bright low-sat bgs.
+        """
+        img = image.convert("RGB")
+        arr_u8 = np.asarray(img).astype(np.uint8)
+        h, w, _ = arr_u8.shape
+        arr = arr_u8.astype(np.float32)
+
+        # 1) estimate background color from a thin border frame
+        b = max(1, int(self.bg_border))
+        strips = [arr[:b, :, :], arr[-b:, :, :], arr[:, :b, :], arr[:, -b:, :]]
+        frame = np.concatenate([s.reshape(-1, 3) for s in strips], axis=0)
+        bg_color = np.median(frame, axis=0)  # robust median RGB
+
+        # 2) soft distance-to-bg mask (1=bg, 0=fg)
+        diff = arr - bg_color[None, None, :]
+        dist = np.sqrt((diff ** 2).sum(axis=-1))  # 0..~441
+        low = float(self.bg_dist_thresh)
+        high = low + max(1e-6, float(self.bg_soften))
+        alpha_bg1 = np.clip(
+            (dist <= low) * 1.0 + ((high - dist) / (high - low)) * ((dist > low) & (dist < high)),
+            0.0, 1.0
+        )
+
+        # 3) HSV helpers (dark and bright-gray bgs)
+        norm = arr / 255.0
+        maxc = norm.max(axis=-1)
+        minc = norm.min(axis=-1)
+        v = maxc
+        with np.errstate(divide='ignore', invalid='ignore'):
+            s = (maxc - minc) / np.where(maxc == 0, 1.0, maxc)
+
+        alpha_dark = (v < float(self.v_black_thresh)).astype(np.float32)
+        alpha_bright_gray = ((v > float(self.v_white_thresh)) & (s < float(self.s_low_thresh))).astype(np.float32)
+
+        # combine
+        alpha_bg = np.maximum(alpha_bg1, np.maximum(alpha_dark, alpha_bright_gray))
+
+        # composite over white
+        out = (1.0 * alpha_bg[..., None] + norm * (1.0 - alpha_bg[..., None]))
+        out = (np.clip(out, 0, 1) * 255).astype(np.uint8)
+        return Image.fromarray(out, mode="RGB")
 
     # >>> NEW:
     def _otsu_threshold(self, gray_np):

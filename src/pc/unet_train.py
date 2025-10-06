@@ -48,9 +48,18 @@ class UNetTrainer:
 
     def _load_dataset(self):
 
+        # dataset = CustomDatasetUnetSD(
+        #     input_dir=self.cfg['paths']['m_color_sep_plots'],
+        #     ground_truth_dir=self.cfg['paths']['m_gt_plots_cat_crops'],
+        #     transform=self.transform,
+        #     channel_mode=self.args.channel_mode,
+        #     hsv_tolerance=0.15
+        # )
+
+        # this dataset when the background is white for gt too
         dataset = CustomDatasetUnetSD(
             input_dir=self.cfg['paths']['m_color_sep_plots'],
-            ground_truth_dir=self.cfg['paths']['m_gt_plots_cat_crops'],
+            ground_truth_dir=self.cfg['paths']['m_gt_plots_cat_ntl_crops'],
             transform=self.transform,
             channel_mode=self.args.channel_mode,
             hsv_tolerance=0.15,
