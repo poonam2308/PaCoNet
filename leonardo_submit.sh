@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=8                    # adjust to your dataloader needs
 #SBATCH --gres=gpu:1                         # number of A100 GPUs
 #SBATCH --time=08:00:00                      # hh:mm:ss
-#SBATCH --output=slurm_logs/logs/%x-%j.out
+#SBATCH --output=slurm_logs/%x-%j.out
 #SBATCH --qos=normal
 
 # --- safety & prep ---
