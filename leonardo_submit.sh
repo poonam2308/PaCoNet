@@ -13,9 +13,23 @@
 # --- safety & prep ---
 set -euo pipefail
 echo "Job $SLURM_JOB_ID on $(hostname) in $PWD"
-
+mkdir -p slurm_logs/paconetlogs
 
 # --- create or reuse a virtualenv in $WORK (recommended by CINECA) ---
+PYTHON=$(command -v python3 || true)
+if [ -z "$PYTHON" ]; then
+  # try site python modules if present
+  if module -t avail 2>&1 | grep -qE '^python/'; then
+    PY_MOD=$(module -t avail 2>&1 | grep -E '^python/' | head -n1)
+    module load "$PY_MOD" 2>/dev/null || true
+    PYTHON=$(command -v python3 || command -v python || true)
+  fi
+fi
+if [ -z "$PYTHON" ]; then
+  echo "ERROR: No python3 found. Try: module avail python ; module load python/<ver>" >&2
+  exit 1
+fi
+echo "Using $($PYTHON -V)"
 # One venv per project is usually best; reuse across jobs to avoid reinstall time.
 VENV_ROOT="$WORK/.venvs"
 VENV_NAME="paconet"
