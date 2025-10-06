@@ -64,7 +64,14 @@ def save_visualization(input_img, ground_truth, output_img, epoch, save_dir):
     plt.close()
 
     print(f"Saved visualization for epoch {epoch} at {save_path}")
-
+def _to_rgb_pil(arr_uint8):
+    pil = Image.fromarray(arr_uint8)
+    if pil.mode == "RGBA":
+        bg = Image.new("RGBA", pil.size, (255, 255, 255, 255))
+        pil = Image.alpha_composite(bg, pil).convert("RGB")
+    else:
+        pil = pil.convert("RGB")
+    return pil
 
 def save_batch_visualization(input_batch, ground_truth_batch, output_batch, epoch, save_dir):
     """ Save each image in the batch individually and create a combined visualization plot. """
@@ -90,14 +97,19 @@ def save_batch_visualization(input_batch, ground_truth_batch, output_batch, epoc
         ground_truth = (ground_truth * 255).astype(np.uint8)
         output_img = (output_img * 255).astype(np.uint8)
 
+
         # Save images individually
         input_path = os.path.join(batch_save_dir, f"input_{idx}.png")
         gt_path = os.path.join(batch_save_dir, f"ground_truth_{idx}.png")
         output_path = os.path.join(batch_save_dir, f"output_{idx}.png")
 
-        Image.fromarray(input_img).save(input_path)
-        Image.fromarray(ground_truth).save(gt_path)
-        Image.fromarray(output_img).save(output_path)
+        _to_rgb_pil(input_img).save(input_path)
+        _to_rgb_pil(ground_truth).save(gt_path)
+        _to_rgb_pil(output_img).save(output_path)
+
+        # Image.fromarray(input_img).save(input_path)
+        # Image.fromarray(ground_truth).save(gt_path)
+        # Image.fromarray(output_img).save(output_path)
 
         # inp_arr, inp_mode = _to_pil_ready(input_img)
         # gt_arr, gt_mode = _to_pil_ready(ground_truth)
