@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=paconet-train
-#SBATCH --account=<YOUR_PROJECT_ACCOUNT>     # <-- replace!
 #SBATCH --partition=boost_usr_prod           # Leonardo GPU (Booster) partition
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
+#SBATCH --mem=64GB
 #SBATCH --cpus-per-task=8                    # adjust to your dataloader needs
 #SBATCH --gres=gpu:1                         # number of A100 GPUs
 #SBATCH --time=08:00:00                      # hh:mm:ss
-#SBATCH --output=logs/%x-%j.out
-#SBATCH --error=logs/%x-%j.err
+#SBATCH --output=slurm_logs/logs/%x-%j.out
+#SBATCH --qos=normal
 
 # --- safety & prep ---
 set -euo pipefail
