@@ -49,7 +49,7 @@ def extract_base_name(filename: str):
 class CustomDatasetUnetSD(Dataset):
     def __init__(self, input_json=None, input_dir=None,
                  ground_truth_json=None, ground_truth_dir=None,
-                 transform=None, channel_mode ="RGB", hsv_tolerance=0.1,
+                 transform=None, channel_mode ="RGB", hsv_tolerance=0.1, remove_background=False,
                  # >>> NEW:
                  binarize=False, binarize_method="otsu", binarize_threshold=128):
 
@@ -71,6 +71,7 @@ class CustomDatasetUnetSD(Dataset):
 
         self.transform = transform
         self.hsv_tolerance = hsv_tolerance
+        self.remove_background = remove_background
         self.channel_mode = channel_mode
 
         # >>> NEW:
@@ -153,6 +154,13 @@ class CustomDatasetUnetSD(Dataset):
     def __len__(self):
         return len(self.pairs)
 
+    def remove_bg(self, image):
+        img_array = np.array(image)
+        mask = np.any(img_array < 250, axis=-1)
+        white_bg = np.ones_like(img_array) * 255
+        white_bg[mask] = img_array[mask]
+        return Image.fromarray(white_bg.astype(np.uint8))
+
     # >>> NEW:
     def _otsu_threshold(self, gray_np):
         """Compute Otsu threshold (0-255) for a uint8 grayscale np array."""
@@ -201,6 +209,10 @@ class CustomDatasetUnetSD(Dataset):
             gt_path = os.path.join(self.ground_truth_dir, gt_filename)
             gt_image = Image.open(gt_path).convert(self.channel_mode)
 
+        if self.remove_background:
+            #input_image = self.remove_bg(input_image)
+            if gt_image:
+                gt_image = self.remove_bg(gt_image)
         # >>> NEW: binarize before transforms
         if self.binarize:
             input_image = self.to_binary(input_image)
