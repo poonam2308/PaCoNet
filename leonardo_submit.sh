@@ -15,34 +15,51 @@ set -euo pipefail
 echo "Job $SLURM_JOB_ID on $(hostname) in $PWD"
 mkdir -p logs
 
-# --- load Python from modules (recommended by CINECA docs) ---
-# See available versions with: modmap -m python
 module purge
-module load python/3.10.13   # if unavailable, pick one that 'modmap -m python' shows
 
-# --- create or reuse a virtualenv in $WORK (recommended by CINECA) ---
-# One venv per project is usually best; reuse across jobs to avoid reinstall time.
-VENV_ROOT="$WORK/.venvs"
+# --- Try to load a Python module automatically ---
+load_any_python() {
+  # Try any python/<ver> first
+  PY_MOD="$(module -t avail 2>&1 | grep -E '^python/' | head -n1 || true)"
+  if [ -n "${PY_MOD:-}" ]; then
+    module load "$PY_MOD" && return 0
+  fi
+  # Try common Conda stacks if site provides them
+  module load anaconda 2>/dev/null && return 0 || true
+  module load miniconda3 2>/dev/null && return 0 || true
+  return 1
+}
+
+if ! load_any_python; then
+  echo "No python module found; will use system python if present."
+fi
+
+if ! command -v python >/dev/null 2>&1; then
+  if command -v python3 >/dev/null 2>&1; then
+    ln -s "$(command -v python3)" "$TMPDIR/python"
+    PATH="$TMPDIR:$PATH"
+  else
+    echo "ERROR: No Python found on PATH." >&2
+    exit 1
+  fi
+fi
+
+# --- Create / reuse venv in $WORK ---
+VENV_ROOT="${WORK:-$HOME}/.venvs"
 VENV_NAME="paconet"
 VENV_PATH="$VENV_ROOT/$VENV_NAME"
-
 mkdir -p "$VENV_ROOT"
+
 if [ ! -d "$VENV_PATH" ]; then
   echo "Creating venv at $VENV_PATH"
   python -m venv "$VENV_PATH"
-  source "$VENV_PATH/bin/activate"
-  python -m pip install --upgrade pip
-  pip install -r requirements.txt
-else
-  echo "Reusing existing venv at $VENV_PATH"
-  source "$VENV_PATH/bin/activate"
-  # Optional: ensure deps are up to date for this run
-  pip install -r requirements.txt
 fi
+# shellcheck disable=SC1090
+source "$VENV_PATH/bin/activate"
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 
-# Optional: if you use torch that tracks devices/threads:
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-
 # --- run your project ---
 # Your pc.sh ends with the training command:
 #   python src/pc/unet_train.py --cfg src/pc/config/train_config.yaml --batch_size 8 --num_epochs 80
