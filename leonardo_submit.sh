@@ -13,12 +13,7 @@
 # --- safety & prep ---
 set -euo pipefail
 echo "Job $SLURM_JOB_ID on $(hostname) in $PWD"
-mkdir -p logs
 
-# --- load Python from modules (recommended by CINECA docs) ---
-# See available versions with: modmap -m python
-module purge
-module load python/3.10.13   # if unavailable, pick one that 'modmap -m python' shows
 
 # --- create or reuse a virtualenv in $WORK (recommended by CINECA) ---
 # One venv per project is usually best; reuse across jobs to avoid reinstall time.
