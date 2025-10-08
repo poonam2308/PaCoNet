@@ -1,56 +1,20 @@
 import json
 import os
+from collections import defaultdict
+
 from torch.utils.data import Dataset
 from PIL import Image, ImageOps
 import numpy as np
 import torchvision.transforms as transforms
 from scipy.spatial.distance import euclidean
 
-# Load JSON files
-def load_json(json_path):
-    with open(json_path, "r") as file:
-        return json.load(file)
+from src.pc.utils import load_json, parse_key
 
-
-def extract_base_name(filename: str):
-    """
-    Extracts a canonical base name from a filename by keeping only
-    the image ID (e.g., image_1) and crop ID (e.g., crop_1).
-    Example:
-        image_1_crop_1_cat.png -> image_1_crop_1
-        image_1_cat_crop_1.png -> image_1_crop_1
-        image_1_crop_1.png     -> image_1_crop_1
-    """
-    name = filename.replace(".png", "").replace(".jpg", "").replace(".jpeg", "")
-    parts = name.split("_")
-
-    image_id = None
-    crop_id = None
-
-    for i, part in enumerate(parts):
-        # detect image number (e.g., "image_1")
-        if part.startswith("image"):
-            if i + 1 < len(parts) and parts[i+1].isdigit():
-                image_id = f"{part}_{parts[i+1]}"
-            else:
-                image_id = part
-        # detect crop number (e.g., "crop_1")
-        if part.startswith("crop"):
-            if i + 1 < len(parts) and parts[i+1].isdigit():
-                crop_id = f"{part}_{parts[i+1]}"
-            else:
-                crop_id = part
-
-    base = []
-    if image_id: base.append(image_id)
-    if crop_id: base.append(crop_id)
-    return "_".join(base)
 
 class CustomDatasetUnetSD(Dataset):
     def __init__(self, input_json=None, input_dir=None,
                  ground_truth_json=None, ground_truth_dir=None,
                  transform=None, channel_mode ="RGB", hsv_tolerance=0.1, remove_background=False,
-                 # >>> NEW:
                  bg_border=5,  # pixels sampled from each border to estimate bg color
                  bg_dist_thresh=45,  # RGB distance to bg color that counts as background
                  bg_soften=10,  # soft band around threshold for anti-aliased edges
@@ -59,12 +23,10 @@ class CustomDatasetUnetSD(Dataset):
                  s_low_thresh=0.18,
                  binarize=False, binarize_method="otsu", binarize_threshold=128):
 
-        # Load input data (from JSON or directory)
         if input_json:
             self.input_data = load_json(input_json)
             self.input_filenames = [item["filename"] for item in self.input_data]
         else:
-            # Build minimal records so match_pairs can iterate safely
             self.input_filenames = [f for f in os.listdir(input_dir)
                                     if f.lower().endswith((".png", ".jpg", ".jpeg"))]
             self.input_data = [{"filename": f} for f in self.input_filenames]
@@ -80,7 +42,6 @@ class CustomDatasetUnetSD(Dataset):
         self.remove_background = remove_background
         self.channel_mode = channel_mode
 
-        # >>> NEW:
         self.binarize = binarize
         self.binarize_method = binarize_method
         self.binarize_threshold = binarize_threshold
@@ -91,76 +52,105 @@ class CustomDatasetUnetSD(Dataset):
         self.v_black_thresh = v_black_thresh
         self.v_white_thresh = v_white_thresh
         self.s_low_thresh = s_low_thresh
-        #>>>>
 
 
         self.pairs = self.match_pairs()
 
-    def match_pairs(self):
-        pairs = []
+    import re
+    from collections import defaultdict
 
-        # Index ground truths by base name if JSON is given
-        gt_dict = {}
+    def parse_key(filename: str):
+        """
+        Return a normalized key for pairing:
+            (image_id:int, crop_id:int, code:str|None)
+        Accepts both 'image_3_crop_2_UTnXwc.png' and 'image_3_UTnXwc_crop_2.png'.
+        """
+        stem = os.path.splitext(os.path.basename(filename))[0]
+        parts = stem.split('_')
+
+        image_id, crop_id, code = None, None, None
+
+        # find image id and crop id wherever they appear
+        for i, p in enumerate(parts):
+            if p == 'image' and i + 1 < len(parts) and parts[i + 1].isdigit():
+                image_id = int(parts[i + 1])
+            if p == 'crop' and i + 1 < len(parts) and parts[i + 1].isdigit():
+                crop_id = int(parts[i + 1])
+
+        # find an alphanumeric token that is not 'image'/'crop' or a pure number
+        # (your random tag like UTnXwc, w06Cr, etc.)
+        for p in parts:
+            if p not in {'image', 'crop'} and not p.isdigit():
+                code = p
+                break
+
+        return (image_id, crop_id, code)
+
+    def match_pairs(self):
+        """
+        Deterministic matching:
+          1) Try exact key (image_id, crop_id, code).
+          2) If not found, try (image_id, crop_id) ignoring code.
+          3) If multiple candidates remain, pick the one with the smallest HSV distance when available;
+             otherwise pick lexicographically (stable).
+        """
+        # --- index GTs
+        gt_by_full = defaultdict(list)  # (img, crop, code)
+        gt_by_base = defaultdict(list)  # (img, crop)
+        gt_items = []
+
         if self.ground_truth_data:
             for gt_item in self.ground_truth_data:
-                base = extract_base_name(gt_item["filename"])
-                gt_dict.setdefault(base, []).append(gt_item)
-
-        # If no GT JSON, but a GT directory exists, build a filename index by base name
-        gt_dir_index = {}
-        if not self.ground_truth_data and self.ground_truth_dir and os.path.isdir(self.ground_truth_dir):
+                k = parse_key(gt_item["filename"])
+                gt_items.append((gt_item["filename"], gt_item.get("color_hsv")))
+                gt_by_full[k].append(gt_item)
+                gt_by_base[(k[0], k[1])].append(gt_item)
+        else:
             for f in os.listdir(self.ground_truth_dir):
                 if f.lower().endswith((".png", ".jpg", ".jpeg")):
-                    base = extract_base_name(f)
-                    gt_dir_index.setdefault(base, []).append(f)
+                    k = parse_key(f)
+                    gt_item = {"filename": f, "color_hsv": None}
+                    gt_items.append((f, None))
+                    gt_by_full[k].append(gt_item)
+                    gt_by_base[(k[0], k[1])].append(gt_item)
 
+        pairs = []
         for input_item in self.input_data:
-            input_filename = input_item["filename"]
-            base_name_input = extract_base_name(input_filename)
+            in_name = input_item["filename"]
+            in_hsv = input_item.get("color_hsv")
+            ik = parse_key(in_name)
 
-            input_hsv = input_item.get("color_hsv", None)
+            candidates = []
+            # 1) exact key
+            if ik in gt_by_full:
+                candidates = gt_by_full[ik]
+            # 2) fall back to (image, crop)
+            elif (ik[0], ik[1]) in gt_by_base:
+                candidates = gt_by_base[(ik[0], ik[1])]
 
-            best_match = None
-            best_hsv_distance = float("inf")
+            chosen = None
+            if candidates:
+                # if HSV present on both sides, choose smallest distance
+                if in_hsv is not None and any(c.get("color_hsv") for c in candidates):
+                    best_d, best = float("inf"), None
+                    for c in candidates:
+                        gh = c.get("color_hsv")
+                        if gh is None:
+                            continue
+                        d = ((in_hsv['h'] - gh['h']) ** 2 + (in_hsv['s'] - gh['s']) ** 2 + (
+                                    in_hsv['v'] - gh['v']) ** 2) ** 0.5
+                        if d < best_d:
+                            best_d, best = d, c
+                    chosen = best if best is not None else sorted(candidates, key=lambda x: x["filename"])[0]
+                else:
+                    # deterministic fallback
+                    chosen = sorted(candidates, key=lambda x: x["filename"])[0]
 
-            # Prefer JSON GT if available
-            candidate_gts = []
-            if base_name_input in gt_dict:
-                candidate_gts = gt_dict[base_name_input]
-            elif base_name_input in gt_dir_index:
-                # Convert directory filenames into minimal records to unify logic
-                candidate_gts = [{"filename": f, "color_hsv": None} for f in gt_dir_index[base_name_input]]
+            if chosen is None:
+                print(f"Warning: No GT found for {in_name} (parsed key={ik}).")
+                continue
 
-            # Try HSV-based selection if both sides have HSV; otherwise fall back to first candidate
-            if candidate_gts:
-                if input_hsv is not None and any("color_hsv" in g and g["color_hsv"] is not None for g in candidate_gts):
-                    from scipy.spatial.distance import euclidean
-                    for gt_item in candidate_gts:
-                        gt_hsv = gt_item.get("color_hsv")
-                        if gt_hsv is None:
-                            continue  # skip HSV-less candidates in HSV mode
-                        hsv_distance = euclidean(
-                            [input_hsv['h'], input_hsv['s'], input_hsv['v']],
-                            [gt_hsv['h'], gt_hsv['s'], gt_hsv['v']]
-                        )
-                        if hsv_distance < self.hsv_tolerance and hsv_distance < best_hsv_distance:
-                            best_match = gt_item["filename"]
-                            best_hsv_distance = hsv_distance
-                    # If none within tolerance, still take the closest if any were computed
-                    if best_match is None and best_hsv_distance < float("inf"):
-                        # choose the candidate with min distance (already tracked)
-                        # Nothing to do: best_match stays None if we never set it; handle below
-                        pass
-                # Fallback: no HSV available or no within-tolerance -> take first candidate
-                if best_match is None:
-                    best_match = candidate_gts[0]["filename"]
-
-            # If still nothing found, pair with None (your __getitem__ checks this)
-            if best_match:
-                pairs.append((input_filename, best_match))
-            else:
-                print(f"Warning: No match found for {input_filename}. Pairing with None.")
-                pairs.append((input_filename, None))
+            pairs.append((in_name, chosen["filename"]))
 
         return pairs
 

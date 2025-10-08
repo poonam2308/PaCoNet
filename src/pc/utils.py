@@ -94,4 +94,35 @@ def visualize_crops_dht(cropped_image, gt_coords, i, left_x, right_x):
     plt.show()
 
 
+def load_json(json_path):
+    with open(json_path, "r") as file:
+        return json.load(file)
+
+def parse_key(filename: str):
+    """
+    Return a normalized key for pairing:
+        (image_id:int, crop_id:int, code:str|None)
+    Accepts both 'image_3_crop_2_UTnXwc.png' and 'image_3_UTnXwc_crop_2.png'.
+    """
+    stem = os.path.splitext(os.path.basename(filename))[0]
+    parts = stem.split('_')
+
+    image_id, crop_id, code = None, None, None
+
+    # find image id and crop id wherever they appear
+    for i, p in enumerate(parts):
+        if p == 'image' and i + 1 < len(parts) and parts[i+1].isdigit():
+            image_id = int(parts[i+1])
+        if p == 'crop' and i + 1 < len(parts) and parts[i+1].isdigit():
+            crop_id = int(parts[i+1])
+
+    # find an alphanumeric token that is not 'image'/'crop' or a pure number
+    # (your random tag like UTnXwc, w06Cr, etc.)
+    for p in parts:
+        if p not in {'image', 'crop'} and not p.isdigit():
+            code = p
+            break
+
+    return (image_id, crop_id, code)
+
 

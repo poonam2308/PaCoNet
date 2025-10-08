@@ -6,141 +6,73 @@ import os
 import numpy as np
 import torchvision.transforms as transforms
 
-# --- add near the imports ---
-def _to_pil_ready(arr_uint8):
-    """
-    Accepts a uint8 numpy array shaped (H,W), (H,W,1), (H,W,3) or (H,W,4)
-    Returns (pil_array, mode) suitable for Image.fromarray
-    """
-    if arr_uint8.ndim == 3 and arr_uint8.shape[2] == 1:
-        # Grayscale: drop the singleton channel
-        return arr_uint8[:, :, 0], 'L'
-    elif arr_uint8.ndim == 2:
-        return arr_uint8, 'L'
-    elif arr_uint8.ndim == 3 and arr_uint8.shape[2] in (3, 4):
-        return arr_uint8, None  # let PIL infer RGB/RGBA
-    else:
-        # As a fallback, replicate to 3 channels
-        if arr_uint8.ndim == 3 and arr_uint8.shape[2] > 4:
-            # Unexpected channel count; keep first 3
-            arr_uint8 = arr_uint8[:, :, :3]
-        elif arr_uint8.ndim == 2:
-            arr_uint8 = np.stack([arr_uint8]*3, axis=2)
-        else:
-            # e.g., (H,W,1) or weird shapes
-            arr_uint8 = np.repeat(arr_uint8[:, :, :1], 3, axis=2)
-        return arr_uint8, None
 
+def _denorm01(arr):
+    # arr float in CHW/HWC; if in [-1,1] -> [0,1]; if already [0,1], leave it
+    if arr.min() < 0.0:     # robust test for normalized tensors
+        arr = arr * 0.5 + 0.5
+    return np.clip(arr, 0.0, 1.0)
 
-def save_visualization(input_img, ground_truth, output_img, epoch, save_dir):
-    """ Function to save input, ground truth, and output images """
-    input_img = input_img[0].detach().cpu().permute(1, 2, 0).numpy()  # Convert tensor to numpy
-    ground_truth = ground_truth[0].detach().cpu().permute(1, 2, 0).numpy()
-    output_img = output_img[0].detach().cpu().permute(1, 2, 0).numpy()
+def _composite_over_white(arr01):
+    # arr01 HxWx(3|4) float in [0,1]
+    if arr01.shape[-1] == 4:
+        rgb = arr01[..., :3]
+        a = arr01[..., 3:4]
+        return rgb * a + (1.0 - a) * 1.0
+    return arr01[..., :3]
 
-    # Reverse normalization if applied
-    if input_img.max() < 1.1:  # Check if normalization was applied
-        input_img = (input_img * 0.5) + 0.5  # Convert from [-1,1] to [0,1]
-        ground_truth = (ground_truth * 0.5) + 0.5
-        output_img = (output_img * 0.5) + 0.5
-
-    # Plot images
-    fig, ax = plt.subplots(1, 3, figsize=(12, 4))
-    ax[0].imshow(input_img)
-    ax[0].set_title("Input (Noisy)")
-    ax[0].axis("off")
-
-    ax[1].imshow(ground_truth)
-    ax[1].set_title("Ground Truth")
-    ax[1].axis("off")
-
-    ax[2].imshow(output_img)
-    ax[2].set_title("Output (Denoised)")
-    ax[2].axis("off")
-
-    # Save the plot
-    save_path = os.path.join(save_dir, f"epoch_{epoch}.png")
-    plt.savefig(save_path)
-    plt.close()
-
-    print(f"Saved visualization for epoch {epoch} at {save_path}")
-def _to_rgb_pil(arr_uint8):
-    pil = Image.fromarray(arr_uint8)
-    if pil.mode == "RGBA":
-        bg = Image.new("RGBA", pil.size, (255, 255, 255, 255))
-        pil = Image.alpha_composite(bg, pil).convert("RGB")
-    else:
-        pil = pil.convert("RGB")
-    return pil
+def _to_uint8_rgb(arr):
+    # arr HxWxC float in [0,1] or uint8; returns HxWx3 uint8, alpha composited
+    if arr.dtype != np.uint8:
+        arr = np.asarray(arr, dtype=np.float32)
+        arr = np.clip(arr, 0.0, 1.0)
+        arr = (arr * 255.0).round().astype(np.uint8)
+    if arr.shape[-1] == 4:  # compose if RGBA
+        a = (arr[..., 3:4].astype(np.float32) / 255.0)
+        rgb = arr[..., :3].astype(np.float32)
+        arr = (rgb * a + (1.0 - a) * 255.0).round().astype(np.uint8)
+    return arr[..., :3]
 
 def save_batch_visualization(input_batch, ground_truth_batch, output_batch, epoch, save_dir):
-    """ Save each image in the batch individually and create a combined visualization plot. """
-
-    batch_size = input_batch.shape[0]  # Get the batch size
+    batch_size = input_batch.shape[0]
     batch_save_dir = os.path.join(save_dir, f"epoch_{epoch}")
-    os.makedirs(batch_save_dir, exist_ok=True)  # Ensure per-epoch directory exists
+    os.makedirs(batch_save_dir, exist_ok=True)
+
+    # ---- save each image (RGB uint8, no alpha, no gray veil)
+    for idx in range(batch_size):
+        inp = input_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+        gt  = ground_truth_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+        out = output_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+
+        inp = _to_uint8_rgb(_denorm01(inp))
+        gt  = _to_uint8_rgb(_denorm01(gt))
+        out = _to_uint8_rgb(_denorm01(out))
+
+        Image.fromarray(inp).save(os.path.join(batch_save_dir, f"input_{idx}.png"))
+        Image.fromarray(gt).save(os.path.join(batch_save_dir, f"ground_truth_{idx}.png"))
+        Image.fromarray(out).save(os.path.join(batch_save_dir, f"output_{idx}.png"))
+
+    # ---- combined grid (denorm + white composition + white figure bg)
+    fig, axes = plt.subplots(batch_size, 3, figsize=(12, 4 * batch_size), facecolor="white")
+    if batch_size == 1:
+        axes = np.array([axes])  # make it 2D for uniform indexing
 
     for idx in range(batch_size):
-        # Convert tensors to numpy
-        input_img = input_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
-        ground_truth = ground_truth_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
-        output_img = output_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+        inp = input_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+        gt  = ground_truth_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+        out = output_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
 
-        # Reverse normalization if applied
-        if input_img.max() < 1.1:
-            input_img = (input_img * 0.5) + 0.5  # Convert from [-1,1] to [0,1]
-            ground_truth = (ground_truth * 0.5) + 0.5
-            output_img = (output_img * 0.5) + 0.5
+        inp = _composite_over_white(_denorm01(inp))
+        gt  = _composite_over_white(_denorm01(gt))
+        out = _composite_over_white(_denorm01(out))
 
-        # Convert to [0, 255] and uint8
-        input_img = (input_img * 255).astype(np.uint8)
-        ground_truth = (ground_truth * 255).astype(np.uint8)
-        output_img = (output_img * 255).astype(np.uint8)
-
-
-        # Save images individually
-        input_path = os.path.join(batch_save_dir, f"input_{idx}.png")
-        gt_path = os.path.join(batch_save_dir, f"ground_truth_{idx}.png")
-        output_path = os.path.join(batch_save_dir, f"output_{idx}.png")
-
-        _to_rgb_pil(input_img).save(input_path)
-        _to_rgb_pil(ground_truth).save(gt_path)
-        _to_rgb_pil(output_img).save(output_path)
-
-        # Image.fromarray(input_img).save(input_path)
-        # Image.fromarray(ground_truth).save(gt_path)
-        # Image.fromarray(output_img).save(output_path)
-
-        # inp_arr, inp_mode = _to_pil_ready(input_img)
-        # gt_arr, gt_mode = _to_pil_ready(ground_truth)
-        # out_arr, out_mode = _to_pil_ready(output_img)
-        #
-        # Image.fromarray(inp_arr if inp_mode is None else inp_arr, mode=inp_mode).save(input_path)
-        # Image.fromarray(gt_arr if gt_mode is None else gt_arr, mode=gt_mode).save(gt_path)
-        # Image.fromarray(out_arr if out_mode is None else out_arr, mode=out_mode).save(output_path)
-
-        print(f"Saved {input_path}")
-        print(f"Saved {gt_path}")
-        print(f"Saved {output_path}")
-
-    # Save a combined visualization plot
-    fig, axes = plt.subplots(batch_size, 3, figsize=(12, 4 * batch_size))
-    for idx in range(batch_size):
-        axes[idx, 0].imshow(input_batch[idx].cpu().permute(1, 2, 0).numpy())
-        axes[idx, 0].set_title("Input (Noisy)")
-        axes[idx, 0].axis("off")
-
-        axes[idx, 1].imshow(ground_truth_batch[idx].cpu().permute(1, 2, 0).numpy())
-        axes[idx, 1].set_title("Ground Truth")
-        axes[idx, 1].axis("off")
-
-        axes[idx, 2].imshow(output_batch[idx].cpu().permute(1, 2, 0).numpy())
-        axes[idx, 2].set_title("Output (Denoised)")
-        axes[idx, 2].axis("off")
+        axes[idx, 0].imshow(inp);  axes[idx, 0].set_title("Input (Noisy)");    axes[idx, 0].axis("off")
+        axes[idx, 1].imshow(gt);   axes[idx, 1].set_title("Ground Truth");     axes[idx, 1].axis("off")
+        axes[idx, 2].imshow(out);  axes[idx, 2].set_title("Output (Denoised)");axes[idx, 2].axis("off")
 
     viz_path = os.path.join(batch_save_dir, f"visualization_batch_{epoch}.png")
-    plt.savefig(viz_path)
-    plt.close()
+    plt.savefig(viz_path, facecolor="white", bbox_inches="tight", pad_inches=0.1)
+    plt.close(fig)
     print(f"Saved visualization plot at {viz_path}")
 
 # without adding modified output images with input noisy images
