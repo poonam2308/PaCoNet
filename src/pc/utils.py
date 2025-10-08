@@ -8,7 +8,7 @@ def unet_transformation(args):
     return transforms.Compose([
         transforms.Resize((args.new_width, args.new_width)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=args.mean * 3, std=args.std * 3)
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
 
 def ensure_directory_exists(directory_path):

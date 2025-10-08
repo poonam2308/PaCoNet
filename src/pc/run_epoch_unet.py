@@ -33,7 +33,7 @@ def _to_uint8_rgb(arr):
         arr = (rgb * a + (1.0 - a) * 255.0).round().astype(np.uint8)
     return arr[..., :3]
 
-def save_batch_visualization(input_batch, ground_truth_batch, output_batch, epoch, save_dir):
+def save_batch_visualization1(input_batch, ground_truth_batch, output_batch, epoch, save_dir):
     batch_size = input_batch.shape[0]
     batch_save_dir = os.path.join(save_dir, f"epoch_{epoch}")
     os.makedirs(batch_save_dir, exist_ok=True)
@@ -74,7 +74,62 @@ def save_batch_visualization(input_batch, ground_truth_batch, output_batch, epoc
     plt.savefig(viz_path, facecolor="white", bbox_inches="tight", pad_inches=0.1)
     plt.close(fig)
     print(f"Saved visualization plot at {viz_path}")
+def save_batch_visualization(input_batch, ground_truth_batch, output_batch, epoch, save_dir):
+    """ Save each image in the batch individually and create a combined visualization plot. """
 
+    batch_size = input_batch.shape[0]  # Get the batch size
+    batch_save_dir = os.path.join(save_dir, f"epoch_{epoch}")
+    os.makedirs(batch_save_dir, exist_ok=True)  # Ensure per-epoch directory exists
+
+    for idx in range(batch_size):
+        # Convert tensors to numpy
+        input_img = input_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+        ground_truth = ground_truth_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+        output_img = output_batch[idx].detach().cpu().permute(1, 2, 0).numpy()
+
+        # Reverse normalization if applied
+        if input_img.max() < 1.1:
+            input_img = (input_img * 0.5) + 0.5  # Convert from [-1,1] to [0,1]
+            ground_truth = (ground_truth * 0.5) + 0.5
+            output_img = (output_img * 0.5) + 0.5
+
+        # Convert to [0, 255] and uint8
+        input_img = (input_img * 255).astype(np.uint8)
+        ground_truth = (ground_truth * 255).astype(np.uint8)
+        output_img = (output_img * 255).astype(np.uint8)
+
+        # Save images individually
+        input_path = os.path.join(batch_save_dir, f"input_{idx}.png")
+        gt_path = os.path.join(batch_save_dir, f"ground_truth_{idx}.png")
+        output_path = os.path.join(batch_save_dir, f"output_{idx}.png")
+
+        Image.fromarray(input_img).save(input_path)
+        Image.fromarray(ground_truth).save(gt_path)
+        Image.fromarray(output_img).save(output_path)
+
+        print(f"Saved {input_path}")
+        print(f"Saved {gt_path}")
+        print(f"Saved {output_path}")
+
+    # Save a combined visualization plot
+    fig, axes = plt.subplots(batch_size, 3, figsize=(12, 4 * batch_size))
+    for idx in range(batch_size):
+        axes[idx, 0].imshow(input_batch[idx].cpu().permute(1, 2, 0).numpy())
+        axes[idx, 0].set_title("Input (Noisy)")
+        axes[idx, 0].axis("off")
+
+        axes[idx, 1].imshow(ground_truth_batch[idx].cpu().permute(1, 2, 0).numpy())
+        axes[idx, 1].set_title("Ground Truth")
+        axes[idx, 1].axis("off")
+
+        axes[idx, 2].imshow(output_batch[idx].cpu().permute(1, 2, 0).numpy())
+        axes[idx, 2].set_title("Output (Denoised)")
+        axes[idx, 2].axis("off")
+
+    viz_path = os.path.join(batch_save_dir, f"visualization_batch_{epoch}.png")
+    plt.savefig(viz_path)
+    plt.close()
+    print(f"Saved visualization plot at {viz_path}")
 # without adding modified output images with input noisy images
 def train_epoch_unet_womo(model, dataloader, criterion, optimizer, device):
     model.train()

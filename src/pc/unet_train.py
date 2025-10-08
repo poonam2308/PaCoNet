@@ -29,8 +29,8 @@ class UNetTrainer:
         self._prepare_dirs()
         self._prepare_transforms()
 
-        # self.model = UNetSD(in_channels=3, out_channels=3).to(self.device)
-        self.model = UNetSD(in_channels=self.args.in_channels, out_channels=self.args.out_channels).to(self.device)
+        self.model = UNetSD(in_channels=3, out_channels=3).to(self.device)
+        #self.model = UNetSD(in_channels=self.args.in_channels, out_channels=self.args.out_channels).to(self.device)
 
     def _set_seed(self, seed):
         torch.manual_seed(seed)
