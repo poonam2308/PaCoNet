@@ -1,7 +1,11 @@
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
+import os
+import sys
 
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
 from src.pc.config import config
 from src.pc.config.config import get_args, load_config
 from src.pc.utils import ensure_directory_exists, unet_transformation
