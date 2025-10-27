@@ -129,7 +129,7 @@ def main():
             dataset = json.load(f)
 
         def handle(data):
-            im = cv2.imread(os.path.join(data_root, "images", data["filename"]))
+            im = cv2.imread(os.path.join(data_root, "denoised", data["filename"]))
             if im is None:
                 print(f"Warning: Unable to read image {data['filename']}. Skipping.")
                 return
