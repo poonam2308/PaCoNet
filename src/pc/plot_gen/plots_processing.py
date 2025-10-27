@@ -112,6 +112,12 @@ class PlotsPipeline:
                 valid_file=self.paths['m_color_valid_json']
             )
 
+    def rescale_test_lines(self):
+        if 'm_color_all_json' in self.paths:
+            update_lines(
+                json_file=self.paths['m_color_all_json'],
+                output_file=self.paths['m_color_test_json']
+            )
     def split_data_wbg(self):
         # Optionally split into train/val
         if 'm_color_wbg_all_json' in self.paths:
