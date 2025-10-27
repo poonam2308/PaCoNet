@@ -195,9 +195,9 @@ def save_images(input_images, input_filenames, outputs, output_dir):
         if isinstance(filename, (tuple, list)):
             filename = filename[0]
         output_path = os.path.join(output_dir, filename)
-        # img = Image.fromarray(output_img)
-        pil_arr, mode = _to_pil_ready(output_img)
-        img = Image.fromarray(pil_arr if mode is None else pil_arr, mode=mode)
+        img = Image.fromarray(output_img)
+        # pil_arr, mode = _to_pil_ready(output_img)
+        # img = Image.fromarray(pil_arr if mode is None else pil_arr, mode=mode)
 
         img.save(output_path, format='PNG')  # Save as PNG for lossless quality
 
