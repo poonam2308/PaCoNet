@@ -95,7 +95,7 @@ def save_heatmap(prefix, image, lines):
 
     if len(lneg) == 0:
         print("Warning: No negative samples found in save_heatmap. Skipping negative line processing.")
-        return  # Avoid crashing
+        return False
     lneg.sort(key=lambda l: -l[-1])
 
     junc = np.array(junc, dtype=float)
@@ -119,6 +119,7 @@ def save_heatmap(prefix, image, lines):
         lneg=lneg,  # [Nn, 2, 3]   Negative lines represented with junction coordinates
     )
     cv2.imwrite(f"{prefix}.png", image)
+    return True
 
 
 def handle(data,data_root, data_output, batch):
@@ -136,9 +137,12 @@ def handle(data,data_root, data_output, batch):
     lines0 = lines.copy()
 
     path = os.path.join(data_output, batch, prefix)
-    save_heatmap(f"{path}_0", im[::, ::], lines0)
-
-    print("Finishing", os.path.join(data_output, batch, prefix))
+    # save_heatmap(f"{path}_0", im[::, ::], lines0)
+    #
+    # print("Finishing", os.path.join(data_output, batch, prefix))
+    ok = save_heatmap(f"{path}_0", im, lines.copy())  # no need for im[::, ::]; pass as-is
+    if ok:
+        print("Finishing", path)
 
 def main():
     start_time = time.time()
