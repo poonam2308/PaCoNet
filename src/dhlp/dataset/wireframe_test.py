@@ -19,7 +19,9 @@ import os
 import sys
 import json
 from itertools import combinations
+from multiprocessing import Pool
 
+import time
 import cv2
 import numpy as np
 import skimage.draw
@@ -91,7 +93,9 @@ def save_heatmap(prefix, image, lines):
             rr, cc, value = skimage.draw.line_aa(*vint0, *vint1)
             lneg.append([v0, v1, i0, i1, np.average(np.minimum(value, llmap[rr, cc]))])
 
-    assert len(lneg) != 0
+    if len(lneg) == 0:
+        print("Warning: No negative samples found in save_heatmap. Skipping negative line processing.")
+        return  # Avoid crashing
     lneg.sort(key=lambda l: -l[-1])
 
     junc = np.array(junc, dtype=float)
@@ -116,7 +120,28 @@ def save_heatmap(prefix, image, lines):
     )
     cv2.imwrite(f"{prefix}.png", image)
 
+
+def handle(data,data_root, data_output, batch):
+    im = cv2.imread(os.path.join(data_root, "denoised", data["filename"]))
+    if im is None:
+        print(f"Warning: Unable to read image {data['filename']}. Skipping.")
+        return
+
+    prefix = data["filename"].split(".")[0]
+    print(prefix)
+
+    lines = np.array(data["lines"]).reshape(-1, 2, 2)
+    os.makedirs(os.path.join(data_output, batch), exist_ok=True)
+
+    lines0 = lines.copy()
+
+    path = os.path.join(data_output, batch, prefix)
+    save_heatmap(f"{path}_0", im[::, ::], lines0)
+
+    print("Finishing", os.path.join(data_output, batch, prefix))
+
 def main():
+    start_time = time.time()
     args = docopt(__doc__)
     data_root = args["<src>"]
     data_output = args["<dst>"]
@@ -128,25 +153,13 @@ def main():
         with open(anno_file, "r") as f:
             dataset = json.load(f)
 
-        def handle(data):
-            im = cv2.imread(os.path.join(data_root, "denoised", data["filename"]))
-            if im is None:
-                print(f"Warning: Unable to read image {data['filename']}. Skipping.")
-                return
 
-            prefix = data["filename"].split(".")[0]
-            print(prefix)
-
-            lines = np.array(data["lines"]).reshape(-1, 2, 2)
-            os.makedirs(os.path.join(data_output, batch), exist_ok=True)
-
-            lines0 = lines.copy()
-
-            path = os.path.join(data_output, batch, prefix)
-            save_heatmap(f"{path}_0", im[::, ::], lines0)
-
-            print("Finishing", os.path.join(data_output, batch, prefix))
-        parmap(handle, dataset, 16)
+        # parmap(handle, dataset, 16)
+        with Pool(processes=8) as pool:  # Adjust number of processes if needed
+            pool.starmap(handle, [(data, data_root, data_output, batch) for data in dataset])
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f" Processing completed in {total_time:.2f} seconds ({total_time / 60:.2f} minutes)\n")
 
 
 if __name__ == "__main__":
