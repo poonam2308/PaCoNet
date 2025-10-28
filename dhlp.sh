@@ -20,7 +20,7 @@
 # verify the paths are correct
 # step 1
 
-./src/dhlp/dataset/wireframe_denoised.py data/synthetic_plots/multi_cat/training/color/denoised data/dhlp/pcw_2dn
+./src/dhlp/dataset/wireframe_denoised.py data/synthetic_plots/multi_cat/training/color data/dhlp/pcw_2dn
 
 
 # step 2
