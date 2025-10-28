@@ -54,12 +54,11 @@ def process_and_save_masks(image_dir, save_dir, target_size=(128, 128)):
             cv2.imwrite(save_png_path, (mask * 255).astype(np.uint8))
 
             mask_resized = cv2.resize(mask, target_size, interpolation=cv2.INTER_NEAREST)
-            #filename = os.path.splitext(os.path.basename(image_path))[0]
-            # save_path = os.path.join(save_dir, f"{filename}_label.npz")
-            # np.savez_compressed(save_path, mask=mask_resized)
-            #
-            #
-            # print(f"Saved mask: {save_path}")
+            filename = os.path.splitext(os.path.basename(image_path))[0]
+            save_path = os.path.join(save_dir, f"{filename}_label.npz")
+            np.savez_compressed(save_path, mask=mask_resized)
+
+            print(f"Saved mask: {save_path}")
             print(f"Saved mask imge: {save_png_path}")
         except Exception as e:
             print(f"Error processing {image_path}: {e}")

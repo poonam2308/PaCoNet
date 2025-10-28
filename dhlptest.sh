@@ -16,7 +16,11 @@
 # Step 3
 #generate the predictions using the best checkpoint for the test data
 
-#./src/dhlp/process_original.py ./src/dhlp/config/test.yaml logs_ct5k1/250223-200052-baseline/checkpoint_best.pth
+#./src/dhlp/process_original.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 
 
+# Step 4
+# calculate sap
+
+#./src/dhlp/eval-sAP.py ./outputs/results_test
 

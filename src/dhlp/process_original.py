@@ -23,6 +23,10 @@ import os.path as osp
 import threading
 import subprocess
 
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
+
 import yaml
 import numpy as np
 import torch

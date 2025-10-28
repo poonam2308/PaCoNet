@@ -17,13 +17,19 @@ Options:
 import os
 import glob
 import json
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from docopt import docopt
-
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
 import src.dhlp.lcnn.utils
 import src.dhlp.lcnn.metric
 from src.dhlp import lcnn
+
+
+GT = "data/pcw_test/test/*.npz"
+MASK_PATH = "data/tcw_test/masks/*.npz"
 
 # GT = "data/pcwireframe_test/test/*.npz"
 # MASK_PATH = "data/pcwireframe_test/masks/*.npz"
@@ -44,9 +50,9 @@ from src.dhlp import lcnn
 #
 # GT = "data/pcwireframe_clst5knew/test/*.npz"
 # MASK_PATH = "data/pcwireframe_clst5knew/masks/*.npz"
-
-GT = "data/pcwireframe_clst5kdenew/test/*.npz"
-MASK_PATH = "data/pcwireframe_clst5kdenew/masks/*.npz"
+#
+# GT = "data/pcwireframe_clst5kdenew/test/*.npz"
+# MASK_PATH = "data/pcwireframe_clst5kdenew/masks/*.npz"
 
 
 def line_score(pred_path, threshold=1):
