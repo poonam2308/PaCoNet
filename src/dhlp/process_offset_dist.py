@@ -17,6 +17,9 @@ Options:
 import os
 import pprint
 import random
+import sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
 
 import numpy as np
 import torch
@@ -246,3 +249,9 @@ def main():
 #
 if __name__ == "__main__":
     main()
+
+
+#Final Average Offset Errors: caluclated on new test dataset
+# Avg Mean Offset: 12.83
+# Avg Lower Offset: -7.67
+# Avg Upper Offset: 33.32

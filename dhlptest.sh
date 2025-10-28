@@ -9,7 +9,7 @@
 # Step 2
 # create masks for test data
 
-./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
+#./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
 
 
 
@@ -23,4 +23,8 @@
 # calculate sap
 
 #./src/dhlp/eval-sAP.py ./outputs/results_test
+
+# to get the mean error
+
+#./src/dhlp//process_offset_dist.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 

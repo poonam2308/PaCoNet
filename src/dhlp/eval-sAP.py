@@ -28,8 +28,8 @@ import src.dhlp.lcnn.metric
 from src.dhlp import lcnn
 
 
-GT = "data/pcw_test/test/*.npz"
-MASK_PATH = "data/tcw_test/masks/*.npz"
+GT = "./data/pcw_test/test/*.npz"
+MASK_PATH = "./data/pcw_test/masks/*.npz"
 
 # GT = "data/pcwireframe_test/test/*.npz"
 # MASK_PATH = "data/pcwireframe_test/masks/*.npz"
@@ -334,7 +334,7 @@ if __name__ == "__main__":
         for t in [5,10,15]:
             print(f"\nRunning process_multiple_files for threshold t={t}\n")
             avg_map = 100 * process_multiple_files(f"{path}/*.npz", t,
-                                                   "output_json_data/results_clst5kdenew1_2.json")
+                                                   "./outputs/output_json_data/results_clst5kdenew1_2.json")
 
         # return 100 * process_multiple_files(f"{path}/*.npz")
         # return [100 * line_score(f"{path}/*.npz", t) for t in [5, 10, 15]]
