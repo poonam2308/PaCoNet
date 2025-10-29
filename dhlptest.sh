@@ -37,7 +37,7 @@
 ####------------------------
 # create the dataset as dhlp format for the crops
 
-./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/m_crops data/dhlp/pcw_alltest
+./src/dhlp/dataset/wireframe_all_test.py data/synthetic_plots/multi_cat/testing/m_crops data/dhlp/pcw_alltest
 
 
 
