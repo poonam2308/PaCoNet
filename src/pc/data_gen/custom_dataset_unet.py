@@ -407,7 +407,7 @@ class CustomHSVMatchingDataset(Dataset):
 
         return input_image, gt_image
 
-class CustomTestDatasetSD_oldUseful(Dataset):
+class CustomTestDatasetSD(Dataset):
     def __init__(self, input_dir, transform=None):
         self.input_dir = input_dir
         self.transform = transform
@@ -435,55 +435,6 @@ class CustomTestDatasetSD_oldUseful(Dataset):
         except Exception as e:
             print(f"Error loading image {input_filename}: {e}")
             return None  # Return None to indicate an issue
-
-
-class CustomTestDatasetSD(Dataset):
-    def __init__(self, input_dir, transform=None,
-                 channel_mode="RGB",
-                 remove_background=False,
-                 binarize=False, binarize_method="otsu", binarize_threshold=128):
-        self.input_dir = input_dir
-        self.transform = transform
-        self.channel_mode = channel_mode
-        self.remove_background = remove_background
-        self.binarize = binarize
-        self.binarize_method = binarize_method
-        self.binarize_threshold = binarize_threshold
-
-        self.image_files = [
-            f for f in os.listdir(input_dir)
-            if os.path.isfile(os.path.join(input_dir, f)) and f.lower().endswith(('.png', '.jpg', '.jpeg'))
-        ]
-
-    # --- reuse the same helpers from CustomDatasetUnetSD:
-    _otsu_threshold = CustomDatasetUnetSD._otsu_threshold
-    to_binary       = CustomDatasetUnetSD.to_binary
-    remove_bg       = CustomDatasetUnetSD.remove_bg
-
-    def __len__(self):
-        return len(self.image_files)
-
-    def __getitem__(self, idx):
-        input_filename = self.image_files[idx]
-        input_path = os.path.join(self.input_dir, input_filename)
-
-        try:
-            img = Image.open(input_path).convert(self.channel_mode)
-
-            if self.remove_background:
-                img = self.remove_bg(self, img)   # call as bound helper
-
-            if self.binarize:
-                img = self.to_binary(self, img)
-
-            if self.transform:
-                img = self.transform(img)
-
-            return img, input_filename
-        except Exception as e:
-            print(f"Error loading image {input_filename}: {e}")
-            # you can choose to raise here instead of returning None:
-            raise
 
 
 class CustomHSVMatchingDatasetSD1(Dataset):
