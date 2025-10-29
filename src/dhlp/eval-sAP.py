@@ -351,3 +351,22 @@ if __name__ == "__main__":
 # results_clst5kdenew: 57.1 58.5 58.9
 # results_all: 42.8 42.9 42.9
 
+
+# Total Processed Files: 1169
+# Average mAP Score for t=5: 28.8290
+#
+# Running process_multiple_files for threshold t=10
+#
+# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
+#
+# Total Processed Files: 1169
+# Average mAP Score for t=10: 33.7513
+#
+# Running process_multiple_files for threshold t=15
+#
+# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
+#
+# Total Processed Files: 1169
+# Average mAP Score for t=15: 36.8419
+
+

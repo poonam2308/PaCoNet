@@ -42,7 +42,11 @@ class UNetTester:
         ensure_directory_exists(config.plot_log_dir)
 
     def run(self, input_dir, output_dir, description="Denoising"):
-        dataset = CustomTestDatasetSD(input_dir=input_dir, transform=self.transform)
+        dataset = CustomTestDatasetSD(input_dir=input_dir, transform=self.transform,
+                                      channel_mode=self.args.channel_mode,
+                                      remove_background=True,
+                                      binarize=False
+                                      )
         loader = DataLoader(dataset, batch_size=2, shuffle=False)
 
         print(f"Testing on: {description or input_dir} | Samples: {len(dataset)}")

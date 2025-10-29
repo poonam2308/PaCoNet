@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Evaluate mAPJ for LCNN, AFM, and Wireframe
 Usage:
-    eval-mAPJ.py <path>...
-    eval-mAPJ.py (-h | --help )
+    eval-mAP.py <path>...
+    eval-mAP.py (-h | --help )
 
 Examples:
-    python eval-mAPJ.py logs/*
+    python eval-mAP.py logs/*
 
 Arguments:
     <path>                           One or more directories that contain *.npz
@@ -19,9 +19,18 @@ import glob
 import os.path as osp
 import numpy as np
 from docopt import docopt
+import os
+import sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
 
 import src.dhlp.lcnn.models
 from src.dhlp.lcnn.metric import mAPJ, post_jheatmap
+
+
+
+GT = "./data/pcw_test/test/*.npz"
+IM = "./data/pcw_test/test/*.png"
 
 
 # GT = "data/wireframe/valid/*.npz"
@@ -47,8 +56,8 @@ from src.dhlp.lcnn.metric import mAPJ, post_jheatmap
 
 # # python eval-mAP.py results_clst5knew
 # ( 0.3 of the filelist)
-GT = "data/pcwireframe_clst5knew/test/*.npz"
-IM = "data/pcwireframe_clst5knew/test/*.png"
+# GT = "data/pcwireframe_clst5knew/test/*.npz"
+# IM = "data/pcwireframe_clst5knew/test/*.png"
 # #
 # #python eval-mAP.py results_clst5kdenew
 # GT = "data/pcwireframe_clst5kdenew/test/*.npz"

@@ -22,9 +22,17 @@
 # Step 4
 # calculate sap
 
-#./src/dhlp/eval-sAP.py ./outputs/results_test
+#./src/dhlp/eval-sAP.py ./outputs/results_test1
+
+./src/dhlp/eval-mAP.py ./outputs/results_test1
+#Evaluating ./outputs/results_test
+#  27.4 | 38.4
+#Evaluating ./outputs/results_test1
+#  30.9 | 44.0
+
+
 
 # to get the mean error
 
-#./src/dhlp//process_offset_dist.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+./src/dhlp//process_offset_dist.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 

@@ -270,101 +270,6 @@ class CustomDatasetUnetSD(Dataset):
 
         return input_image, gt_image
 
-class CustomDatasetUnetSD_useless(Dataset):
-    def __init__(self, input_json=None, input_dir=None,
-                 ground_truth_json=None, ground_truth_dir=None,
-                 transform=None, hsv_tolerance=0.1, remove_background=False):
-
-        # Load input data (from JSON or directory)
-        if input_json:
-            self.input_data = load_json(input_json)
-            self.input_filenames = [item["filename"] for item in self.input_data]
-        else:
-            self.input_data = None
-            self.input_filenames = [f for f in os.listdir(input_dir) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
-
-        self.input_dir = input_dir
-        self.ground_truth_data = load_json(ground_truth_json) if ground_truth_json else None
-        self.ground_truth_dir = ground_truth_dir
-        self.transform = transform
-        self.hsv_tolerance = hsv_tolerance
-        self.remove_background = remove_background
-
-        self.pairs = self.match_pairs()
-
-    def match_pairs(self):
-        pairs = []
-
-        # Pre-index ground truths by base name
-        gt_dict = {}
-        if self.ground_truth_data:
-            for gt_item in self.ground_truth_data:
-                base = extract_base_name(gt_item["filename"])
-                if base not in gt_dict:
-                    gt_dict[base] = []
-                gt_dict[base].append(gt_item)
-
-        for input_item in self.input_data:
-            input_filename = input_item["filename"]
-            input_hsv = input_item["color_hsv"]
-            base_name_input = extract_base_name(input_filename)
-
-            best_match = None
-            best_hsv_distance = float("inf")
-
-            # Only compare against ground truths with the same base name
-            if base_name_input in gt_dict:
-                for gt_item in gt_dict[base_name_input]:
-                    gt_hsv = gt_item["color_hsv"]
-                    hsv_distance = euclidean(
-                        [input_hsv['h'], input_hsv['s'], input_hsv['v']],
-                        [gt_hsv['h'], gt_hsv['s'], gt_hsv['v']]
-                    )
-                    if hsv_distance < self.hsv_tolerance and hsv_distance < best_hsv_distance:
-                        best_match = gt_item["filename"]
-                        best_hsv_distance = hsv_distance
-
-            if best_match:
-                pairs.append((input_filename, best_match))
-            else:
-                print(f"Warning: No match found for {input_filename}. Skipping.")
-
-        return pairs
-
-    def __len__(self):
-        return len(self.pairs)
-
-    def remove_bg(self, image):
-        """Replace non-white background with pure white"""
-        img_array = np.array(image)
-        # Mask for non-white pixels
-        mask = np.any(img_array < 250, axis=-1)
-        white_bg = np.ones_like(img_array) * 255
-        white_bg[mask] = img_array[mask]
-        return Image.fromarray(white_bg.astype(np.uint8))
-
-    def __getitem__(self, idx):
-        input_filename, gt_filename = self.pairs[idx]
-        input_path = os.path.join(self.input_dir, input_filename)
-        input_image = Image.open(input_path).convert("RGB")
-
-        gt_image = None
-        if gt_filename:
-            gt_path = os.path.join(self.ground_truth_dir, gt_filename)
-            gt_image = Image.open(gt_path).convert("RGB")
-
-        # Background removal if flag is set
-        if self.remove_background:
-            input_image = self.remove_bg(input_image)
-            if gt_image:
-                gt_image = self.remove_bg(gt_image)
-
-        if self.transform:
-            input_image = self.transform(input_image)
-            if gt_image:
-                gt_image = self.transform(gt_image)
-        return input_image, gt_image
-
 
 class CustomHSVMatchingDatasetSD(Dataset):
     def __init__(self, input_json, ground_truth_json, input_dir, ground_truth_dir, transform=None, hsv_tolerance=0.1):
@@ -502,27 +407,7 @@ class CustomHSVMatchingDataset(Dataset):
 
         return input_image, gt_image
 
-class CustomTestDatasetSD1(Dataset):
-    def __init__(self, input_json, input_dir, transform=None):
-        self.input_data = load_json(input_json)  # Load test image metadata
-        self.input_dir = input_dir
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.input_data)
-
-    def __getitem__(self, idx):
-        input_filename = self.input_data[idx]["filename"]
-        input_path = os.path.join(self.input_dir, input_filename)
-
-        input_image = Image.open(input_path).convert("RGB")
-
-        if self.transform:
-            input_image = self.transform(input_image)
-
-        return input_image, input_filename  # No ground truth, so returning only input image and filename
-
-class CustomTestDatasetSD(Dataset):
+class CustomTestDatasetSD_oldUseful(Dataset):
     def __init__(self, input_dir, transform=None):
         self.input_dir = input_dir
         self.transform = transform
@@ -550,6 +435,55 @@ class CustomTestDatasetSD(Dataset):
         except Exception as e:
             print(f"Error loading image {input_filename}: {e}")
             return None  # Return None to indicate an issue
+
+
+class CustomTestDatasetSD(Dataset):
+    def __init__(self, input_dir, transform=None,
+                 channel_mode="RGB",
+                 remove_background=False,
+                 binarize=False, binarize_method="otsu", binarize_threshold=128):
+        self.input_dir = input_dir
+        self.transform = transform
+        self.channel_mode = channel_mode
+        self.remove_background = remove_background
+        self.binarize = binarize
+        self.binarize_method = binarize_method
+        self.binarize_threshold = binarize_threshold
+
+        self.image_files = [
+            f for f in os.listdir(input_dir)
+            if os.path.isfile(os.path.join(input_dir, f)) and f.lower().endswith(('.png', '.jpg', '.jpeg'))
+        ]
+
+    # --- reuse the same helpers from CustomDatasetUnetSD:
+    _otsu_threshold = CustomDatasetUnetSD._otsu_threshold
+    to_binary       = CustomDatasetUnetSD.to_binary
+    remove_bg       = CustomDatasetUnetSD.remove_bg
+
+    def __len__(self):
+        return len(self.image_files)
+
+    def __getitem__(self, idx):
+        input_filename = self.image_files[idx]
+        input_path = os.path.join(self.input_dir, input_filename)
+
+        try:
+            img = Image.open(input_path).convert(self.channel_mode)
+
+            if self.remove_background:
+                img = self.remove_bg(self, img)   # call as bound helper
+
+            if self.binarize:
+                img = self.to_binary(self, img)
+
+            if self.transform:
+                img = self.transform(img)
+
+            return img, input_filename
+        except Exception as e:
+            print(f"Error loading image {input_filename}: {e}")
+            # you can choose to raise here instead of returning None:
+            raise
 
 
 class CustomHSVMatchingDatasetSD1(Dataset):

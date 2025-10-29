@@ -255,3 +255,9 @@ if __name__ == "__main__":
 # Avg Mean Offset: 12.83
 # Avg Lower Offset: -7.67
 # Avg Upper Offset: 33.32
+
+# Final Average Offset Errors (Nearest Junction Based):
+# Avg Mean Offset: 13.44
+# Avg Lower Offset: -5.52
+# Avg Upper Offset: 32.41
+
