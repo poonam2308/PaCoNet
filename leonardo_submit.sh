@@ -8,6 +8,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --output=slurm_logs/paconetlogs/%x-%j.out
 #SBATCH --qos=normal
+#SBATCH --time=24:00:00
 
 set -euo pipefail
 mkdir -p slurm_logs/paconetlogs
