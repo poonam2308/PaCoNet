@@ -19,4 +19,4 @@ eval "$(/leonardo_work/EUHPC_D18_087/miniconda/bin/conda shell.bash hook)"
 conda activate myenv
 
 # --- Run your training ---
-bash pc.sh
+bash pcdata.sh
