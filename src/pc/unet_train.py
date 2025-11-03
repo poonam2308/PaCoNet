@@ -63,7 +63,9 @@ class UNetTrainer:
             transform=self.transform,
             channel_mode=self.args.channel_mode,
             hsv_tolerance=0.15,
-            remove_background=True
+            remove_background=True,
+            binarize=True,
+            binarize_method="otsu"
 
         )
 

@@ -2,6 +2,7 @@ import json
 import os
 from collections import defaultdict
 
+import re
 from torch.utils.data import Dataset
 from PIL import Image, ImageOps
 import numpy as np
@@ -56,8 +57,6 @@ class CustomDatasetUnetSD(Dataset):
 
         self.pairs = self.match_pairs()
 
-    import re
-    from collections import defaultdict
 
     def parse_key(filename: str):
         """
