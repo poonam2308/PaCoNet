@@ -10,32 +10,32 @@ paths:
   s_crops: "data/synthetic_plots/single_cat/testing/s_crops/images"
 
   # Multi-category
-  m_plots_svg:  "data/synthetic_plots/multi_cat/testing/svgs"
-  m_plots: "data/synthetic_plots/multi_cat/testing/images"
-  m_dist_file: "data/synthetic_plots/multi_cat/testing/dist_annotations.json"
-  m_axes_file: "data/synthetic_plots/multi_cat/testing/axes_annotations.json"
-  m_crops: "data/synthetic_plots/multi_cat/testing/m_crops/images"
+  m_plots_svg:  "data/synthetic_plots/multi_cat_opaque/testing/svgs"
+  m_plots: "data/synthetic_plots/multi_cat_opaque/testing/images"
+  m_dist_file: "data/synthetic_plots/multi_cat_opaque/testing/dist_annotations.json"
+  m_axes_file: "data/synthetic_plots/multi_cat_opaque/testing/axes_annotations.json"
+  m_crops: "data/synthetic_plots/multi_cat_opaque/testing/m_crops/images"
 
   # Mult-Category Ground truth plots
-  m_gt_plots: "data/synthetic_plots/multi_cat/testing/gt/images"
-  m_gt_axes_file: "data/synthetic_plots/multi_cat/testing/gt/gt_axes_annotations.json"
-  m_gt_crops: "data/synthetic_plots/multi_cat/testing/gt/gt_crops"
-  m_gt_line_color: "data/synthetic_plots/multi_cat/testing/gt/gt_line_color.json"
+  m_gt_plots: "data/synthetic_plots/multi_cat_opaque/testing/gt/images"
+  m_gt_axes_file: "data/synthetic_plots/multi_cat_opaque/testing/gt/gt_axes_annotations.json"
+  m_gt_crops: "data/synthetic_plots/multi_cat_opaque/testing/gt/gt_crops"
+  m_gt_line_color: "data/synthetic_plots/multi_cat_opaque/testing/gt/gt_line_color.json"
   
   # Ground truth plots for individual category
-  m_gt_plots_cat: "data/synthetic_plots/multi_cat/testing/gt/gt_cat"
-  m_gt_plots_cat_crops: "data/synthetic_plots/multi_cat/testing/gt/gt_cat_crops"
-  m_gt_plots_cat_ntl: "data/synthetic_plots/multi_cat/testing/gt/gt_cat_ntl"
-  m_gt_plots_cat_ntl_crops: "data/synthetic_plots/multi_cat/testing/gt/gt_cat_ntl_crops"
+  m_gt_plots_cat: "data/synthetic_plots/multi_cat_opaque/testing/gt/gt_cat"
+  m_gt_plots_cat_crops: "data/synthetic_plots/multi_cat_opaque/testing/gt/gt_cat_crops"
+  m_gt_plots_cat_ntl: "data/synthetic_plots/multi_cat_opaque/testing/gt/gt_cat_ntl"
+  m_gt_plots_cat_ntl_crops: "data/synthetic_plots/multi_cat_opaque/testing/gt/gt_cat_ntl_crops"
 
   # Multi-category separated
-  m_color_sep_plots: "data/synthetic_plots/multi_cat/testing/color/images"
-  m_color_all_json: "data/synthetic_plots/multi_cat/testing/color/images/all_data.json"
-  m_color_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/color/test.json"
+  m_color_sep_plots: "data/synthetic_plots/multi_cat_opaque/testing/color/images"
+  m_color_all_json: "data/synthetic_plots/multi_cat_opaque/testing/color/images/all_data.json"
+  m_color_rescaled_all_json: "data/synthetic_plots/multi_cat_opaque/testing/color/test.json"
 
-  m_cluster_sep_plots: "data/synthetic_plots/multi_cat/testing/cluster/images"
-  m_color_denoised_plots: "data/synthetic_plots/multi_cat/testing/color_denoised"
-  m_cluster_denoised_plots: "data/synthetic_plots/multi_cat/testing/cluster_denoised"
+  m_cluster_sep_plots: "data/synthetic_plots/multi_cat_opaque/testing/cluster/images"
+  m_color_denoised_plots: "data/synthetic_plots/multi_cat_opaque/testing/color_denoised"
+  m_cluster_denoised_plots: "data/synthetic_plots/multi_cat_opaque/testing/cluster_denoised"
 
 
   # Real-world plots
@@ -50,15 +50,15 @@ paths:
 
 unet:
   chkpt_path: "outputs/chkpt/0810-25_1529-52/unet_sd_cluster_mse_model_epoch80.pth"
-  output_dir: "data/synthetic_plots/multi_cat/testing/color/denoised"
+  output_dir: "data/synthetic_plots/multi_cat_opaque/testing/color/denoised"
 
 #  input_dir: "data/real_plots/color/images"
 #  output_dir: "data/real_plots/cluster/images"
 #
-#  input_dir: "data/synthetic_plots/multi_cat/testing/color/images"
-#  output_dir: "data/synthetic_plots/multi_cat/testing/color_denoised"
+#  input_dir: "data/synthetic_plots/multi_cat_opaque/testing/color/images"
+#  output_dir: "data/synthetic_plots/multi_cat_opaque/testing/color_denoised"
 #
-#  input_dir: "data/synthetic_plots/multi_cat/testing/cluster/images"
-#  output_dir: "data/synthetic_plots/multi_cat/testing/cluster_denoised"
+#  input_dir: "data/synthetic_plots/multi_cat_opaque/testing/cluster/images"
+#  output_dir: "data/synthetic_plots/multi_cat_opaque/testing/cluster_denoised"
 
 
