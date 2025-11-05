@@ -48,7 +48,7 @@ paths:
 
   # Category separation - clustering
   m_cluster_sep_plots: "data/synthetic_plots/multi_cat_opaque/training/cluster/images"
-  m_cluster_all_json: "data/synthetic_plots/multi_cat_opaque/training/cluster/all_data.json"
+  m_cluster_all_json: "data/synthetic_plots/multi_cat_opaque/training/cluster/images/all_data.json"
   m_cluster_rescaled_all_json: "data/synthetic_plots/multi_cat_opaque/training/cluster/rescaled_all_data.json"
   m_cluster_train_json: "data/synthetic_plots/multi_cat_opaque/training/cluster/train.json"
   m_cluster_valid_json: "data/synthetic_plots/multi_cat_opaque/training/cluster/valid.json"

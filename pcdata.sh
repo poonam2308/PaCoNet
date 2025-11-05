@@ -15,7 +15,7 @@
 
 #separating the categories based on cluster
 
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_cluster
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_cluster
 python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_cluster
 python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_cluster
 
