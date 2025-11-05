@@ -85,6 +85,34 @@ class ClusteringCategorySeparator:
             return merged
         return crop_lines or []
 
+    def _count_gt_categories_for_base(self, json_path, crops):
+        """
+        Count how many GT categories are actually present (non-empty) across
+        the crop_* entries for this base.
+        - If lines[crop_k] is a dict: count keys with non-empty coord lists.
+        - If lines[crop_k] is a list: contributes no categories (unlabeled GT).
+        """
+        if not self._json_exists(json_path):
+            return 0
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        lines_root = (data.get("lines") or {})
+        present = set()
+
+        for crop_name in crops:
+            m = re.search(r"_crop_(\d+)", Path(crop_name).stem)
+            if not m:
+                continue
+            crop_key = f"crop_{m.group(1)}"
+            v = lines_root.get(crop_key, [])
+            if isinstance(v, dict):
+                for cat, coords in v.items():
+                    if coords and len(coords) > 0:
+                        present.add(cat)
+            # if it's a list, there is no per-category GT to count
+        return len(present)
+
     def _load_lines_structured(self, json_path, crop_filename):
         """
         Returns (per_category_dict_or_None, merged_list).
@@ -354,6 +382,7 @@ class ClusteringCategorySeparator:
           - Save white-bg cutouts and two JSONs: all_data.json, all_colors.json
         """
         os.makedirs(output_dir, exist_ok=True)
+        comparisons = []
 
         # Inventory images
         files = [f for f in os.listdir(input_dir) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
@@ -401,8 +430,21 @@ class ClusteringCategorySeparator:
                 with open(json_path, "r") as f:
                     data = json.load(f)
                 category_colors = data.get("category_colors", None)
+            # Count GT categories present across this base's crops
+            gt_cat_count = self._count_gt_categories_for_base(json_path, crops)
+            pred_clusters = best_count  # the number of clusters you selected as "best" for this base
+            delta = pred_clusters - gt_cat_count
+            relation = "equal" if delta == 0 else ("greater" if delta > 0 else "less")
 
-            print(f"[INFO] Base '{base}': using best crop '{best_crop}' with {best_count} clusters.")
+            comparisons.append({
+                "base": base,
+                "pred_clusters": int(pred_clusters),
+                "gt_categories": int(gt_cat_count),
+                "relation": relation,
+                "delta": int(delta)
+            })
+
+            #print(f"[INFO] Base '{base}': using best crop '{best_crop}' with {best_count} clusters.")
 
             # 2) apply best crop ranges to every crop
             for crop in crops:
@@ -426,6 +468,30 @@ class ClusteringCategorySeparator:
             json.dump(all_output, f, indent=2)
         with open(os.path.join(output_dir, "all_colors.json"), "w") as f:
             json.dump(all_colors, f, indent=2)
+        with open(os.path.join(output_dir, "cluster_vs_gt.json"), "w") as f:
+            json.dump(comparisons, f, indent=2)
+
+        # ---- write summary (counts & percentages) without printing ----
+        total = len(comparisons)
+        less = sum(1 for r in comparisons if r.get("relation") == "less")
+        equal = sum(1 for r in comparisons if r.get("relation") == "equal")
+        more = sum(1 for r in comparisons if r.get("relation") == "greater")
+
+        def pct(x, n):
+            return round((x / n) * 100.0, 2) if n else 0.0
+
+        summary = {
+            "total_bases": total,
+            "counts": {"less": less, "equal": equal, "greater": more},
+            "percentages": {
+                "less": pct(less, total),
+                "equal": pct(equal, total),
+                "greater": pct(more, total),
+            }
+        }
+
+        with open(os.path.join(output_dir, "cluster_vs_gt_summary.json"), "w") as f:
+            json.dump(summary, f, indent=2)
 
         print(f"[DONE] Saved batch results in: {output_dir}")
         return all_output, all_colors

@@ -9,23 +9,26 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --num_files 5000 --task run
 
 #separating the categories based on color
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_color
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_color
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data
 
 #separating the categories based on cluster
 
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_cluster
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_cluster
 
 
 # step 1-4 for testing data
 # testing - one time
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --num_files 1000 --seed 0 --task run_dist
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --num_files 1000 --seed 0 --task run
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task separate_by_color
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task separate_by_color
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines
+
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task separate_by_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines_cluster
 
 
 ######--------------------------------------------------

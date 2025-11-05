@@ -28,12 +28,17 @@ paths:
   m_gt_plots_cat_ntl: "data/synthetic_plots/multi_cat/testing/gt/gt_cat_ntl"
   m_gt_plots_cat_ntl_crops: "data/synthetic_plots/multi_cat/testing/gt/gt_cat_ntl_crops"
 
-  # Multi-category separated
+  # Multi-category separated by color
   m_color_sep_plots: "data/synthetic_plots/multi_cat/testing/color/images"
   m_color_all_json: "data/synthetic_plots/multi_cat/testing/color/images/all_data.json"
   m_color_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/color/test.json"
 
   m_cluster_sep_plots: "data/synthetic_plots/multi_cat/testing/cluster/images"
+  m_cluster_all_json: "data/synthetic_plots/multi_cat/testing/cluster/all_data.json"
+  m_cluster_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/cluster/test.json"
+
+
+
   m_color_denoised_plots: "data/synthetic_plots/multi_cat/testing/color_denoised"
   m_cluster_denoised_plots: "data/synthetic_plots/multi_cat/testing/cluster_denoised"
 
