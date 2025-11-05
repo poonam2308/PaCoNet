@@ -5,6 +5,8 @@ import os
 import numpy as np
 import torch
 
+from src.pc.plot_gen.clustering_category_separation import ClusteringCategorySeparator
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 
@@ -112,12 +114,30 @@ class PlotsPipeline:
                 valid_file=self.paths['m_color_valid_json']
             )
 
-    def rescale_test_lines(self):
-        if 'm_color_all_json' in self.paths:
+    def separate_by_cluster(self):
+        print(f"🎨 Separating by cluster using {method} method...")
+        sep = ClusteringCategorySeparator()
+        sep.process_batch(
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_cluster_sep_plots']
+        )
+
+    def rescale_lines_cluster(self):
+        if 'm_cluster_all_json' in self.paths:
             update_lines(
-                json_file=self.paths['m_color_all_json'],
-                output_file=self.paths['m_color_test_json']
+                json_file=self.paths['m_cluster_all_json'],
+                output_file=self.paths['m_cluster_rescaled_all_json']
             )
+
+    def split_data_cluster(self):
+        if 'm_color_rescaled_all_json' in self.paths:
+            split_data(
+                input_file=self.paths['m_cluster_rescaled_all_json'],
+                train_file=self.paths['m_cluster_train_json'],
+                valid_file=self.paths['m_cluster_valid_json']
+            )
+
     def split_data_wbg(self):
         # Optionally split into train/val
         if 'm_color_wbg_all_json' in self.paths:

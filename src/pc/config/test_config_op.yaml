@@ -1,0 +1,64 @@
+paths:
+  # CSV-style input
+  real_dist_file:  "data/real_world_dis_info_rgb.xlsx"
+  input_dir: "data/raw_synthetic/testing_data/data_1k"
+
+  # Single-category plots
+  s_plots: "data/synthetic_plots/single_cat/testing/images"
+  s_dist_file: "data/synthetic_plots/single_cat/testing/dist_annotations.json"
+  s_axes_file: "data/synthetic_plots/single_cat/testing/axes_annotations.json"
+  s_crops: "data/synthetic_plots/single_cat/testing/s_crops/images"
+
+  # Multi-category
+  m_plots_svg:  "data/synthetic_plots/multi_cat/testing/svgs"
+  m_plots: "data/synthetic_plots/multi_cat/testing/images"
+  m_dist_file: "data/synthetic_plots/multi_cat/testing/dist_annotations.json"
+  m_axes_file: "data/synthetic_plots/multi_cat/testing/axes_annotations.json"
+  m_crops: "data/synthetic_plots/multi_cat/testing/m_crops/images"
+
+  # Mult-Category Ground truth plots
+  m_gt_plots: "data/synthetic_plots/multi_cat/testing/gt/images"
+  m_gt_axes_file: "data/synthetic_plots/multi_cat/testing/gt/gt_axes_annotations.json"
+  m_gt_crops: "data/synthetic_plots/multi_cat/testing/gt/gt_crops"
+  m_gt_line_color: "data/synthetic_plots/multi_cat/testing/gt/gt_line_color.json"
+  
+  # Ground truth plots for individual category
+  m_gt_plots_cat: "data/synthetic_plots/multi_cat/testing/gt/gt_cat"
+  m_gt_plots_cat_crops: "data/synthetic_plots/multi_cat/testing/gt/gt_cat_crops"
+  m_gt_plots_cat_ntl: "data/synthetic_plots/multi_cat/testing/gt/gt_cat_ntl"
+  m_gt_plots_cat_ntl_crops: "data/synthetic_plots/multi_cat/testing/gt/gt_cat_ntl_crops"
+
+  # Multi-category separated
+  m_color_sep_plots: "data/synthetic_plots/multi_cat/testing/color/images"
+  m_color_all_json: "data/synthetic_plots/multi_cat/testing/color/images/all_data.json"
+  m_color_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/color/test.json"
+
+  m_cluster_sep_plots: "data/synthetic_plots/multi_cat/testing/cluster/images"
+  m_color_denoised_plots: "data/synthetic_plots/multi_cat/testing/color_denoised"
+  m_cluster_denoised_plots: "data/synthetic_plots/multi_cat/testing/cluster_denoised"
+
+
+  # Real-world plots
+  real_plots: "data/real_plots/images"
+  real_crops: "data/real_plots/crops"
+  real_axes_file: "data/real_plots/r_axes_annotations.json"
+  real_color_mapping: "data/real_plots/color_mapping.json"
+  real_color_sep_plots: "data/real_plots/color/images"
+  real_cluster_sep_plots: "data/real_plots/cluster/images"
+  real_color_denoised_plots: "data/real_plots/color/denoised"
+  real_cluster_denoised_plots: "data/real_plots/cluster/denoised"
+
+unet:
+  chkpt_path: "outputs/chkpt/0810-25_1529-52/unet_sd_cluster_mse_model_epoch80.pth"
+  output_dir: "data/synthetic_plots/multi_cat/testing/color/denoised"
+
+#  input_dir: "data/real_plots/color/images"
+#  output_dir: "data/real_plots/cluster/images"
+#
+#  input_dir: "data/synthetic_plots/multi_cat/testing/color/images"
+#  output_dir: "data/synthetic_plots/multi_cat/testing/color_denoised"
+#
+#  input_dir: "data/synthetic_plots/multi_cat/testing/cluster/images"
+#  output_dir: "data/synthetic_plots/multi_cat/testing/cluster_denoised"
+
+

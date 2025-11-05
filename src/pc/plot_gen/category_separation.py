@@ -58,6 +58,35 @@ class CategorySeparator:
         else:
             return crop_lines
 
+    def _load_lines_structured(self, json_path, crop_filename):
+        """
+        Returns (per_category_dict_or_None, merged_list).
+        - If lines[crop_k] is a dict: returns (that dict, merged list)
+        - If it's a list: returns (None, that list)
+        - If no JSON: returns (None, [])
+        """
+        if not self._json_exists(json_path):
+            return None, []
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        m = re.search(r"_crop_(\d+)", Path(crop_filename).stem)
+        if not m:
+            return None, []
+
+        crop_key = f"crop_{m.group(1)}"
+        crop_lines = (data.get("lines", {}) or {}).get(crop_key, [])
+
+        if isinstance(crop_lines, dict):
+            # preserve insertion order and original numeric types
+            merged = []
+            for _, coords in crop_lines.items():
+                if coords:
+                    merged.extend(coords)
+            return crop_lines, merged
+        else:
+            return None, (crop_lines or [])
+
     # ---------- Peak detection (histogram) ----------
     @staticmethod
     def _build_peak_masks_from_hist(hsv_img, peaks, tol=10):
@@ -102,40 +131,49 @@ class CategorySeparator:
             })
         return output_data, color_data
 
-    def _process_masks_categories_white_bg(self, crop, image_bgr, color_masks, lines, output_dir, category_colors):
+    def _process_masks_categories_white_bg(
+            self, crop, image_bgr, color_masks, lines, output_dir, category_colors, gt_cat_coords=None
+    ):
         """
         JSON categories present: group by closest configured category, WHITE background only.
+        If gt_cat_coords is provided (dict: cat -> list of lines), those are used directly.
         """
         output_data, color_data = [], []
         cat_coords = {cat: [] for cat in (category_colors or {})}
         cat_masks = {cat: np.zeros(image_bgr.shape[:2], dtype=np.uint8) for cat in (category_colors or {})}
 
-        # Assign lines and build cat masks
-        for line in lines or []:
-            x1, y1, x2, y2 = map(int, line)
-            mid_x, mid_y = int((x1 + x2) / 2), int((y1 + y2) / 2)
+        if gt_cat_coords:
+            # Use GT lines as-is; still build masks by mapping peaks to nearest category
+            cat_coords = {cat: gt_cat_coords.get(cat, []) for cat in cat_coords}
+            # Merge peak masks per category (keeps your current visual behavior)
             for peak, mask, *rest in color_masks:
-                if 0 <= mid_y < mask.shape[0] and 0 <= mid_x < mask.shape[1] and mask[mid_y, mid_x] > 0:
-                    hsv_val = (peak / 180, 1, 1)
-                    cat = self._closest_category(hsv_val, category_colors)
-                    cat_coords.setdefault(cat, []).append(line)
-                    cat_masks[cat] = cv2.bitwise_or(cat_masks[cat], mask)
-                    break
+                hsv_val = (peak / 180, 1, 1)
+                cat = self._closest_category(hsv_val, category_colors)
+                cat_masks[cat] = cv2.bitwise_or(cat_masks[cat], mask)
+        else:
+            # Original behavior: assign by mid-point + hue mask, then map to nearest category
+            for line in lines or []:
+                x1, y1, x2, y2 = map(int, line)
+                mid_x, mid_y = int((x1 + x2) / 2), int((y1 + y2) / 2)
+                for peak, mask, *rest in color_masks:
+                    if 0 <= mid_y < mask.shape[0] and 0 <= mid_x < mask.shape[1] and mask[mid_y, mid_x] > 0:
+                        hsv_val = (peak / 180, 1, 1)
+                        cat = self._closest_category(hsv_val, category_colors)
+                        cat_coords.setdefault(cat, []).append(line)
+                        cat_masks[cat] = cv2.bitwise_or(cat_masks[cat], mask)
+                        break
 
-        # Save per-category results (white bg)
+        # Save per-category results (white bg) — unchanged
         for cat, coords in cat_coords.items():
             mask = cat_masks.get(cat, None)
             if mask is None or np.count_nonzero(mask) == 0:
                 continue
-
             white = np.full_like(image_bgr, 255)
             fg = cv2.bitwise_and(image_bgr, image_bgr, mask=mask)
             inv = cv2.bitwise_not(mask)
             result = cv2.bitwise_or(fg, cv2.bitwise_and(white, white, mask=inv))
-
             out_name = f"{Path(crop).stem}_{cat}.png"
             cv2.imwrite(os.path.join(output_dir, out_name), result)
-
             output_data.append({"filename": out_name, "lines": coords})
             color_data.append({"filename": out_name, "color_hsv": category_colors[cat]})
         return output_data, color_data
@@ -149,10 +187,11 @@ class CategorySeparator:
         sat_thresh=50,
         save_per_file=False,
         show_plot=False,
-        top_k=None,                 # <-- NEW: limit number of peaks to keep
-        peak_height_frac=0.05,      # keep defaults aligned with previous enhanced flow
+        top_k=None,
+        peak_height_frac=0.05,
         peak_distance=5,
-        tolerance=10
+        tolerance=10,
+        prefer_gt_lines=True,
     ):
         """
         Enhanced variant with saturation filtering. Always uses WHITE background.
@@ -173,9 +212,13 @@ class CategorySeparator:
         hsv = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2HSV)
 
         # Optional JSON inputs
-        lines = self._load_lines(json_path, Path(image_path).name) if self._json_exists(json_path) else []
+        # lines = self._load_lines(json_path, Path(image_path).name) if self._json_exists(json_path) else []
+        lines = []
+        gt_cat_dict = None
         category_colors = None
         if self._json_exists(json_path):
+            gt_cat_dict, merged = self._load_lines_structured(json_path, Path(image_path).name)
+            lines = merged
             with open(json_path, "r") as f:
                 data = json.load(f)
             category_colors = data.get("category_colors", None)
@@ -207,7 +250,8 @@ class CategorySeparator:
         # Process with white background only
         if category_colors:
             out_data, color_data = self._process_masks_categories_white_bg(
-                image_path, img_bgr, masks, lines, output_dir, category_colors
+                image_path, img_bgr, masks, lines, output_dir, category_colors,
+                gt_cat_coords=(gt_cat_dict if prefer_gt_lines and isinstance(gt_cat_dict, dict) else None)
             )
         else:
             out_data, color_data = self._process_masks_simple_white_bg(
