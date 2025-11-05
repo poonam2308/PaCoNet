@@ -131,7 +131,7 @@ class PlotsPipeline:
             )
 
     def split_data_cluster(self):
-        if 'm_color_rescaled_all_json' in self.paths:
+        if 'm_cluster_rescaled_all_json' in self.paths:
             split_data(
                 input_file=self.paths['m_cluster_rescaled_all_json'],
                 train_file=self.paths['m_cluster_train_json'],
