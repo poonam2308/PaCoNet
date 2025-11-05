@@ -21,7 +21,7 @@ def get_args():
     parse.add_argument('--task', type=str, default='run', help="Which method to run",
                        choices=['run_dist', 'run', 'run_single', 'generate_data', 'generate_plots',
                                 'crop_plots', 'separate_by_color','rescale_lines', 'split_data',
-                                'separate_by_cluster','rescale_lines_cluster', 'split_data_cluster'
+                                'separate_by_cluster','rescale_lines_cluster', 'split_data_cluster',
                                 'separate_by_color_wbg', 'split_data_wbg'])
 
     # Network Training Parameters
