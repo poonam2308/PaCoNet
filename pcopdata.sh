@@ -22,8 +22,8 @@ python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.y
 # step 1-4 for testing data
 # testing - one time
 
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --num_files 1000 --seed 0 --task run
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task separate_by_color
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config_op.yaml --num_files 1000 --seed 0 --task run
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config_op.yaml --seed 0 --task separate_by_color
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config_op.yaml --seed 0 --task rescale_lines
 
 
