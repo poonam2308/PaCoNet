@@ -5,7 +5,6 @@ import os
 import numpy as np
 import torch
 
-from src.pc.plot_gen.clustering_category_separation import ClusteringCategorySeparator
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
@@ -18,6 +17,7 @@ from src.pc.data_gen.real_dist_info import extract_distributions_from_excel, ext
 from src.pc.plot_gen.multi_cat import MultiCatPCPGenerator
 from src.pc.plot_gen.axes_crop import CroppingProcessor
 from src.pc.plot_gen.category_separation import CategorySeparator
+from src.pc.plot_gen.clustering_category_separation import ClusteringCategorySeparator
 from src.pc.plot_gen.plot_utils import split_data, update_lines
 
 
