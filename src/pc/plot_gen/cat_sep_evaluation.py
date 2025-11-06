@@ -1,11 +1,14 @@
-# eval_many_catsep_vs_gt.py
-import argparse, json, csv, re
+# eval_many_catsep_vs_gt_nocli.py
+# Drop-in, no-argparse version of your evaluator.
+# Call evaluate_catsep_vs_gt(pred_dir, gt_dir, ...) from your code or edit the __main__ block.
+
+import json, csv, re
 from pathlib import Path
+from typing import Dict, List
 import cv2
 import numpy as np
-from typing import Dict, Tuple, List
 
-# ---------- pairing & keys ----------
+# ---------- pairing & keys (unchanged) ----------
 
 _CROP_RE = re.compile(r"(?:^|_)(crop)_(\d+)(?:_|$)", re.IGNORECASE)
 
@@ -23,7 +26,6 @@ def base_key(stem: str) -> str:
     Order-agnostic key for grouping by BASE IMAGE (strip '_crop_#').
     Works even if 'crop_#' appears in a different position.
     """
-    # remove exactly one crop_# token
     def _strip_one_crop_token(tokens: List[str]) -> List[str]:
         out = []
         skip_next = False
@@ -49,7 +51,7 @@ def collect_images(d: Path, exts=(".png",".jpg",".jpeg",".bmp")) -> Dict[str, Pa
             m[token_key(p.stem)] = p
     return m
 
-# ---------- masks & metrics ----------
+# ---------- masks & metrics (unchanged) ----------
 
 def load_mask(path: Path, white_thresh: int = 750) -> np.ndarray:
     """
@@ -62,7 +64,6 @@ def load_mask(path: Path, white_thresh: int = 750) -> np.ndarray:
     s = img.astype(np.uint16).sum(axis=2)
     return (s < white_thresh).astype(np.uint8)
 
-
 def load_mask_hsv(path, s_thresh=20, v_thresh=230):
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -71,7 +72,6 @@ def load_mask_hsv(path, s_thresh=20, v_thresh=230):
     bg = (S < s_thresh) & (V > v_thresh)
     mask = (~bg).astype(np.uint8)  # 1 = foreground
     return mask
-
 
 def metrics_from_masks(pred_mask: np.ndarray, gt_mask: np.ndarray):
     if pred_mask.shape != gt_mask.shape:
@@ -119,19 +119,34 @@ def mean_metrics(rows: List[dict]) -> dict:
     keys = ["precision","recall","f1_dice","iou","accuracy"]
     return {k: float(np.mean([r[k] for r in rows])) for k in keys}
 
-# ---------- main ----------
+# ---------- core evaluator (no argparse) ----------
 
-def main():
-    ap = argparse.ArgumentParser(description="Evaluate cat-sep (pred) vs GT across many crops and bases.")
-    ap.add_argument("--pred_dir", required=True, help="Dir with prediction images (cat-sep).")
-    ap.add_argument("--gt_dir",   required=True, help="Dir with GT images.")
-    ap.add_argument("--white_thresh", type=int, default=750, help="Sum(B,G,R) threshold for white background.")
-    ap.add_argument("--per_crop_csv", default="per_crop_results.csv", help="Output CSV per crop.")
-    ap.add_argument("--per_base_csv", default="per_base_results.csv", help="Output CSV per base image (aggregated).")
-    ap.add_argument("--summary_json", default="summary.json", help="Output JSON with overall metrics.")
-    args = ap.parse_args()
+def evaluate_catsep_vs_gt(
+    pred_dir,
+    gt_dir,
+    white_thresh: int = 750,
+    per_crop_csv: str = "per_crop_results.csv",
+    per_base_csv: str = "per_base_results.csv",
+    summary_json: str = "summary.json",
+    verbose: bool = True
+) -> dict:
+    """
+    Evaluate prediction images vs. GT images across many crops and bases.
 
-    pred_dir = Path(args.pred_dir); gt_dir = Path(args.gt_dir)
+    Args:
+        pred_dir (str|Path): directory with prediction images.
+        gt_dir   (str|Path): directory with GT images.
+        white_thresh (int): sum(B,G,R) threshold to detect white background.
+        per_crop_csv (str): path to write per-crop CSV.
+        per_base_csv (str): path to write per-base CSV.
+        summary_json (str): path to write summary JSON.
+        verbose (bool): print progress summary.
+
+    Returns:
+        dict: summary payload (also written to summary_json).
+    """
+    pred_dir = Path(pred_dir)
+    gt_dir   = Path(gt_dir)
 
     pred_map = collect_images(pred_dir)
     gt_map   = collect_images(gt_dir)
@@ -139,7 +154,7 @@ def main():
     pairs = []
     missing_pred, missing_gt = [], []
 
-    # pair using GT as driver (requires GT for evaluation)
+    # Pair using GT as driver (requires GT for evaluation)
     for k, gpath in gt_map.items():
         ppath = pred_map.get(k)
         if ppath is None:
@@ -147,7 +162,7 @@ def main():
         else:
             pairs.append((ppath, gpath, k))
 
-    # also track preds that had no GT
+    # Also track preds that had no GT
     for k, ppath in pred_map.items():
         if k not in gt_map:
             missing_gt.append(str(ppath))
@@ -156,15 +171,15 @@ def main():
     per_crop_rows = []
     for ppath, gpath, key in pairs:
         try:
-            pred_mask = load_mask(ppath, args.white_thresh)
-            gt_mask   = load_mask(gpath,   args.white_thresh)
+            pred_mask = load_mask(ppath, white_thresh)
+            gt_mask   = load_mask(gpath, white_thresh)
             m = metrics_from_masks(pred_mask, gt_mask)
         except Exception as e:
-            print(f"[WARN] Skipping pair due to error: {ppath} <-> {gpath}: {e}")
+            if verbose:
+                print(f"[WARN] Skipping pair due to error: {ppath} <-> {gpath}: {e}")
             continue
 
-        # derive base key (strip crop_#)
-        bkey = base_key(Path(ppath).stem)
+        bkey = base_key(Path(ppath).stem)  # strip crop_#
         per_crop_rows.append({
             "base": bkey,
             "crop_key": key,
@@ -175,7 +190,7 @@ def main():
 
     # write per-crop CSV
     if per_crop_rows:
-        with open(args.per_crop_csv, "w", newline="") as f:
+        with open(per_crop_csv, "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=list(per_crop_rows[0].keys()))
             w.writeheader()
             w.writerows(per_crop_rows)
@@ -187,10 +202,8 @@ def main():
 
     per_base_rows = []
     for b, rows in per_base_dict.items():
-        # micro per base
-        micro = combine_counts(rows)
-        # macro over that base's crops (optional; included for reference)
-        macro = mean_metrics(rows)
+        micro = combine_counts(rows)      # micro per base
+        macro = mean_metrics(rows)        # macro per base (optional)
         per_base_rows.append({
             "base": b,
             "num_crops": len(rows),
@@ -199,7 +212,7 @@ def main():
         })
 
     if per_base_rows:
-        with open(args.per_base_csv, "w", newline="") as f:
+        with open(per_base_csv, "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=list(per_base_rows[0].keys()))
             w.writeheader()
             w.writerows(per_base_rows)
@@ -230,22 +243,28 @@ def main():
         }
     }
 
-    with open(args.summary_json, "w") as f:
+    with open(summary_json, "w") as f:
         json.dump(summary, f, indent=2)
 
-    print(json.dumps(summary, indent=2))
-    print(f"Per-crop CSV  -> {args.per_crop_csv}")
-    print(f"Per-base CSV  -> {args.per_base_csv}")
-    print(f"Summary JSON  -> {args.summary_json}")
+    if verbose:
+        print(json.dumps(summary, indent=2))
+        print(f"Per-crop CSV  -> {per_crop_csv}")
+        print(f"Per-base CSV  -> {per_base_csv}")
+        print(f"Summary JSON  -> {summary_json}")
 
-if __name__ == "__main__":
-    main()
+    return summary
 
-#
-# python eval_many_catsep_vs_gt.py \
-#   --pred_dir /path/to/cat_sep_dir \
-#   --gt_dir   /path/to/gt_dir \
-#   --white_thresh 750 \
-#   --per_crop_csv per_crop_results.csv \
-#   --per_base_csv per_base_results.csv \
-#   --summary_json summary.json
+# Optional: edit these and run the file directly
+# if __name__ == "__main__":
+#     # <<< set these to your actual paths / filenames >>>
+#     PRED_DIR = "/path/to/cat_sep_dir"
+#     GT_DIR   = "/path/to/gt_dir"
+#     evaluate_catsep_vs_gt(
+#         pred_dir=PRED_DIR,
+#         gt_dir=GT_DIR,
+#         white_thresh=750,
+#         per_crop_csv="per_crop_results.csv",
+#         per_base_csv="per_base_results.csv",
+#         summary_json="summary.json",
+#         verbose=True
+#     )

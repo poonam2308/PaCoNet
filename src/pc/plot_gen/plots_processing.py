@@ -19,6 +19,7 @@ from src.pc.plot_gen.axes_crop import CroppingProcessor
 from src.pc.plot_gen.category_separation import CategorySeparator
 from src.pc.plot_gen.clustering_category_separation import ClusteringCategorySeparator
 from src.pc.plot_gen.plot_utils import split_data, update_lines
+from src.pc.plot_gen.cat_sep_evaluation import evaluate_catsep_vs_gt
 
 
 class PlotsPipeline:
@@ -153,6 +154,27 @@ class PlotsPipeline:
     def run(self):
         self.generate_plots()
         self.crop_plots()
+
+    def cat_eval_color(self):
+        evaluate_catsep_vs_gt(
+            pred_dir=self.paths['m_color_sep_plots'],
+            gt_dir=self.paths['m_gt_plots_cat_ntl_crops'],
+            white_thresh=750,
+            per_crop_csv=self.paths['m_color_cat_eval_crop_csv'],
+            per_base_csv=self.paths['m_color_cat_eval_base_csv'],
+            summary_json=self.paths['m_color_cat_eval_json'],
+            verbose=True
+        )
+    def cat_eval_cluster(self):
+        evaluate_catsep_vs_gt(
+            pred_dir=self.paths['m_cluster_sep_plots'],
+            gt_dir=self.paths['m_gt_plots_cat_ntl_crops'],
+            white_thresh=750,
+            per_crop_csv=self.paths['m_cluster_cat_eval_crop_csv'],
+            per_base_csv=self.paths['m_cluster_cat_eval_base_csv'],
+            summary_json=self.paths['m_cluster_cat_eval_json'],
+            verbose=True
+        )
 
 
 if __name__ == "__main__":
