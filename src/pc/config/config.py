@@ -23,7 +23,8 @@ def get_args():
                                 'crop_plots', 'separate_by_color','rescale_lines', 'split_data',
                                 'separate_by_cluster','rescale_lines_cluster', 'split_data_cluster',
                                 'cat_eval_color', 'cat_eval_cluster',
-                                'separate_by_color_wbg', 'split_data_wbg'])
+                                'separate_by_color_wbg', 'split_data_wbg',
+                                'color_unet', 'cluster_unet'])
 
     # Network Training Parameters
     parse.add_argument('--reg_model', type =str, default='lenet6', choices=['lenet4', 'lenet6', 'lenet', 'resnet18'])

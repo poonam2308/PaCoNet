@@ -69,6 +69,7 @@ class UNetTrainer:
 
         )
 
+
         train_size = int(0.8 * len(dataset))
         val_size = len(dataset) - train_size
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
@@ -77,7 +78,27 @@ class UNetTrainer:
         dataloader_val = DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=False)
         return dataloader_train, dataloader_val
 
-    def train(self, save_prefix="unet_sd_cluster_mse"):
+    def _load_dataset_cluster(self):
+
+        # this dataset when the background is white for gt too
+        dataset = CustomDatasetUnetSD(
+            input_dir=self.cfg['paths']['m_cluster_sep_plots'],
+            ground_truth_dir=self.cfg['paths']['m_gt_plots_cat_ntl_crops'],
+            transform=self.transform,
+            channel_mode=self.args.channel_mode,
+            hsv_tolerance=0.15,
+            remove_background=True
+        )
+
+        train_size = int(0.8 * len(dataset))
+        val_size = len(dataset) - train_size
+        train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+
+        dataloader_train = DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True)
+        dataloader_val = DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=False)
+        return dataloader_train, dataloader_val
+
+    def train(self, save_prefix="unet_sd_color_mse"):
         dataloader_train, dataloader_val = self._load_dataset()
 
         criterion = nn.MSELoss()
@@ -109,6 +130,43 @@ class UNetTrainer:
         print(f"Final model saved: {final_ckpt}")
         save_loss_plot(train_losses, val_losses, config.plot_log_dir, f"final_{save_prefix}_loss.png",
                        self.args.num_epochs, self.args.num_epochs)
+
+    def train_cluster(self, save_prefix="unet_sd_cluster_mse"):
+        dataloader_train, dataloader_val = self._load_dataset_cluster()
+
+        criterion = nn.MSELoss()
+        optimizer = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate, weight_decay=1e-4)
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
+
+        train_losses, val_losses = [], []
+
+        for epoch in range(self.args.num_epochs):
+            train_loss = train_epoch_unet_womo(self.model, dataloader_train, criterion,
+                                               optimizer, self.device)
+            val_loss = validate_epoch_unet_womo(self.model, dataloader_val, criterion,
+                                                epoch, config.save_dir, self.device)
+
+            train_losses.append(train_loss)
+            val_losses.append(val_loss)
+            scheduler.step(val_loss)
+
+            if (epoch + 1) % 5 == 0:
+                ckpt_path = os.path.join(config.model_log_dir, f"{save_prefix}_model_epoch{epoch + 1}.pth")
+                torch.save(self.model.state_dict(), ckpt_path)
+                print(f"Model saved at epoch {epoch + 1}: {ckpt_path}")
+                plot_name = f"loss_{save_prefix}_epoch_{epoch + 1}.png"
+                save_loss_plot(train_losses, val_losses, config.plot_log_dir,
+                               plot_name, len(train_losses), len(val_losses))
+
+        final_ckpt = os.path.join(config.model_log_dir, f"final_{save_prefix}_model.pth")
+        torch.save(self.model.state_dict(), final_ckpt)
+        print(f"Final model saved: {final_ckpt}")
+        save_loss_plot(train_losses, val_losses, config.plot_log_dir, f"final_{save_prefix}_loss.png",
+                       self.args.num_epochs, self.args.num_epochs)
 if __name__ == "__main__":
     trainer = UNetTrainer()
-    trainer.train()
+    task = trainer.args.task
+    if task == "color_unet":
+        trainer.train()
+    else:
+         trainer.train_cluster()
