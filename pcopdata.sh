@@ -13,10 +13,10 @@ python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.y
 python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.yaml --task rescale_lines
 python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.yaml --task split_data
 
-# separating the categories based on cluster
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.yaml --task separate_by_cluster
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.yaml --task rescale_lines
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.yaml --task split_data
+ separating the categories based on cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.yaml --task separate_by_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.yaml --task rescale_lines_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.yaml --task split_data_cluster
 
 
 # step 1-4 for testing data
@@ -25,5 +25,8 @@ python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config_op.y
 python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config_op.yaml --num_files 1000 --seed 0 --task run
 python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config_op.yaml --seed 0 --task separate_by_color
 python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config_op.yaml --seed 0 --task rescale_lines
+
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config_op.yaml --seed 0 --task separate_by_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config_op.yaml --seed 0 --task rescale_lines_cluster
 
 
