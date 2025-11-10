@@ -3,6 +3,7 @@
 #
 #./src/dhlp/dataset/wireframe_noisy.py data/synthetic_plots/multi_cat/training/color data/dhlp/pcw_1n
 
+
 # Step 2
 # once the data is present provide the same path in the yaml where data is preset and start the training
 
@@ -24,4 +25,22 @@
 
 
 # step 2
-python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/denoised.yaml
+#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/denoised.yaml
+
+
+# this is for the denoised dataset which are generated with the right set of line coordinates - mapped to the lines for color based separation
+#step 1
+./src/dhlp/dataset/wireframe_denoised.py data/synthetic_plots/multi_cat/training/color data/dhlp/pcw_color
+
+# step 2
+#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/denoised.yaml
+
+# this is for the denoised dataset which are generated with the right set of line coordinates - mapped to the lines  for clustererd based separation
+#step 1
+#./src/dhlp/dataset/wireframe_denoised.py data/synthetic_plots/multi_cat/training/cluster data/dhlp/pcw_cluster
+# step 2
+#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/denoised.yaml
+
+
+
+
