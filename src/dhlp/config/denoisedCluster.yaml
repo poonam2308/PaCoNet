@@ -1,9 +1,9 @@
 #for all the data
 io:
-  vote_index: data/dhlp/vote_index_128_128_3_3dn2.mat
-  logdir: outputs/logs/3dn2
-  datadir: data/dhlp/pcw_3dn2
-  outdir: outputs/results/3dn2
+  vote_index: data/dhlp/vote_index_128_128_3_cls.mat
+  logdir: outputs/logs/cluster
+  datadir: data/dhlp/pcw_cluster
+  outdir: outputs/results/cluster
   resume_from:
   num_workers: 4
   tensorboard_port: 0

@@ -10,10 +10,10 @@
 #  validation_interval: 20000
 
 io:
-  vote_index: data/dhlp/vote_index_128_128_3_3dn1.mat
-  logdir: outputs/logs/3dn1
-  datadir: data/dhlp/pcw_3dn1
-  outdir: outputs/results/3dn1
+  vote_index: data/dhlp/vote_index_128_128_3_c.mat
+  logdir: outputs/logs/color
+  datadir: data/dhlp/pcw_color
+  outdir: outputs/results/color
   resume_from:
   num_workers: 4
   tensorboard_port: 0
