@@ -56,6 +56,7 @@ paths:
 unet:
   chkpt_path: "outputs/chkpt/0810-25_1529-52/unet_sd_cluster_mse_model_epoch80.pth"
   output_dir: "data/synthetic_plots/multi_cat/testing/color/denoised"
+  output_dir_cls: "data/synthetic_plots/multi_cat/testing/cluster/denoised"
 
 #  input_dir: "data/real_plots/color/images"
 #  output_dir: "data/real_plots/cluster/images"
