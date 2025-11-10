@@ -2,14 +2,13 @@
 # output :generate the npz for each image
 # input : using the category separated images and the lines json present in  test.json
 
-#./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_test
-
+./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_test
 
 
 # Step 2
 # create masks for test data
 
-#./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
+./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
 
 
 
@@ -37,7 +36,7 @@
 ####------------------------
 # create the dataset as dhlp format for the crops
 
-./src/dhlp/dataset/wireframe_all_test.py data/synthetic_plots/multi_cat/testing/m_crops data/dhlp/pcw_alltest
+#./src/dhlp/dataset/wireframe_all_test.py data/synthetic_plots/multi_cat/testing/m_crops data/dhlp/pcw_alltest
 
 
 
