@@ -25,10 +25,6 @@ class UNetTester:
         self._set_seed(self.args.seed)
         self._prepare_dirs()
 
-        self.model = UNetSD(in_channels=3, out_channels=3).to(self.device)
-        self.model.load_state_dict(torch.load(self.cfg['unet']['chkpt_path'], map_location=self.device))
-        self.model.eval()
-
         self.transform = unet_transformation(self.args)
 
     def _set_seed(self, seed):
@@ -41,24 +37,43 @@ class UNetTester:
         ensure_directory_exists(config.model_log_dir)
         ensure_directory_exists(config.plot_log_dir)
 
-    def run(self, input_dir, output_dir, description="Denoising"):
+    def run_color(self, input_dir, output_dir, description="Denoising"):
         dataset = CustomTestDatasetSD(input_dir=input_dir, transform=self.transform)
         loader = DataLoader(dataset, batch_size=2, shuffle=False)
 
         print(f"Testing on: {description or input_dir} | Samples: {len(dataset)}")
+
+        model = UNetSD(in_channels=3, out_channels=3).to(self.device)
+        model.load_state_dict(torch.load(self.cfg['unet']['chkpt_path_color'], map_location=self.device))
+        model.eval()
+
         for epoch in range(self.args.num_epochs):
-            test_unetsd_cluster(self.model, loader, self.device, output_dir)
+            test_unetsd_cluster(model, loader, self.device, output_dir)
+        print(f"Finished testing: {description or input_dir}")
+
+    def run_cluster(self, input_dir, output_dir, description="Denoising"):
+        dataset = CustomTestDatasetSD(input_dir=input_dir, transform=self.transform)
+        loader = DataLoader(dataset, batch_size=2, shuffle=False)
+
+        print(f"Testing on: {description or input_dir} | Samples: {len(dataset)}")
+
+        model = UNetSD(in_channels=3, out_channels=3).to(self.device)
+        model.load_state_dict(torch.load(self.cfg['unet']['chkpt_path_cluster'], map_location=self.device))
+        model.eval()
+
+        for epoch in range(self.args.num_epochs):
+            test_unetsd_cluster(model, loader, self.device, output_dir)
         print(f"Finished testing: {description or input_dir}")
 
 
 if __name__ == "__main__":
     tester = UNetTester()
     input_dir = tester.cfg['paths']['m_color_sep_plots']
-    output_dir = tester.cfg['unet']['output_dir']
+    output_dir = tester.cfg['unet']['output_dir_color']
 
     input_dir_cls = tester.cfg['paths']['m_cluster_sep_plots']
     output_dir_cls = tester.cfg['unet']['output_dir_cluster']
 
-    tester.run(input_dir, output_dir)
-    # tester.run(input_dir_cls, output_dir_cls)
+    tester.run_color(input_dir, output_dir)
+    tester.run_cluster(input_dir_cls, output_dir_cls)
 

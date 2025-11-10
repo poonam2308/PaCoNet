@@ -59,9 +59,10 @@ paths:
 
 
 unet:
-  chkpt_path: "outputs/chkpt/0810-25_1529-52/unet_sd_cluster_mse_model_epoch80.pth"
-  #input_dir: "data/real_plots/cluster/images"  same as color separated paths
-  output_dir: "data/synthetic_plots/multi_cat_opaque/training/color/denoised"
+  chkpt_path_color: "outputs/chkpt/0611-25_1457-21/unet_sd_color_mse_model_epoch80.pth" # color
+  output_dir_color: "data/synthetic_plots/multi_cat_opaque/training/color/denoised"
+
+  chkpt_path_cluster: "outputs/chkpt/0811-25_0325-23/unet_sd_cluster_mse_model_epoch80.pth" # cluster
   output_dir_cluster: "data/synthetic_plots/multi_cat_opaque/training/cluster/denoised"
 
 
