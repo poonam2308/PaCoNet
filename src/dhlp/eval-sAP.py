@@ -369,4 +369,19 @@ if __name__ == "__main__":
 # Total Processed Files: 1169
 # Average mAP Score for t=15: 36.8419
 
+# pcw_test
+# Total Processed Files: 1241
+# Average mAP Score for t=5: 32.2306
+
+
+
+# Total Processed Files: 1241
+# Average mAP Score for t=10: 34.8777
+#
+# Running process_multiple_files for threshold t=15
+#
+# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
+#
+# Total Processed Files: 1241
+# Average mAP Score for t=15: 36.1664
 

@@ -17,6 +17,9 @@ Options:
 import os
 import pprint
 import random
+import sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
 
 import numpy as np
 import torch
@@ -96,7 +99,7 @@ def main():
     output_dir = C.io.outdir
     os.makedirs(output_dir, exist_ok=True)
 
-    output_file = "offset_results.txt"
+    output_file = "offset_results_lines.txt"
     output_dir = "output_offsets"
     os.makedirs(output_dir, exist_ok=True)  # Ensure directory exists
     output_path = os.path.join(output_dir, output_file)

@@ -2,13 +2,13 @@
 # output :generate the npz for each image
 # input : using the category separated images and the lines json present in  test.json
 
-./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_test
+#./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_test
 
 
 # Step 2
 # create masks for test data
 
-./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
+#./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
 
 
 
@@ -19,19 +19,34 @@
 
 
 # Step 4
-# calculate sap, map and mean offsets
+# calculate sap, map
 
-#./src/dhlp/eval-sAP.py ./outputs/results_test1
+#./src/dhlp/eval-sAP.py ./outputs/results_test2
 
-#./src/dhlp/eval-mAP.py ./outputs/results_test1
+#./src/dhlp/eval-mAP.py ./outputs/results_test2
+
 #Evaluating ./outputs/results_test
 #  27.4 | 38.4
 #Evaluating ./outputs/results_test1
 #  30.9 | 44.0
+#Evaluating ./outputs/results_test2
+#  30.7 | 44.2
 
-# to get the mean error
-#
+
+#step 5 to get the mean and mean offsets
+
 #./src/dhlp//process_offset_dist.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+#./src/dhlp//process_offset_sing.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+
+
+
+#Final Average Offset Errors (Nearest Junction Based):
+#Avg Mean Offset: 24.49
+#Avg Lower Offset: -10.44
+#Avg Upper Offset: 59.41
+
+
+
 
 ####------------------------
 # create the dataset as dhlp format for the crops
