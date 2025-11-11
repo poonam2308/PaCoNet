@@ -1,16 +1,13 @@
 # imports
 import sys
 import os
-
 import numpy as np
 import torch
-
-from src.pc.plot_gen.elbo_category_separator import ELBOCategorySeparator
-
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 
-
+from src.pc.plot_gen.elbo_category_separator import ELBOCategorySeparator
+from src.pc.plot_gen.elbo_fullres_category_separator import ELBOFullResCategorySeparator
 from src.pc.config.config import get_args, load_config
 
 import src.pc.data_gen.data_generator as dgen
@@ -167,7 +164,7 @@ class PlotsPipeline:
     # ----Elbo full resolution  ----#
     def separate_by_elbo_fres(self):
         print(f"🎨 Separating by elbo full resolution using {method} method...")
-        sep = ELBOCategorySeparator()
+        sep = ELBOFullResCategorySeparator()
         sep.process_batch(
             input_dir=self.paths['m_crops'],
             json_dir=self.paths['m_plots'],
