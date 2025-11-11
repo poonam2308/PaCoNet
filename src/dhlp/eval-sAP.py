@@ -385,3 +385,27 @@ if __name__ == "__main__":
 # Total Processed Files: 1241
 # Average mAP Score for t=15: 36.1664
 
+
+# Working on ./outputs/results_test3
+#
+# Running process_multiple_files for threshold t=5
+#
+#   0%|                                                                                                                            | 0/1 [00:00<?, ?it/s]Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
+#
+# Total Processed Files: 1241
+# Average mAP Score for t=5: 57.1862
+#
+# Running process_multiple_files for threshold t=10
+#
+# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
+#
+# Total Processed Files: 1241
+# Average mAP Score for t=10: 62.3498
+#
+# Running process_multiple_files for threshold t=15
+#
+# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
+#
+# Total Processed Files: 1241
+# Average mAP Score for t=15: 64.9340
+

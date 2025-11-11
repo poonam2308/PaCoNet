@@ -19,7 +19,9 @@ import os
 import os.path as osp
 import pprint
 import random
-
+import sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
+sys.path.insert(0, project_root)
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,6 +37,7 @@ from src.dhlp.lcnn.config import C, M
 from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
+from src.dhlp.line_prediction import run_line_prediction_on_images
 
 from src.dhlp.lcnn.postprocess import postprocess
 
@@ -69,8 +72,8 @@ def main():
     args = docopt(__doc__)
     print("Parsed arguments:", args)
     config_file = args["<yaml-config>"] or "config/wireframe.yaml"
-    source_dir = args.get("<source-dir>", "./outputs/reals/denoised")
-    output_dir = args.get("<output-dir>", "./outputs/reals/redesigned/1")
+    source_dir = args.get("<source-dir>", "./outputs/syns/p_test")
+    output_dir = args.get("<output-dir>", "./outputs/syns/redesigned/1")
 
     C.update(C.from_yaml(filename=config_file))
     M.update(C.model)
@@ -170,7 +173,7 @@ def main():
             image_feature = image.mean(dim=[2, 3]).to(device)  # [1, 3]
             predicted_threshold = threshold_predictor(image_feature).cpu().item()
 
-        print(f"Predicted threshold: {predicted_threshold:.4f}")
+        print(f"Random threshold used: {predicted_threshold:.4f}")
 
         # postprocess lines to remove overlapped lines
         diag = (im.shape[0] ** 2 + im.shape[1] ** 2) ** 0.5
@@ -238,6 +241,48 @@ def main():
             #
             # plt.show()
 
+            # --- SAME-SIZE, OVERLAID PLOT ---
+            H_img, W_img = im.shape[:2]
+            dpi = 100  # any convenient DPI; just keep it consistent below
+            fig = plt.figure(figsize=(W_img / dpi, H_img / dpi), dpi=dpi)
+
+            # full-bleed axes (no margins)
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.imshow(im, origin="upper")  # draw the input image as background
+            ax.set_xlim(0, W_img)
+            ax.set_ylim(H_img, 0)  # invert Y so (0,0) is top-left
+            ax.set_axis_off()
+
+            for (a, b), s in zip(nlines, nscores):
+                if s < predicted_threshold:
+                    continue
+
+                # sample colors from the image (same logic you already had)
+                start_x, start_y = int(a[1]), int(a[0])
+                mid_x, mid_y = int((a[1] + b[1]) / 2), int((a[0] + b[0]) / 2)
+                end_x, end_y = int(b[1]), int(b[0])
+
+                def get_color(x, y, image):
+                    if 0 <= x < image.shape[1] and 0 <= y < image.shape[0]:
+                        color = image[y, x]
+                        if color.max() > 1:  # handle uint8 images
+                            color = color / 255.0
+                        return color
+                    return np.array([0, 0, 0])
+
+                start_color = get_color(start_x, start_y, im)
+                mid_color = get_color(mid_x, mid_y, im)
+                end_color = get_color(end_x, end_y, im)
+                line_color = tuple(((start_color + mid_color + end_color) / 3.0)[:3])
+
+                ax.plot([a[1], b[1]], [a[0], b[0]], linewidth=2, color=line_color)
+                ax.scatter([a[1], b[1]], [a[0], b[0]], **PLTOPTS)
+
+            # save **exactly** the same pixel size as input
+            output_path_png = osp.join(output_dir, osp.basename(imname).rsplit(".", 1)[0] + "-lines.png")
+            fig.savefig(output_path_png, dpi=dpi, bbox_inches="tight", pad_inches=0)
+            plt.close(fig)
+
             fig, ax = plt.subplots()
             ax.set_facecolor("white")  # Change to "black" if you want a black background
             ax.set_xlim(0, im.shape[1])  # Set X limits to image width
@@ -278,12 +323,15 @@ def main():
                 ax.scatter(a[1], a[0], **PLTOPTS)
                 ax.scatter(b[1], b[0], **PLTOPTS)
 
+
             output_path =osp.join(output_dir, osp.basename(imname).replace(".png", "-lines.svg"))
             # plt.colorbar(sm, ax=ax, fraction=0.046, pad=0.04)
 
             plt.savefig(output_path, bbox_inches="tight", facecolor="white", transparent=False)
 
             plt.close()
+
+
 
 
 if __name__ == "__main__":

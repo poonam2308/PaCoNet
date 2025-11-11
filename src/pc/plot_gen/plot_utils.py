@@ -41,6 +41,13 @@ def normalize_column(df, col_name):
     df[norm_col_name] = (df[col_name] - min_val) / (max_val - min_val)
     return norm_col_name
 
+def normalize_column_reverse(df, col_name):
+    min_val = df[col_name].min()
+    max_val = df[col_name].max()
+    norm_col_name = f" {col_name}"
+    df[norm_col_name] = 1-((df[col_name] - min_val) / (max_val - min_val))
+    return norm_col_name
+
 def calculate_pixel_positions(df, normalized_columns, height):
     pixel_positions = {}
     for col in normalized_columns:

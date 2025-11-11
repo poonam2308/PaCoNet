@@ -17,13 +17,12 @@
 
 #./src/dhlp/process_original.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 
-
 # Step 4
 # calculate sap, map
 
-#./src/dhlp/eval-sAP.py ./outputs/results_test2
+#./src/dhlp/eval-sAP.py ./outputs/results_test3
 
-#./src/dhlp/eval-mAP.py ./outputs/results_test2
+#./src/dhlp/eval-mAP.py ./outputs/results_test3
 
 #Evaluating ./outputs/results_test
 #  27.4 | 38.4
@@ -31,6 +30,11 @@
 #  30.9 | 44.0
 #Evaluating ./outputs/results_test2
 #  30.7 | 44.2
+#Evaluating ./outputs/results_test3
+#  33.6 | 48.5
+
+./src/dhlp/demo.py -d 0 ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth ./outputs/syns/p_test/
+
 
 
 #step 5 to get the mean and mean offsets
