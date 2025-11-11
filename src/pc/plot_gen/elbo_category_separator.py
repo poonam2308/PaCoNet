@@ -51,29 +51,28 @@ class ELBOCategorySeparator(ClusteringCategorySeparator):
                 continue
         return int(best_k)
 
-
     def _cluster_hues(
-        self,
-        img_bgr,
-        resize_factor,
-        eps=None,                # kept for signature compatibility; ignored here
-        min_samples=None,        # kept for signature compatibility; ignored here
-        sat_thresh=50,
-        val_thresh=50,
-        n_components=8,
-        weight_thresh=0.01,
-        min_cluster_size=100,
-        random_state=0,
-        max_iter=500
+            self,
+            img_bgr,
+            resize_factor,
+            eps=None,  # kept for signature compatibility; ignored here
+            min_samples=None,  # kept for signature compatibility; ignored here
+            sat_thresh=50,
+            val_thresh=50,
+            n_components=8,  # unused when BIC chooses K; kept for compatibility
+            weight_thresh=0.01,
+            min_cluster_size=100,
+            random_state=0,
+            max_iter=500
     ):
         """
-        Fit a BayesianGaussianMixture on the downsampled hue channel (H in [0..179])
-        for moderately saturated/bright pixels only.
-
-        Returns:
-            cluster_ranges: dict[comp_id] -> (hmin, hmax, center)
-            kept: list of kept component ids (stable order by center hue)
+        Downsampled ELBO clustering on hue with strong numerical safeguards.
+        - float64 data for stability
+        - BIC to choose K, capped by data complexity
+        - reg_covar, init fallbacks, covariance_type fallback
+        - graceful early-exit if hue has near-zero variance
         """
+
         hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
         H, S, V = hsv[..., 0], hsv[..., 1], hsv[..., 2]
 
@@ -88,44 +87,35 @@ class ELBOCategorySeparator(ClusteringCategorySeparator):
         V_small = cv2.resize(V, (0, 0), fx=resize_factor, fy=resize_factor, interpolation=cv2.INTER_NEAREST)
         valid_small = (S_small >= sat_thresh) & (V_small >= val_thresh)
 
-        hue_vals = H_small[valid_small].astype(np.float32).reshape(-1, 1)
+        hue_vals = H_small[valid_small].astype(np.float64).reshape(-1, 1)  # float64 (not float32!)
         if hue_vals.size == 0:
             return {}, []
 
-        best_k = self._choose_k_via_bic(hue_vals, k_min=1, k_max=12, sample_size=15000, random_state=random_state)
+        # If data is (almost) constant or extremely discrete (common after downsampling), return one tight bin
+        var = np.var(hue_vals)
+        unique_count = np.unique(hue_vals).size
+        if var < 1e-6 or unique_count <= 2:
+            hmin = int(np.floor(np.min(hue_vals)))
+            hmax = int(np.ceil(np.max(hue_vals)))
+            center = float((hmin + hmax) / 2.0)
+            return {0: (hmin, hmax, center)}, [0]
 
-        # Fit variational Bayes GMM (ELBO optimization internally)
-        bgm = BayesianGaussianMixture(
-            n_components=best_k,
-            covariance_type="diag",
-            weight_concentration_prior_type="dirichlet_process",
-            max_iter=max_iter,
+        # --- Choose K via BIC on a subsample and cap by unique hues ---
+        best_k = self._choose_k_via_bic(
+            hue_vals,
+            k_min=1,
+            k_max=min(12, max(1, unique_count)),  # don't ask for more comps than unique hues
+            sample_size=15000,
             random_state=random_state
         )
-        bgm.fit(hue_vals)
+        best_k = max(1, min(int(best_k), unique_count))
 
-        # Responsibilities and weights
-        resp = bgm.predict_proba(hue_vals)    # (N, K)
-        weights = bgm.weights_                # (K,)
-
-        # Select active components
-        active = [k for k, w in enumerate(weights) if w >= weight_thresh]
-        if not active:
-            return {}, []
-
-        # Assign points by MAP component (restricted to active components)
-        hard = np.argmax(resp[:, active], axis=1)     # index into 'active'
-        cluster_ranges = {}
-        kept_ids = []
-
-        # Helper: handle hue wrap when computing ranges
-        def hue_range_with_wrap(samples):
+        # Helper: hue wrap-aware range (0..179)
+        def hue_range_with_wrap(samples: np.ndarray):
             s = np.sort(samples)
-            # Direct interval
             direct_span = s[-1] - s[0]
             direct_center = (s[0] + s[-1]) / 2.0
 
-            # Wrap alternative: shift values near 0 by +180 to see if span tightens
             s_shift = s.copy()
             s_shift[s_shift < 90] += 180.0
             s_shift.sort()
@@ -134,25 +124,77 @@ class ELBOCategorySeparator(ClusteringCategorySeparator):
 
             if wrap_span < direct_span:
                 hmin_raw, hmax_raw, center_raw = s_shift[0], s_shift[-1], wrap_center
-                # Map back to [0, 180)
                 hmin = hmin_raw % 180.0
                 hmax = hmax_raw % 180.0
                 center = center_raw % 180.0
             else:
                 hmin, hmax, center = s[0], s[-1], direct_center
-
             return float(hmin), float(hmax), float(center)
 
-        # Build ranges per active component (using assigned samples)
+        # --- Robust Bayesian fit with fallbacks ---
+        def fit_bayesian(init_params="kmeans", covariance_type="diag", reg_covar=1e-3):
+            bgm = BayesianGaussianMixture(
+                n_components=best_k,
+                covariance_type=covariance_type,
+                weight_concentration_prior_type="dirichlet_process",
+                init_params=init_params,
+                reg_covar=reg_covar,  # key: prevent collapsed covariance
+                tol=1e-4,
+                max_iter=max_iter,
+                random_state=random_state
+            )
+            return bgm.fit(hue_vals), "bayesian"
+
+        model = None
+        try:
+            model, _ = fit_bayesian(init_params="kmeans", covariance_type="diag", reg_covar=1e-3)
+        except Exception:
+            try:
+                model, _ = fit_bayesian(init_params="random", covariance_type="diag", reg_covar=1e-2)
+            except Exception:
+                try:
+                    model, _ = fit_bayesian(init_params="random", covariance_type="spherical", reg_covar=1e-2)
+                except Exception:
+                    gm = GaussianMixture(
+                        n_components=best_k,
+                        covariance_type="diag",
+                        init_params="kmeans",
+                        reg_covar=1e-2,
+                        tol=1e-4,
+                        max_iter=max_iter,
+                        random_state=random_state
+                    )
+                    model = gm.fit(hue_vals)
+
+        # Responsibilities and weights
+        resp = model.predict_proba(hue_vals)
+        weights = model.weights_
+
+        # Select active components; if none, keep the largest-weight one
+        active = [k for k, w in enumerate(weights) if w >= weight_thresh]
+        if not active:
+            active = [int(np.argmax(weights))]
+
+        # Assign points by MAP component (restricted to active components)
+        hard = np.argmax(resp[:, active], axis=1)  # indices into 'active'
+
+        cluster_ranges = {}
+        kept_ids = []
         for local_k, comp_id in enumerate(active):
             comp_samples = hue_vals[hard == local_k, 0]
             if comp_samples.size < min_cluster_size:
                 continue
             hmin, hmax, center = hue_range_with_wrap(comp_samples)
-
-            # Convert bounds to ints for downstream thresholding
             cluster_ranges[int(comp_id)] = (int(np.floor(hmin)), int(np.ceil(hmax)), float(center))
             kept_ids.append(int(comp_id))
+
+        # If everything was too small, at least return the global range
+        if not kept_ids:
+            hmin = int(np.floor(np.min(hue_vals)))
+            hmax = int(np.ceil(np.max(hue_vals)))
+            center = float((hmin + hmax) / 2.0)
+            cluster_ranges = {0: (hmin, hmax, center)}
+            kept_ids = [0]
 
         # Sort by center hue to ensure stable ordering downstream
         kept_ids.sort(key=lambda cid: cluster_ranges[cid][2])

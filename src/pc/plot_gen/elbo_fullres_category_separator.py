@@ -79,9 +79,6 @@ class ELBOFullResCategorySeparator(ClusteringCategorySeparator):
         - reg_covar, init fallback, covariance_type fallback
         - graceful early-exit if hue has near-zero variance
         """
-        import numpy as np
-        import cv2
-        from sklearn.mixture import BayesianGaussianMixture, GaussianMixture
 
         hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
         H, S, V = hsv[..., 0], hsv[..., 1], hsv[..., 2]
