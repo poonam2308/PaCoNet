@@ -48,7 +48,7 @@ class MultiCatPCPGenerator:
             height=self.height
         )
 
-        lines = base.mark_line(opacity=1).encode(
+        lines = base.mark_line(opacity=0.4).encode(
             x=alt.X('key:N', axis=alt.Axis(
                 title=None,
                 domain=False,
@@ -207,7 +207,7 @@ class MultiCatPCPGenerator:
                 mid="(datum.value + datum.value) / 2"
             ).properties(width=self.width, height=self.height)
 
-            lines = base.mark_line(opacity=1).encode(
+            lines = base.mark_line(opacity=0.4).encode(
                 x=alt.X('key:N', axis=alt.Axis(
                     title=None,
                     domain=False,

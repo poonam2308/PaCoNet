@@ -22,6 +22,8 @@ def get_args():
                        choices=['run_dist', 'run', 'run_single', 'generate_data', 'generate_plots',
                                 'crop_plots', 'separate_by_color','rescale_lines', 'split_data',
                                 'separate_by_cluster','rescale_lines_cluster', 'split_data_cluster',
+                                'separate_by_elbo', 'rescale_lines_elbo', 'split_data_elbo',
+                                'separate_by_elbo_fres', 'rescale_lines_elbo_fres', 'split_data_elbo_fres',
                                 'cat_eval_color', 'cat_eval_cluster',
                                 'separate_by_color_wbg', 'split_data_wbg',
                                 'color_unet', 'cluster_unet'])

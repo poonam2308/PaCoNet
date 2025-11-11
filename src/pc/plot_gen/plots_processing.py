@@ -5,6 +5,7 @@ import os
 import numpy as np
 import torch
 
+from src.pc.plot_gen.elbo_category_separator import ELBOCategorySeparator
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
@@ -138,6 +139,56 @@ class PlotsPipeline:
                 train_file=self.paths['m_cluster_train_json'],
                 valid_file=self.paths['m_cluster_valid_json']
             )
+    #----Elbo ----#
+    def separate_by_elbo(self):
+        print(f"🎨 Separating by elbo using {method} method...")
+        sep = ELBOCategorySeparator()
+        sep.process_batch(
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_elbo_sep_plots']
+        )
+
+    def rescale_lines_elbo(self):
+        if 'm_elbo_all_json' in self.paths:
+            update_lines(
+                json_file=self.paths['m_elbo_all_json'],
+                output_file=self.paths['m_elbo_rescaled_all_json']
+            )
+
+    def split_data_elbo(self):
+        if 'm_elbo_rescaled_all_json' in self.paths:
+            split_data(
+                input_file=self.paths['m_elbo_rescaled_all_json'],
+                train_file=self.paths['m_elbo_train_json'],
+                valid_file=self.paths['m_elbo_valid_json']
+            )
+
+    # ----Elbo full resolution  ----#
+    def separate_by_elbo_fres(self):
+        print(f"🎨 Separating by elbo full resolution using {method} method...")
+        sep = ELBOCategorySeparator()
+        sep.process_batch(
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_elbofres_sep_plots']
+        )
+
+    def rescale_lines_elbo_fres(self):
+        if 'm_elbofres_all_json' in self.paths:
+            update_lines(
+                json_file=self.paths['m_elbofres_all_json'],
+                output_file=self.paths['m_elbofres_rescaled_all_json']
+            )
+
+    def split_data_elbo_fres(self):
+        if 'm_elbofres_rescaled_all_json' in self.paths:
+            split_data(
+                input_file=self.paths['m_elbofres_rescaled_all_json'],
+                train_file=self.paths['m_elbofres_train_json'],
+                valid_file=self.paths['m_elbofres_valid_json']
+            )
+
 
     def split_data_wbg(self):
         # Optionally split into train/val

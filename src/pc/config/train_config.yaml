@@ -45,12 +45,28 @@ paths:
   m_color_line_color: "data/synthetic_plots/multi_cat/training/color/line_color.json"
   m_color_denoised_plots: "data/synthetic_plots/multi_cat/training/color_denoised"
 
-  # Category separation - clustering
+  # Category separation - clustering dbscan downnsampled
   m_cluster_sep_plots: "data/synthetic_plots/multi_cat/training/cluster/images"
   m_cluster_all_json: "data/synthetic_plots/multi_cat/training/cluster/images/all_data.json"
   m_cluster_rescaled_all_json: "data/synthetic_plots/multi_cat/training/cluster/rescaled_all_data.json"
   m_cluster_train_json: "data/synthetic_plots/multi_cat/training/cluster/train.json"
   m_cluster_valid_json: "data/synthetic_plots/multi_cat/training/cluster/valid.json"
+
+  # Category separation - clustering elbo downsampled
+  m_elbo_sep_plots: "data/synthetic_plots/multi_cat/training/elbo/images"
+  m_elbo_all_json: "data/synthetic_plots/multi_cat/training/elbo/images/all_data.json"
+  m_elbo_rescaled_all_json: "data/synthetic_plots/multi_cat/training/elbo/rescaled_all_data.json"
+  m_elbo_train_json: "data/synthetic_plots/multi_cat/training/elbo/train.json"
+  m_elbo_valid_json: "data/synthetic_plots/multi_cat/training/elbo/valid.json"
+
+
+  # Category separation - clustering elbo full resolution
+  m_elbofres_sep_plots: "data/synthetic_plots/multi_cat/training/elbofres/images"
+  m_elbofres_all_json: "data/synthetic_plots/multi_cat/training/elbofres/images/all_data.json"
+  m_elbofres_rescaled_all_json: "data/synthetic_plots/multi_cat/training/elbofres/rescaled_all_data.json"
+  m_elbofres_train_json: "data/synthetic_plots/multi_cat/training/elbofres/train.json"
+  m_elbofres_valid_json: "data/synthetic_plots/multi_cat/training/elbofres/valid.json"
+
 
 
   # Single-category

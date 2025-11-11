@@ -176,6 +176,44 @@ class ClusteringCategorySeparator:
             cluster_ranges[int(cid)] = (hmin, hmax, center)
         return cluster_ranges, keep.tolist()
 
+    def _cluster_hues_fullres(self, img_bgr, resize_factor, eps, min_samples, sat_thresh=50, val_thresh=50):
+        """
+        Run DBSCAN on full-resolution hue channel (only moderately saturated/bright pixels).
+        Return: dict cluster_id -> (min_hue, max_hue, center_hue), and list of kept cluster ids.
+        """
+
+        hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
+        H, S, V = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+
+        # Use FULL resolution – no resizing
+        valid = (S >= sat_thresh) & (V >= val_thresh)
+        hue_vals = H[valid].reshape(-1, 1)
+
+        # max_points = 100000
+        # hue_vals = H[valid].reshape(-1, 1)
+        # if hue_vals.shape[0] > max_points:
+        #     idx = np.random.choice(hue_vals.shape[0], max_points, replace=False)
+        #     hue_vals = hue_vals[idx]
+
+        if hue_vals.size == 0:
+            return {}, []
+
+        # Perform DBSCAN
+        db = DBSCAN(eps=eps, min_samples=min_samples)
+        lab = db.fit_predict(hue_vals)
+        keep = np.unique(lab[lab != -1])
+
+        cluster_ranges = {}
+        for cid in keep:
+            ch = hue_vals[lab == cid]
+            if ch.size == 0:
+                continue
+            hmin, hmax = int(np.min(ch)), int(np.max(ch))
+            center = float((hmin + hmax) / 2.0)
+            cluster_ranges[int(cid)] = (hmin, hmax, center)
+
+        return cluster_ranges, keep.tolist()
+
     def _build_masks_from_ranges(self, hsv_img, cluster_ranges, pad=5):
         """
         Build binary masks per cluster from (min_hue, max_hue, center).
