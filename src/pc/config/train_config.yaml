@@ -88,10 +88,10 @@ paths:
   m_cluster_cat_eval_base_csv: "data/synthetic_plots/multi_cat/training/cluster/per_base_results.csv"
 
 unet:
-  chkpt_path_color: "outputs/chkpt/0810-25_1529-52/unet_sd_cluster_mse_model_epoch80.pth"
+  chkpt_path_color: "outputs/chkpt/0810-25_1529-52/unet_sd_cluster_mse_model_epoch80.pth" # the name has cluster but it was trained on color separated images
   output_dir_color: "data/synthetic_plots/multi_cat/training/color/denoised"
 
-  chkpt_path_cluster: "outputs/chkpt/0811-25_0325-23/unet_sd_cluster_mse_model_epoch80.pth" # cluster
+  chkpt_path_cluster: "outputs/chkpt/1011-25_0934-19/unet_sd_cluster_mse_model_epoch80.pth" # cluster
   output_dir_cluster: "data/synthetic_plots/multi_cat/training/cluster/denoised"
 
 
