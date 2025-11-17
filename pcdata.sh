@@ -33,6 +33,12 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_elbo_fres
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_elbo_fres
 
+#separating the categories based on cluster using lab color space
+
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_lab_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_lab_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_lab_cluster
+
 
 # category evaluation
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_color
@@ -52,8 +58,8 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines_cluster
 
 # lab color space clustering
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task separate_by_lab_cluster
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines_lab_cluster
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task separate_by_lab_cluster
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines_lab_cluster
 
 
 

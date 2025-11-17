@@ -218,9 +218,9 @@ class PlotsPipeline:
     def split_data_lab_cluster(self):
         if 'm_lab_cluster_rescaled_all_json' in self.paths:
             split_data(
-                input_file=self.paths['m_cluster_rescaled_all_json'],
-                train_file=self.paths['m_cluster_train_json'],
-                valid_file=self.paths['m_cluster_valid_json']
+                input_file=self.paths['m_lab_cluster_rescaled_all_json'],
+                train_file=self.paths['m_lab_cluster_train_json'],
+                valid_file=self.paths['m_lab_cluster_valid_json']
             )
 
     def run_dist(self):

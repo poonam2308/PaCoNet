@@ -67,6 +67,15 @@ paths:
   m_elbofres_train_json: "data/synthetic_plots/multi_cat/training/elbofres/train.json"
   m_elbofres_valid_json: "data/synthetic_plots/multi_cat/training/elbofres/valid.json"
 
+  # clustering using LAB color space
+  m_lab_cluster_sep_plots: "data/synthetic_plots/multi_cat/training/lab_cluster/images"
+  m_lab_cluster_all_json: "data/synthetic_plots/multi_cat/training/lab_cluster/images/all_data.json"
+  m_lab_cluster_rescaled_all_json: "data/synthetic_plots/multi_cat/training/lab_cluster/rescaled_all_data.json"
+  m_lab_cluster_train_json: "data/synthetic_plots/multi_cat/training/lab_cluster/train.json"
+  m_lab_cluster_valid_json: "data/synthetic_plots/multi_cat/training/lab_cluster/valid.json"
+
+  m_lab_cluster_denoised_plots: "data/synthetic_plots/multi_cat/training/lab_cluster/denoised"
+
 
 
   # Single-category
