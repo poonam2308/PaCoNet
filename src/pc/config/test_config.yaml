@@ -37,10 +37,15 @@ paths:
   m_cluster_all_json: "data/synthetic_plots/multi_cat/testing/cluster/images/all_data.json"
   m_cluster_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/cluster/test.json"
 
+  m_color_denoised_plots: "data/synthetic_plots/multi_cat/testing/color/denoised"
+  m_cluster_denoised_plots: "data/synthetic_plots/multi_cat/testing/cluster/denoised"
 
+  # clustering using LAB color space
+  m_lab_cluster_sep_plots: "data/synthetic_plots/multi_cat/testing/lab_cluster/images"
+  m_lab_cluster_all_json: "data/synthetic_plots/multi_cat/testing/lab_cluster/images/all_data.json"
+  m_lab_cluster_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/lab_cluster/test.json"
 
-  m_color_denoised_plots: "data/synthetic_plots/multi_cat/testing/color_denoised"
-  m_cluster_denoised_plots: "data/synthetic_plots/multi_cat/testing/cluster_denoised"
+  m_lab_cluster_denoised_plots: "data/synthetic_plots/multi_cat/testing/lab_cluster/denoised"
 
 
   # Real-world plots

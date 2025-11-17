@@ -6,6 +6,7 @@ import torch
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 
+from src.pc.plot_gen.lab_clustering_category_separation import LabClusteringCategorySeparator
 from src.pc.plot_gen.elbo_category_separator import ELBOCategorySeparator
 from src.pc.plot_gen.elbo_fullres_category_separator import ELBOFullResCategorySeparator
 from src.pc.config.config import get_args, load_config
@@ -194,6 +195,32 @@ class PlotsPipeline:
                 input_file=self.paths['m_color_wbg_all_json'],
                 train_file=self.paths['m_color_wbg_train_json'],
                 valid_file=self.paths['m_color_wbg_valid_json']
+            )
+
+    #%------Lab color space for clustering-----
+
+    def separate_by_lab_cluster(self):
+        print(f"🎨 Separating by cluster using {method} method...")
+        sep = LabClusteringCategorySeparator()
+        sep.process_batch(
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_lab_cluster_sep_plots']
+        )
+
+    def rescale_lines_lab_cluster(self):
+        if 'm_lab_cluster_all_json' in self.paths:
+            update_lines(
+                json_file=self.paths['m_lab_cluster_all_json'],
+                output_file=self.paths['m_lab_cluster_rescaled_all_json']
+            )
+
+    def split_data_lab_cluster(self):
+        if 'm_lab_cluster_rescaled_all_json' in self.paths:
+            split_data(
+                input_file=self.paths['m_cluster_rescaled_all_json'],
+                train_file=self.paths['m_cluster_train_json'],
+                valid_file=self.paths['m_cluster_valid_json']
             )
 
     def run_dist(self):
