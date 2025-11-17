@@ -22,9 +22,9 @@
 
 #separating the categories based on cluster elbo bayesian gmm  reduced size
 
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_elbo
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_elbo
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_elbo
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_elbo
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_elbo
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_elbo
 
 
 #separating the categories based on cluster elbo bayesian gmm  full size
