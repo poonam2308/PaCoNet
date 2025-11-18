@@ -3,8 +3,7 @@ import torch.nn as nn
 import torchvision.transforms as T
 import timm
 import numpy as np
-from PIL.Image import Image
-
+from PIL import Image
 
 class DinoPatchFeatureExtractor(nn.Module):
     """
