@@ -9,6 +9,8 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
+from src.pc.plot_gen.dino_feature_extractor import DinoEmbeddingWrapper
+
 
 # ============================================================
 # Base class: shared logic
@@ -231,3 +233,37 @@ class HSVFullKMeansEvaluator(BaseKMeansColorEvaluator):
     def _compute_features(self, img_rgb: np.ndarray) -> np.ndarray:
         img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2HSV)
         return img_hsv.astype(np.float32)
+
+
+class EmbeddingKMeansEvaluator(BaseKMeansColorEvaluator):
+    """
+    KMeans evaluator on an arbitrary embedding space.
+    You pass in a feature_extractor that returns an array of shape
+    (N, D) or (H, W, D) given an RGB image.
+
+    Example usage:
+        dino_eval = EmbeddingKMeansEvaluator(dino_feature_extractor, sample_size=10000)
+        dino_eval.evaluate_batch(input_dir, json_dir, output_dir)
+    """
+    color_space_name = "EMBEDDING"
+
+    def __init__(self, feature_extractor, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.feature_extractor = feature_extractor
+
+    def _compute_features(self, img_rgb: np.ndarray) -> np.ndarray:
+        feats = self.feature_extractor(img_rgb)  # should return np.ndarray
+        if not isinstance(feats, np.ndarray):
+            feats = np.array(feats, dtype=np.float32)
+        return feats.astype(np.float32)
+
+
+class DinoKMeansEvaluator(EmbeddingKMeansEvaluator):
+    """
+    KMeans evaluator in DINO embedding space.
+    """
+    color_space_name = "DINO"
+
+    def __init__(self, model_name="vit_small_patch16_224.dino", device=None, *args, **kwargs):
+        dino_extractor = DinoEmbeddingWrapper(model_name=model_name, device=device)
+        super().__init__(feature_extractor=dino_extractor, *args, **kwargs)

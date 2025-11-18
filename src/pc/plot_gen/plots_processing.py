@@ -10,7 +10,7 @@ sys.path.insert(0, project_root)
 
 
 from src.pc.plot_gen.color_space_evaluator import RGBKMeansEvaluator, LabKMeansEvaluator, HSVFullKMeansEvaluator, \
-    HSVHueKMeansEvaluator
+    HSVHueKMeansEvaluator, DinoKMeansEvaluator
 
 from src.pc.plot_gen.lab_clustering_category_separation import LabClusteringCategorySeparator
 from src.pc.plot_gen.elbo_category_separator import ELBOCategorySeparator
@@ -263,6 +263,7 @@ class PlotsPipeline:
         lab_eval = LabKMeansEvaluator(sample_size=10000)
         hsv_full_eval = HSVFullKMeansEvaluator(sample_size=10000)
 
+
         rgb_eval.evaluate_batch(input_dir=self.paths['m_crops'],
             json_dir=self.paths['m_plots'],
             output_dir=self.paths['m_color_space'])
@@ -278,6 +279,17 @@ class PlotsPipeline:
         hsv_full_eval.evaluate_batch(input_dir=self.paths['m_crops'],
             json_dir=self.paths['m_plots'],
             output_dir=self.paths['m_color_space'])
+
+    def dino_features_evaluation(self):
+        dino_eval = DinoKMeansEvaluator(
+            model_name="vit_small_patch16_224.dino",
+            sample_size=10000,  # max number of tokens to use for KMeans
+        )
+        dino_eval.evaluate_batch(input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_color_space'])
+
+
 
 
 if __name__ == "__main__":
