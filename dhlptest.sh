@@ -32,15 +32,21 @@
 #  30.7 | 44.2
 #Evaluating ./outputs/results_test3
 #  33.6 | 48.5
-
-./src/dhlp/demo.py -d 0 ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth ./outputs/syns/p_test/
-
+#
+#./src/dhlp/demo.py -d 0 ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth ./outputs/syns/p_test/
+#
 
 
 #step 5 to get the mean and mean offsets
 
 #./src/dhlp//process_offset_dist.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
-#./src/dhlp//process_offset_sing.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+./src/dhlp//process_offset_sing.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+
+#
+#./src/dhlp/process_offset_sing_mae.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+
+
+#./src/dhlp/process_offset_sing_mae1.py  ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 
 
 

@@ -4,9 +4,9 @@ import torchvision.transforms as transforms
 import os
 import matplotlib.pyplot as plt
 
-def unet_transformation(args):
+def unet_transformation(width=224, height=224):
     return transforms.Compose([
-        transforms.Resize((args.new_width, args.new_width)),
+        transforms.Resize((width, height)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])

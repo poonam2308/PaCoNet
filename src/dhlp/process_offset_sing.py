@@ -25,6 +25,8 @@ import numpy as np
 import torch
 from docopt import docopt
 import scipy.io as sio
+import matplotlib.pyplot as plt
+
 import src.dhlp.lcnn
 from src.dhlp.lcnn.utils import recursive_to
 from src.dhlp.lcnn.config import C, M
@@ -34,6 +36,67 @@ from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearn
 from src.dhlp.lcnn.models.HT import hough_transform
 from process_utils import nearest_junction
 
+def visualize_points(img_tensor,
+                     gt_junc,
+                     start_points,
+                     end_points,
+                     save_path,
+                     title=None):
+    """
+    Visualize GT junctions and predicted line endpoints on the image.
+
+    Coordinates are assumed to be (y, x), so we plot:
+        x = coord[:, 1]
+        y = coord[:, 0]
+
+    img_tensor   : torch tensor (C, H, W)
+    gt_junc      : (Ng, 3) or (Ng, 2) numpy array (y, x, ...)
+    start_points : (Ns, 2) numpy array (y, x)
+    end_points   : (Ne, 2) numpy array (y, x)
+    save_path    : path for saving the PNG
+    """
+    # Convert image tensor to HxWxC
+    img = img_tensor.cpu().numpy()
+    if img.ndim == 3 and img.shape[0] in (1, 3):
+        img = np.transpose(img, (1, 2, 0))  # C,H,W -> H,W,C
+
+    # Normalize image for display
+    img_min, img_max = img.min(), img.max()
+    if img_max > img_min:
+        img_vis = (img - img_min) / (img_max - img_min)
+    else:
+        img_vis = img
+
+    plt.figure(figsize=(6, 6))
+    plt.imshow(img_vis)
+
+    # GT junctions (black circles, open)
+    if gt_junc is not None and gt_junc.size > 0:
+        gt_pts = gt_junc[:, :2]
+        plt.scatter(gt_pts[:, 1], gt_pts[:, 0],
+                    s=10, marker='o', edgecolors='k', facecolors='none',
+                    label='GT junction')
+
+    # Predicted start points (green x)
+    if start_points is not None and start_points.size > 0:
+        plt.scatter(start_points[:, 1], start_points[:, 0],
+                    s=10, marker='x', color='g', label='Pred start')
+
+    # Predicted end points (blue +)
+    if end_points is not None and end_points.size > 0:
+        plt.scatter(end_points[:, 1], end_points[:, 0],
+                    s=10, marker='+', color='b', label='Pred end')
+
+    if title is not None:
+        plt.title(title)
+
+    plt.legend(loc='upper right', fontsize=8)
+    plt.axis('off')
+
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    plt.savefig(save_path, bbox_inches='tight', dpi=150)
+    plt.close()
+
 
 def main():
     args = docopt(__doc__)
@@ -41,6 +104,8 @@ def main():
     C.update(C.from_yaml(filename=config_file))
     M.update(C.model)
     pprint.pprint(C, indent=4)
+
+    num_plots = int(6)
 
     random.seed(0)
     np.random.seed(0)
@@ -99,10 +164,14 @@ def main():
     output_dir = C.io.outdir
     os.makedirs(output_dir, exist_ok=True)
 
-    output_file = "offset_results_lines_c.txt"
+    output_file = "offset_results_lines_c1.txt"
     output_dir = "output_offsets"
     os.makedirs(output_dir, exist_ok=True)  # Ensure directory exists
     output_path = os.path.join(output_dir, output_file)
+
+    vis_dir = "output_point_mae_vis_sing"
+    os.makedirs(vis_dir, exist_ok=True)
+    plots_done = 0  # <--- add this
 
     # Initialize lists to store offsets across all images
     all_start_offsets = []
@@ -175,6 +244,22 @@ def main():
                     f.write(f"{index}, {average_start_offset:.3f}, {average_end_offset:.3f}\n")
                     print(
                         f"Image {index}: Avg Start Offset = {average_start_offset:.3f}, Avg End Offset = {average_end_offset:.3f}")
+
+
+                    if (num_plots == 0) or (plots_done < num_plots):
+                        vis_path = os.path.join(vis_dir, f"img_{index:05d}.png")
+                        title = (f"Idx {index} | "
+                                 f"StartOff={average_start_offset:.2f}, "
+                                 f"EndOff={average_end_offset:.2f}")
+                        visualize_points(
+                            image[i],  # tensor (C,H,W)
+                            ground_truth_junctions,  # (Na,3)
+                            start_points,  # (Ns,2)
+                            end_points,  # (Ne,2)
+                            vis_path,
+                            title=title,
+                        )
+                        plots_done += 1
 
         # Compute overall average offsets
         overall_start_offset = np.mean(all_start_offsets) if len(all_start_offsets) > 0 else 0
