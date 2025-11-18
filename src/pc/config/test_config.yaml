@@ -47,6 +47,9 @@ paths:
 
   m_lab_cluster_denoised_plots: "data/synthetic_plots/multi_cat/testing/lab_cluster/denoised"
 
+  #Color_space RGB, HSV, LAB
+  m_color_space: "data/synthetic_plots/multi_cat/testing/color_space"
+
 
   # Real-world plots
   real_plots: "data/real_plots/images"

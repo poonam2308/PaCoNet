@@ -3,8 +3,14 @@ import sys
 import os
 import numpy as np
 import torch
+
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
+
+
+from src.pc.plot_gen.color_space_evaluator import RGBKMeansEvaluator, LabKMeansEvaluator, HSVFullKMeansEvaluator, \
+    HSVHueKMeansEvaluator
 
 from src.pc.plot_gen.lab_clustering_category_separation import LabClusteringCategorySeparator
 from src.pc.plot_gen.elbo_category_separator import ELBOCategorySeparator
@@ -250,6 +256,28 @@ class PlotsPipeline:
             summary_json=self.paths['m_cluster_cat_eval_json'],
             verbose=True
         )
+
+    def color_space_evaluation(self):
+        rgb_eval = RGBKMeansEvaluator(sample_size=10000)
+        hsv_h_eval = HSVHueKMeansEvaluator(sample_size=10000)
+        lab_eval = LabKMeansEvaluator(sample_size=10000)
+        hsv_full_eval = HSVFullKMeansEvaluator(sample_size=10000)
+
+        rgb_eval.evaluate_batch(input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_color_space'])
+
+        hsv_h_eval.evaluate_batch(input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_color_space'])
+
+        lab_eval.evaluate_batch(input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_color_space'])
+
+        hsv_full_eval.evaluate_batch(input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_color_space'])
 
 
 if __name__ == "__main__":
