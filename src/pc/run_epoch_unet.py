@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import torchvision.transforms as transforms
+import torch.nn.functional as F
+
+
 
 
 def _denorm01(arr):
@@ -174,32 +177,87 @@ def test_unetsd(model, dataloader, device, output_dir):
             save_images(input_images, input_filenames, outputs, output_dir)
         print(f"Images Saved in the {output_dir}")
 
-def test_unetsd_cluster(model, dataloader, device, output_dir):
+# def test_unetsd_cluster(model, dataloader, device, output_dir):
+#     model.eval()
+#     os.makedirs(output_dir, exist_ok=True)
+#     with torch.no_grad():
+#         for idx, (input_images, input_filenames) in enumerate(dataloader):
+#             input_images = input_images.to(device)
+#             outputs = model(input_images)
+#             save_images(input_images, input_filenames, outputs, output_dir)
+#         print(f"Images Saved in the {output_dir}")
+
+def test_unetsd_cluster(model, dataloader, device, output_dir, resize_to_original=False):
     model.eval()
     os.makedirs(output_dir, exist_ok=True)
+
     with torch.no_grad():
-        for idx, (input_images, input_filenames) in enumerate(dataloader):
+        for input_images, input_filenames, orig_sizes in dataloader:
             input_images = input_images.to(device)
             outputs = model(input_images)
-            save_images(input_images, input_filenames, outputs, output_dir)
-        print(f"Images Saved in the {output_dir}")
 
-def save_images(input_images, input_filenames, outputs, output_dir):
-    batch_size = input_images.shape[0]
+            # if resize_to_original is True, we pass orig_sizes, else None
+            save_images(
+                input_images,
+                input_filenames,
+                outputs,
+                output_dir,
+                orig_sizes=orig_sizes if resize_to_original else None,
+            )
+
+    print(f"Images Saved in the {output_dir}")
+
+
+def save_images(input_images, input_filenames, outputs, output_dir, orig_sizes=None):
+    batch_size = outputs.shape[0]
+
     for idx in range(batch_size):
-        output_img = outputs[idx].cpu().permute(1, 2, 0).numpy()
-        output_img = (output_img * 255).astype(np.float32)
+        # pick one output
+        single_out = outputs[idx:idx + 1]  # (1, C, H, W)
+
+        # optionally resize to original
+        if orig_sizes is not None:
+            orig_w, orig_h = orig_sizes[idx]  # (W, H)
+            orig_w, orig_h = int(orig_w), int(orig_h)
+
+            single_out = F.interpolate(
+                single_out,
+                size=(orig_h, orig_w),  # (H, W)
+                mode="bilinear",
+                align_corners=False,
+            )
+
+        # to numpy H x W x C
+        output_img = single_out[0].cpu().permute(1, 2, 0).numpy()
+        output_img = (output_img * 255.0).astype(np.float32)
         output_img = np.clip(output_img, 0, 255).astype(np.uint8)
-        # Ensure filename compatibility
+
+        # handle filename
         filename = input_filenames[idx]
         if isinstance(filename, (tuple, list)):
             filename = filename[0]
+
         output_path = os.path.join(output_dir, filename)
         img = Image.fromarray(output_img)
-        # pil_arr, mode = _to_pil_ready(output_img)
-        # img = Image.fromarray(pil_arr if mode is None else pil_arr, mode=mode)
+        img.save(output_path, format="PNG")
 
-        img.save(output_path, format='PNG')  # Save as PNG for lossless quality
+
+# def save_images(input_images, input_filenames, outputs, output_dir):
+#     batch_size = input_images.shape[0]
+#     for idx in range(batch_size):
+#         output_img = outputs[idx].cpu().permute(1, 2, 0).numpy()
+#         output_img = (output_img * 255).astype(np.float32)
+#         output_img = np.clip(output_img, 0, 255).astype(np.uint8)
+#         # Ensure filename compatibility
+#         filename = input_filenames[idx]
+#         if isinstance(filename, (tuple, list)):
+#             filename = filename[0]
+#         output_path = os.path.join(output_dir, filename)
+#         img = Image.fromarray(output_img)
+#         # pil_arr, mode = _to_pil_ready(output_img)
+#         # img = Image.fromarray(pil_arr if mode is None else pil_arr, mode=mode)
+#
+#         img.save(output_path, format='PNG')  # Save as PNG for lossless quality
 
 
 # Function to visualize input and ground truth images

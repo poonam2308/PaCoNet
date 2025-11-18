@@ -426,11 +426,12 @@ class CustomTestDatasetSD(Dataset):
 
         try:
             input_image = Image.open(input_path).convert("RGB")
+            orig_w, orig_h = input_image.size
 
             if self.transform:
                 input_image = self.transform(input_image)
 
-            return input_image, input_filename  # Returning only image and filename
+            return input_image, input_filename, (orig_w, orig_h)  # Returning only image and filename
         except Exception as e:
             print(f"Error loading image {input_filename}: {e}")
             return None  # Return None to indicate an issue
