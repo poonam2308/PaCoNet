@@ -8,22 +8,12 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.insert(0, project_root)
 from src.pc.config import config
 from src.pc.config.config import get_args, load_config
-from src.pc.utils import ensure_directory_exists, unet_transformation
+from src.pc.utils import ensure_directory_exists, unet_transformation, unet_collate_fn
 from src.pc.data_gen.custom_dataset_unet import CustomTestDatasetSD
 from src.pc.models.unet import UNetSD
 from src.pc.run_epoch_unet import test_unetsd_cluster
 
-def unet_collate_fn(batch):
-    # drop failed samples
-    batch = [b for b in batch if b is not None]
-    # batch is a list of (img, filename, (W, H))
-    images, filenames, sizes = zip(*batch)  # sizes: tuple of (W, H)
 
-    images = torch.stack(images, dim=0)
-    filenames = list(filenames)
-    sizes = list(sizes)  # list of (W, H)
-
-    return images, filenames, sizes
 
 
 class UNetTester:

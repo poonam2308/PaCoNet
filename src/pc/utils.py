@@ -11,6 +11,18 @@ def unet_transformation(width=224, height=224):
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
 
+def unet_collate_fn(batch):
+    # drop failed samples
+    batch = [b for b in batch if b is not None]
+    # batch is a list of (img, filename, (W, H))
+    images, filenames, sizes = zip(*batch)  # sizes: tuple of (W, H)
+
+    images = torch.stack(images, dim=0)
+    filenames = list(filenames)
+    sizes = list(sizes)  # list of (W, H)
+
+    return images, filenames, sizes
+
 def ensure_directory_exists(directory_path):
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)

@@ -8,7 +8,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.insert(0, project_root)
 from src.pc.config import config
 from src.pc.config.config import get_args, load_config
-from src.pc.utils import ensure_directory_exists, unet_transformation
+from src.pc.utils import ensure_directory_exists, unet_transformation, unet_collate_fn
 from src.pc.data_gen.custom_dataset_unet import CustomTestDatasetSD
 from src.pc.models.unet import UNetSD
 from src.pc.run_epoch_unet import test_unetsd_cluster
@@ -37,7 +37,7 @@ class UNetTester:
         ensure_directory_exists(config.model_log_dir)
         ensure_directory_exists(config.plot_log_dir)
 
-    def run_color(self, input_dir, output_dir, description="Denoising"):
+    def run_color(self, input_dir, output_dir, description="Denoising", resize_to_original=False):
         dataset = CustomTestDatasetSD(input_dir=input_dir, transform=self.transform)
         loader = DataLoader(dataset, batch_size=2, shuffle=False)
 
@@ -48,12 +48,17 @@ class UNetTester:
         model.eval()
 
         for epoch in range(self.args.num_epochs):
-            test_unetsd_cluster(model, loader, self.device, output_dir)
+            test_unetsd_cluster(model, loader, self.device, output_dir, resize_to_original=resize_to_original)
         print(f"Finished testing: {description or input_dir}")
 
-    def run_cluster(self, input_dir, output_dir, description="Denoising"):
+    def run_cluster(self, input_dir, output_dir, description="Denoising", resize_to_original=False):
         dataset = CustomTestDatasetSD(input_dir=input_dir, transform=self.transform)
-        loader = DataLoader(dataset, batch_size=2, shuffle=False)
+        loader = DataLoader(
+            dataset,
+            batch_size=2,
+            shuffle=False,
+            collate_fn=unet_collate_fn,
+        )
 
         print(f"Testing on: {description or input_dir} | Samples: {len(dataset)}")
 
@@ -62,7 +67,7 @@ class UNetTester:
         model.eval()
 
         for epoch in range(self.args.num_epochs):
-            test_unetsd_cluster(model, loader, self.device, output_dir)
+            test_unetsd_cluster(model, loader, self.device, output_dir, resize_to_original=resize_to_original)
         print(f"Finished testing: {description or input_dir}")
 
 
