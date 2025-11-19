@@ -25,7 +25,7 @@ from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
 from src.dhlp.lcnn.postprocess import postprocess
-
+from pathlib import Path
 # --- Helper threshold predictor ---
 class ThresholdPredictor(torch.nn.Module):
     def __init__(self, input_dim=3):
@@ -55,12 +55,21 @@ class LineDemoRunner:
         runner.run_on_dir(source_dir, output_dir)
     """
 
-    def __init__(self, config_file, checkpoint_file, devices="0"):
+    def __init__(self, config_file, checkpoint_file, devices="0", project_root=None):
         # ---- config, seeds, device ----
         C.update(C.from_yaml(filename=config_file))
         M.update(C.model)
         print("Loaded config:")
         pprint.pprint(C, indent=4)
+        config_file = Path(config_file)
+
+        if project_root is None:
+            # project_root = repo root; adjust if your structure is different
+            project_root = config_file.resolve().parents[3]
+        project_root = Path(project_root)
+        self.project_root = project_root
+
+
 
         random.seed(0)
         np.random.seed(0)
@@ -78,11 +87,22 @@ class LineDemoRunner:
         self.device = torch.device(device_name)
 
         # ---- vote_index ----
-        if os.path.isfile(C.io.vote_index):
-            vote_index = sio.loadmat(C.io.vote_index)["vote_index"]
+        vote_index_rel = Path(C.io.vote_index)
+        if vote_index_rel.is_absolute():
+            vote_index_path = vote_index_rel
+        else:
+            vote_index_path = self.project_root / vote_index_rel  # e.g. <project_root>/data/...
+
+        # store the resolved path back into the config (optional but nice)
+        C.io.vote_index = str(vote_index_path)
+
+        if vote_index_path.is_file():
+            vote_index = sio.loadmat(str(vote_index_path))["vote_index"]
         else:
             vote_index = hough_transform(rows=128, cols=128, theta_res=3, rho_res=1)
-            sio.savemat(C.io.vote_index, {"vote_index": vote_index})
+            vote_index_path.parent.mkdir(parents=True, exist_ok=True)
+            sio.savemat(str(vote_index_path), {"vote_index": vote_index})
+
         vote_index = torch.from_numpy(vote_index).float().contiguous().to(self.device)
         print("load vote_index", vote_index.shape)
         self.vote_index = vote_index
@@ -166,7 +186,7 @@ class LineDemoRunner:
             image_feature = image.mean(dim=[2, 3]).to(self.device)  # [1, 3]
             predicted_threshold = self.threshold_predictor(image_feature).cpu().item()
 
-        print(f"Predicted threshold used: {predicted_threshold:.4f}")
+        print(f"Random applied threshold used: {predicted_threshold:.4f}")
 
         # ---- postprocess lines to remove overlapped lines ----
         diag = (im.shape[0] ** 2 + im.shape[1] ** 2) ** 0.5
