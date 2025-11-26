@@ -5,13 +5,14 @@ import numpy as np
 import torch
 
 
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 
 
 from src.pc.plot_gen.color_space_evaluator import RGBKMeansEvaluator, LabKMeansEvaluator, HSVFullKMeansEvaluator, \
     HSVHueKMeansEvaluator, DinoKMeansEvaluator
-
+from src.pc.plot_gen.peak_clustering_category_separator import PeakClusteringCategorySeparator
 from src.pc.plot_gen.lab_clustering_category_separation import LabClusteringCategorySeparator
 from src.pc.plot_gen.elbo_category_separator import ELBOCategorySeparator
 from src.pc.plot_gen.elbo_fullres_category_separator import ELBOFullResCategorySeparator
@@ -228,6 +229,32 @@ class PlotsPipeline:
                 train_file=self.paths['m_lab_cluster_train_json'],
                 valid_file=self.paths['m_lab_cluster_valid_json']
             )
+
+    #%-------------Hue peak filtering and then clustering -----------------
+    def separate_by_peakcluster(self):
+        print(f"🎨 Separating by cluster using {method} method...")
+        sep = PeakClusteringCategorySeparator()
+        sep.process_batch_with_peaks(
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_peak_sep_plots']
+        )
+
+    def rescale_lines_peakcluster(self):
+        if 'm_peak_all_json' in self.paths:
+            update_lines(
+                json_file=self.paths['m_peak_all_json'],
+                output_file=self.paths['m_peak_rescaled_all_json']
+            )
+
+    def split_data_peakcluster(self):
+        if 'm_peak_rescaled_all_json' in self.paths:
+            split_data(
+                input_file=self.paths['m_peak_rescaled_all_json'],
+                train_file=self.paths['m_peak_train_json'],
+                valid_file=self.paths['m_peak_valid_json']
+            )
+
 
     def run_dist(self):
         self.generate_data_from_excel_distribution()

@@ -121,7 +121,7 @@ class CategorySeparator:
             inv = cv2.bitwise_not(mask)
             result = cv2.bitwise_or(fg, cv2.bitwise_and(white, white, mask=inv))
 
-            out_name = f"{Path(crop).stem}_cat_{idx}.png"
+            out_name = f"{Path(crop).stem}_cat{idx}.png"
             cv2.imwrite(os.path.join(output_dir, out_name), result)
 
             output_data.append({"filename": out_name, "lines": cat_coords.get(peak, [])})

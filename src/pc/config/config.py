@@ -25,6 +25,7 @@ def get_args():
                                 'separate_by_elbo', 'rescale_lines_elbo', 'split_data_elbo',
                                 'separate_by_elbo_fres', 'rescale_lines_elbo_fres', 'split_data_elbo_fres',
                                 'separate_by_lab_cluster', 'rescale_lines_lab_cluster', 'split_data_lab_cluster',
+                                'separate_by_peakcluster', 'rescale_lines_peakcluster', 'split_data_peakcluster',
                                 'cat_eval_color', 'cat_eval_cluster',
                                 'color_space_evaluation', 'dino_features_evaluation',
                                 'separate_by_color_wbg', 'split_data_wbg',

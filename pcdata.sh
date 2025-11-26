@@ -38,12 +38,18 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_lab_cluster
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_lab_cluster
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_lab_cluster
-#
+
+
+# separating the categories based on peak filtering and then dbscan clustering
+
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_peakcluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_peakcluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_peakcluster
 
 # color_space evalaution RGb, Lab, HSV
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task color_space_evaluation
 
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task dino_features_evaluation
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task dino_features_evaluation
 
 # category evaluation
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_color

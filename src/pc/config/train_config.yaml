@@ -52,6 +52,14 @@ paths:
   m_cluster_train_json: "data/synthetic_plots/multi_cat/training/cluster/train.json"
   m_cluster_valid_json: "data/synthetic_plots/multi_cat/training/cluster/valid.json"
 
+
+  # category separation - using hue filtering and dbscan filtering
+  m_peak_sep_plots: "data/synthetic_plots/multi_cat/training/peak/images"
+  m_peak_all_json: "data/synthetic_plots/multi_cat/training/peak/images/all_data.json"
+  m_peak_rescaled_all_json: "data/synthetic_plots/multi_cat/training/peak/rescaled_all_data.json"
+  m_peak_train_json: "data/synthetic_plots/multi_cat/training/peak/train.json"
+  m_peak_valid_json: "data/synthetic_plots/multi_cat/training/peak/valid.json"
+
   # Category separation - clustering elbo downsampled
   m_elbo_sep_plots: "data/synthetic_plots/multi_cat/training/elbo/images"
   m_elbo_all_json: "data/synthetic_plots/multi_cat/training/elbo/images/all_data.json"
