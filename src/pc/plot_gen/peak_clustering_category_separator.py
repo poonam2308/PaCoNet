@@ -517,9 +517,9 @@ class PeakClusteringCategorySeparator:
                     json.dump(col_data, f, indent=2)
 
         # Global summaries for cutouts/colors
-        with open(os.path.join(output_dir, "all_data_peaks.json"), "w") as f:
+        with open(os.path.join(output_dir, "all_data.json"), "w") as f:
             json.dump(all_output, f, indent=2)
-        with open(os.path.join(output_dir, "all_colors_peaks.json"), "w") as f:
+        with open(os.path.join(output_dir, "all_colors.json"), "w") as f:
             json.dump(all_colors, f, indent=2)
 
         # --- Save cluster vs GT evaluation (per image) ---
