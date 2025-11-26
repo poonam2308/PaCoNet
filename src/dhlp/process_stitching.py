@@ -422,7 +422,45 @@ def redesign(combined_dir, output_dir):
 
         out_svg = os.path.join(output_dir, f"{image_id}_combined.svg")
         # generate_plot will also make a PNG if you pass save_png=True
-        generate_plot(df, filename=out_svg)
+
+        # with open("category_colors.json", "r") as f:
+        #     config = json.load(f)
+        #
+        # category_hsv_map = config["category_colors"]
+
+        # category_hsv_map = {
+        #     "08Qf": {"h": 0.87, "s": 1, "v": 1},
+        #     "UdMbD": {"h": 0.37, "s": 1, "v": 1},
+        # }
+        # category_hsv_map_171 = {
+        #     "cat1": {"h": 0.08, "s": 1, "v": 1},
+        #     "cat2": {"h": 0.33, "s": 1, "v": 1},
+        #       "cat3": {"h": 0.57, "s": 1, "v": 1},
+        # }
+        category_hsv_map_261 = {
+            "cat1": {"h": 0.48, "s": 1, "v": 1},
+            "cat2": {"h": 0.58, "s": 1, "v": 1},
+            "cat3": {"h": 0.8, "s": 1, "v": 1},
+        }
+        category_hsv_map_15 = {
+            "0YKdjv": {
+            "h": 0.83,
+            "s": 1,
+            "v": 1
+        },
+        "JBvaS": {
+            "h": 0.53,
+            "s": 1,
+            "v": 1
+        },
+        "MuWL9a": {
+            "h": 0.3,
+            "s": 1,
+            "v": 1
+        }
+        }
+        generate_plot(df, filename=out_svg, category_hsv_map=category_hsv_map_15)
+        #generate_plot(df, filename=out_svg)
         print(f"✅ Plot saved: {out_svg}")
 
 
@@ -431,5 +469,9 @@ def redesign(combined_dir, output_dir):
 # -----------------------------
 
 if __name__ == "__main__":
-    main("/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1")
-    redesign("/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1", "/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1_plots")
+    #main("/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1")
+
+    main("/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output")
+    #redesign("/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1", "/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1_plots")
+    redesign("/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output",
+             "/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output/redesigned/s15")

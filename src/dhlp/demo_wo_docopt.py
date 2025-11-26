@@ -294,8 +294,10 @@ class LineDemoRunner:
 # ---------------- CLI (optional) ----------------
 def main():
     parser = argparse.ArgumentParser(description="Process images with LCNN line detector.")
-    parser.add_argument("config", help="Path to yaml config file")
-    parser.add_argument("checkpoint", help="Path to checkpoint .pth file")
+    parser.add_argument("config", help="Path to yaml config file",
+                        default="src/dhlp/config/test.yaml")
+    parser.add_argument("checkpoint", help="Path to checkpoint .pth file",
+                        default="./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth")
     parser.add_argument(
         "--image",
         help="Single image to process (if provided, --source is ignored)",

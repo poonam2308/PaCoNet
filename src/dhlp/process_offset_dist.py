@@ -100,7 +100,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Output file to save the offsets
-    output_file = "offset_stats25clstde.txt"
+    output_file = "offset_results_dist_cls1.txt"
     output_dir = "output_offsets"
     os.makedirs(output_dir, exist_ok=True)  # Ensure directory exists
     output_path = os.path.join(output_dir, output_file)

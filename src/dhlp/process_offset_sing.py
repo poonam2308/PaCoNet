@@ -164,7 +164,7 @@ def main():
     output_dir = C.io.outdir
     os.makedirs(output_dir, exist_ok=True)
 
-    output_file = "offset_results_lines_c1.txt"
+    output_file = "offset_results_lines_cls1.txt"
     output_dir = "output_offsets"
     os.makedirs(output_dir, exist_ok=True)  # Ensure directory exists
     output_path = os.path.join(output_dir, output_file)
