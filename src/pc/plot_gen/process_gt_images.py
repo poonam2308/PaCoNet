@@ -177,11 +177,11 @@ def run_rename(image_dir, json_dir, out_image_dir, all_data):
     """
     # 1. Copy & rename images into output dir
     print("=== Copying and renaming images to output directory ===")
-    rename_images(image_dir, out_image_dir)
+    # rename_images(image_dir, out_image_dir)
 
     # 2. Whiten black/grey backgrounds in the output dir
     print("\n=== Whitening backgrounds in output directory ===")
-    whiten_backgrounds_in_dir(out_image_dir)
+    # whiten_backgrounds_in_dir(out_image_dir)
 
     # 3. Build all_data.json (filenames match the renamed images)
     print("\n=== Building all_data.json ===")

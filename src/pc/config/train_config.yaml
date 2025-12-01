@@ -29,7 +29,7 @@ paths:
 
   # Ground truth cat ntl rename and all data lines
   m_gt_cat_ntl_rename : "data/synthetic_plots/multi_cat/training/gt/gt_cat_rename/images"
-  m_gt_cat_all_data :  "data/synthetic_plots/multi_cat/training/gt/gt_cat_rename"
+  m_gt_cat_all_data :  "data/synthetic_plots/multi_cat/training/gt/gt_cat_rename/all_data.json"
   m_gt_train_json: "data/synthetic_plots/multi_cat/training/gt/gt_cat_rename/train.json"
   m_gt_valid_json: "data/synthetic_plots/multi_cat/training/gt/gt_cat_rename/valid.json"
 

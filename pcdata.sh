@@ -51,7 +51,7 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_hdbscan
 
 #
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task gt_rename
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task gt_rename
 python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_gt
 
 # color_space evalaution RGb, Lab, HSV
