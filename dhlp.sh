@@ -43,7 +43,15 @@
 #./src/dhlp/dataset/wireframe_denoised.py data/synthetic_plots/multi_cat/training/cluster data/dhlp/pcw_cluster
 
 # step 2
-python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/denoisedCluster.yaml
+#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/denoisedCluster.yaml
+
+
+# create dhlp format dataset for the ground truth data
+# step 1
+./src/dhlp/dataset/wireframe_gt.py data/synthetic_plots/multi_cat/training/gt/gt_cat_rename  data/dhlp/pcw_gt
+
+# step 2
+#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/gt.yaml
 
 
 

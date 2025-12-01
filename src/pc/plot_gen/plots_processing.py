@@ -290,6 +290,14 @@ class PlotsPipeline:
 
         )
 
+    def split_data_gt(self):
+        if 'm_gt_cat_all_data' in self.paths:
+            split_data(
+                input_file=self.paths['m_gt_cat_all_data'],
+                train_file=self.paths['m_gt_train_json'],
+                valid_file=self.paths['m_gt_valid_json']
+            )
+
 
     def run_dist(self):
         self.generate_data_from_excel_distribution()
