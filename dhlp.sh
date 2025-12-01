@@ -48,10 +48,10 @@
 
 # create dhlp format dataset for the ground truth data
 # step 1
-./src/dhlp/dataset/wireframe_gt.py data/synthetic_plots/multi_cat/training/gt/gt_cat_rename  data/dhlp/pcw_gt
+#./src/dhlp/dataset/wireframe_gt.py data/synthetic_plots/multi_cat/training/gt/gt_cat_rename  data/dhlp/pcw_gt
 
 # step 2
-#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/gt.yaml
+python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/gt.yaml
 
 
 
