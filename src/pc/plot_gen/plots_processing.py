@@ -12,6 +12,7 @@ sys.path.insert(0, project_root)
 
 from src.pc.plot_gen.color_space_evaluator import RGBKMeansEvaluator, LabKMeansEvaluator, HSVFullKMeansEvaluator, \
     HSVHueKMeansEvaluator, DinoKMeansEvaluator
+from src.pc.plot_gen.hdbscan_category_separation import HDBSCANCategorySeparator
 from src.pc.plot_gen.peak_clustering_category_separator import PeakClusteringCategorySeparator
 from src.pc.plot_gen.lab_clustering_category_separation import LabClusteringCategorySeparator
 from src.pc.plot_gen.elbo_category_separator import ELBOCategorySeparator
@@ -253,6 +254,31 @@ class PlotsPipeline:
                 input_file=self.paths['m_peak_rescaled_all_json'],
                 train_file=self.paths['m_peak_train_json'],
                 valid_file=self.paths['m_peak_valid_json']
+            )
+
+    #----------------- hdbscan clustering with downsampled images--------
+    def separate_by_hdbscan(self):
+        print(f"🎨 Separating by cluster using {method} method...")
+        sep = HDBSCANCategorySeparator()
+        sep.process_batch(
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_hdbscan_sep_plots']
+        )
+
+    def rescale_lines_hdbscan(self):
+        if 'm_hdbscan_all_json' in self.paths:
+            update_lines(
+                json_file=self.paths['m_hdbscan_all_json'],
+                output_file=self.paths['m_hdbscan_rescaled_all_json']
+            )
+
+    def split_data_hdbscan(self):
+        if 'm_hdbscan_rescaled_all_json' in self.paths:
+            split_data(
+                input_file=self.paths['m_hdbscan_rescaled_all_json'],
+                train_file=self.paths['m_hdbscan_train_json'],
+                valid_file=self.paths['m_hdbscan_valid_json']
             )
 
 

@@ -42,7 +42,10 @@
 #./src/dhlp//process_offset_dist.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 #./src/dhlp//process_offset_sing.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 
-./src/dhlp//process_offset_dist.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+./src/dhlp//process_offset_sing_hungarian.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+
+
+#./src/dhlp//process_offset_dist.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 
 #
 #./src/dhlp/process_offset_sing_mae.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth

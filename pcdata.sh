@@ -42,9 +42,14 @@
 
 # separating the categories based on peak filtering and then dbscan clustering
 
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_peakcluster
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_peakcluster
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_peakcluster
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_peakcluster
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_peakcluster
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_peakcluster
+
+
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_hdbscan
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_hdbscan
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_hdbscan
 
 # color_space evalaution RGb, Lab, HSV
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task color_space_evaluation
