@@ -30,6 +30,7 @@ def get_args():
                                 'cat_eval_color', 'cat_eval_cluster',
                                 'color_space_evaluation', 'dino_features_evaluation',
                                 'separate_by_color_wbg', 'split_data_wbg',
+                                'gt_rename',
                                 'color_unet', 'cluster_unet'])
 
     # Network Training Parameters

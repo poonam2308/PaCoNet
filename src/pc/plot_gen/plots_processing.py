@@ -5,11 +5,10 @@ import numpy as np
 import torch
 
 
-
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 
-
+from src.pc.plot_gen.process_gt_images import run_rename
 from src.pc.plot_gen.color_space_evaluator import RGBKMeansEvaluator, LabKMeansEvaluator, HSVFullKMeansEvaluator, \
     HSVHueKMeansEvaluator, DinoKMeansEvaluator
 from src.pc.plot_gen.hdbscan_category_separation import HDBSCANCategorySeparator
@@ -281,6 +280,16 @@ class PlotsPipeline:
                 valid_file=self.paths['m_hdbscan_valid_json']
             )
 
+    ##--------------- Gt rename and all data merge and train and valid split --
+    def gt_rename(self):
+        run_rename(
+            self.paths['m_gt_plots_cat_ntl_crops'],
+            self.paths['m_plots'],
+            self.paths['m_gt_cat_ntl_rename'],
+            self.paths['m_gt_cat_all_data']
+
+        )
+
 
     def run_dist(self):
         self.generate_data_from_excel_distribution()
@@ -332,6 +341,7 @@ class PlotsPipeline:
         hsv_full_eval.evaluate_batch(input_dir=self.paths['m_crops'],
             json_dir=self.paths['m_plots'],
             output_dir=self.paths['m_color_space'])
+
 
     def dino_features_evaluation(self):
         dino_eval = DinoKMeansEvaluator(

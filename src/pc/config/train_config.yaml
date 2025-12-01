@@ -27,6 +27,11 @@ paths:
   m_gt_plots_cat_ntl: "data/synthetic_plots/multi_cat/training/gt/gt_cat_ntl"
   m_gt_plots_cat_ntl_crops: "data/synthetic_plots/multi_cat/training/gt/gt_cat_ntl_crops"
 
+  # Ground truth cat ntl rename and all data lines
+  m_gt_cat_ntl_rename : "data/synthetic_plots/multi_cat/training/gt/gt_cat_rename/images"
+  m_gt_cat_all_data :  "data/synthetic_plots/multi_cat/training/gt/gt_cat_rename"
+
+
 
 
   # Category separation - color
