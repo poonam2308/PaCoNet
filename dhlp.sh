@@ -58,7 +58,7 @@
 #./src/dhlp/dataset/wireframe_noised.py data/synthetic_plots/multi_cat/training/color  data/dhlp/pcw_ncolor
 
 # step 2
-python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/noisedPeak.yaml
+#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/noisedPeak.yaml
 
 
 # create dhlp format dataset for without unet dbscan peak data
@@ -67,7 +67,7 @@ python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/noisedPeak.ya
 #./src/dhlp/dataset/wireframe_noised.py data/synthetic_plots/multi_cat/training/cluster  data/dhlp/pcw_ncluster
 
 # step 2
-#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/noisedCluster.yaml
+python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/noisedCluster.yaml
 
 
 
