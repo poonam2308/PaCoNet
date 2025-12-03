@@ -78,7 +78,7 @@
 
 # Step 2
 # create masks for test data
-./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
+./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_ntest/test data/dhlp/pcw_ntest/masks
 
 
 
