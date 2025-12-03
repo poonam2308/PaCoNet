@@ -42,8 +42,8 @@
 #./src/dhlp//process_offset_dist.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 #./src/dhlp//process_offset_sing.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 
-./src/dhlp//process_offset_sing_hungarian.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
-
+#./src/dhlp//process_offset_sing_hungarian.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
+#
 
 #./src/dhlp//process_offset_dist.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 
@@ -74,11 +74,11 @@
 # output :generate the npz for each image
 # input : using the category separated images and the lines json present in  test.json
 
-./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_ntest
+#./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_ntest
 
 # Step 2
 # create masks for test data
-#./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
+./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
 
 
 
