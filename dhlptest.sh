@@ -69,4 +69,16 @@
 #./src/dhlp/dataset/wireframe_all_test.py data/synthetic_plots/multi_cat/testing/m_crops data/dhlp/pcw_alltest
 
 
+#-----------------noisy inputs of test data (without unet)
+# Step 1
+# output :generate the npz for each image
+# input : using the category separated images and the lines json present in  test.json
+
+./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_ntest
+
+# Step 2
+# create masks for test data
+#./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test/test data/dhlp/pcw_test/masks
+
+
 
