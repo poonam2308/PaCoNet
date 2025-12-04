@@ -1,137 +1,328 @@
 #!/usr/bin/env python3
-"""Process a dataset with the trained neural network
+"""
+Compute line detection metrics (TP / FP / FN) for L-CNN.
+
 Usage:
-    process.py [options] <yaml-config> <checkpoint>
-    process.py (-h | --help )
+    process_lines_metric.py [options] <yaml-config> <checkpoint>
+    process_lines_metric.py (-h | --help)
 
 Arguments:
-   <yaml-config>                 Path to the yaml hyper-parameter file
-   <checkpoint>                  Path to the checkpoint
+    <yaml-config>   Path to the yaml hyper-parameter file.
+    <checkpoint>    Path to the trained checkpoint (.pth.tar).
 
 Options:
-   -h --help                     Show this screen.
-   -d --devices <devices>        Comma seperated GPU devices [default: 0]
-   --plot                        Plot the result
+    -h --help                     Show this screen.
+    -d --devices <devices>        Comma separated GPU devices [default: 0]
 """
 
 import os
-import pprint
-import random
 import sys
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
-sys.path.insert(0, project_root)
+import random
+import pprint
 
 import numpy as np
 import torch
+from typing import Tuple
 from docopt import docopt
 import scipy.io as sio
-import matplotlib.pyplot as plt
 
-import src.dhlp.lcnn
+# Make sure the project root (where "src/dhlp/lcnn" lives) is on PYTHONPATH.
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.insert(0, project_root)
+
+import src.dhlp.lcnn  # noqa: F401
 from src.dhlp.lcnn.utils import recursive_to
 from src.dhlp.lcnn.config import C, M
 from src.dhlp.lcnn.datasets import WireframeDataset, collate
 from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
-from process_utils import nearest_junction
 
-def visualize_points(img_tensor,
-                     gt_junc,
-                     start_points,
-                     end_points,
-                     save_path,
-                     title=None):
+
+# ------------------------------------------------------------
+# Line matching utilities
+# ------------------------------------------------------------
+
+# directory containing your mask npz files (same names as label npz)
+# e.g. if labels are in:  data/pcw_test/test/*.npz
+# and masks are in:       data/pcw_test_masks/test/*.npz
+MASK_ROOT = "data/pcw_test/masks"
+
+HEATMAP_H, HEATMAP_W = 128, 128          # jmap / lmap size
+
+def set_seed(seed: int = 0):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+def get_mask_for_index(dataset, index, mask_key="mask"):
     """
-    Visualize GT junctions and predicted line endpoints on the image.
+    dataset: WireframeDataset
+    index:   global index in dataset (0..len(dataset)-1)
+    mask_key: key inside the mask npz (e.g. 'mask')
 
-    Coordinates are assumed to be (y, x), so we plot:
-        x = coord[:, 1]
-        y = coord[:, 0]
-
-    img_tensor   : torch tensor (C, H, W)
-    gt_junc      : (Ng, 3) or (Ng, 2) numpy array (y, x, ...)
-    start_points : (Ns, 2) numpy array (y, x)
-    end_points   : (Ne, 2) numpy array (y, x)
-    save_path    : path for saving the PNG
+    Returns: [H, W] boolean mask tensor in heatmap coords (e.g. 128x128)
     """
-    # Convert image tensor to HxWxC
-    img = img_tensor.cpu().numpy()
-    if img.ndim == 3 and img.shape[0] in (1, 3):
-        img = np.transpose(img, (1, 2, 0))  # C,H,W -> H,W,C
+    # label npz path from dataset
+    label_path = dataset.filelist[index]          # e.g. data/pcw_test/test/..._label.npz
+    base_name = os.path.basename(label_path)      # e.g. image_1_crop_1_BKxJsl_0_label.npz
 
-    # Normalize image for display
-    img_min, img_max = img.min(), img.max()
-    if img_max > img_min:
-        img_vis = (img - img_min) / (img_max - img_min)
-    else:
-        img_vis = img
+    # mask npz in separate directory but same file name
+    mask_path = os.path.join(MASK_ROOT, base_name)
 
-    plt.figure(figsize=(6, 6))
-    plt.imshow(img_vis)
+    if not os.path.isfile(mask_path):
+        raise FileNotFoundError(f"Mask npz not found for index {index}: {mask_path}")
 
-    # GT junctions (black circles, open)
-    if gt_junc is not None and gt_junc.size > 0:
-        gt_pts = gt_junc[:, :2]
-        plt.scatter(gt_pts[:, 1], gt_pts[:, 0],
-                    s=10, marker='o', edgecolors='k', facecolors='none',
-                    label='GT junction')
+    npz = np.load(mask_path)
+    if mask_key not in npz.files:
+        raise KeyError(f"Key '{mask_key}' not found in {mask_path}. Available: {npz.files}")
 
-    # Predicted start points (green x)
-    if start_points is not None and start_points.size > 0:
-        plt.scatter(start_points[:, 1], start_points[:, 0],
-                    s=10, marker='x', color='g', label='Pred start')
+    mask = npz[mask_key]          # shape (128,128), dtype uint8
+    npz.close()
 
-    # Predicted end points (blue +)
-    if end_points is not None and end_points.size > 0:
-        plt.scatter(end_points[:, 1], end_points[:, 0],
-                    s=10, marker='+', color='b', label='Pred end')
+    # ensure [H, W]
+    if mask.ndim == 3 and mask.shape[0] == 1:
+        mask = mask[0]
 
-    if title is not None:
-        plt.title(title)
+    mask_bool = mask > 0          # non-zero is inside
+    return torch.from_numpy(mask_bool)  # [H, W], bool
 
-    plt.legend(loc='upper right', fontsize=8)
-    plt.axis('off')
 
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    plt.savefig(save_path, bbox_inches='tight', dpi=150)
-    plt.close()
+def build_gt_lines_from_meta(meta_i: dict) -> torch.Tensor:
+    """
+    Build a [N_gt, 2, 2] tensor of GT lines from a single
+    sample's meta dict produced by WireframeDataset.
 
+    meta_i["junc"]: [N_junc, 2]
+    meta_i["Lpos"]: [N_junc+1, N_junc+1] binary adjacency
+    """
+    junc = meta_i["junc"]        # (N_junc, 2)
+    Lpos = meta_i["Lpos"]        # (N_junc+1, N_junc+1)
+    device = junc.device
+
+    N_junc = junc.shape[0]
+    lines = []
+    for u in range(N_junc):
+        for v in range(u + 1, N_junc):
+            if Lpos[u, v] > 0:
+                lines.append(torch.stack([junc[u], junc[v]], dim=0))
+
+    if len(lines) == 0:
+        print("the number of lines ", len(lines))
+        return torch.empty(0, 2, 2, device=device)
+
+    return torch.stack(lines, dim=0)
+def sample_points_on_line_heatmap(line, n_points):
+    """
+    line: [2, 2] (y, x) in heatmap coords
+    returns: [n_points, 2] (y, x) in heatmap coords
+    """
+    p0 = line[0]  # (y, x)
+    p1 = line[1]
+    t = torch.linspace(0.0, 1.0, n_points, device=line.device)[:, None]  # [n,1]
+    pts = (1.0 - t) * p0[None, :] + t * p1[None, :]                      # [n,2]
+    return pts
+
+
+def filter_lines_with_mask_heatmap(lines, scores, mask,
+                                   min_frac_inside=0.5, n_samples=16):
+    """
+    lines:  [N, 2, 2] in heatmap coords (y,x)
+    scores: [N]
+    mask:   [H, W] bool in SAME heatmap coords (e.g. 128x128)
+
+    Returns: filtered_lines, filtered_scores, keep_idx
+    """
+    if lines.numel() == 0:
+        return lines.new_zeros((0, 2, 2)), scores.new_zeros((0,)), torch.empty(0, dtype=torch.long)
+
+    mask = mask.to(dtype=torch.bool)
+    H, W = mask.shape
+    device = lines.device
+    mask = mask.to(device)
+
+    keep = []
+    for i in range(lines.shape[0]):
+        pts = sample_points_on_line_heatmap(lines[i], n_samples)  # [n,2] in heatmap coords
+        ys = pts[:, 0].round().long()
+        xs = pts[:, 1].round().long()
+        ys.clamp_(0, H - 1)
+        xs.clamp_(0, W - 1)
+        inside = mask[ys, xs]
+        frac_inside = inside.float().mean().item()
+        if frac_inside >= min_frac_inside:
+            keep.append(i)
+
+    if len(keep) == 0:
+        return lines.new_zeros((0, 2, 2)), scores.new_zeros((0,)), torch.empty(0, dtype=torch.long)
+
+    keep_idx = torch.tensor(keep, dtype=torch.long, device=device)
+    return lines[keep_idx], scores[keep_idx], keep_idx
+
+
+def segment_distance(l1, l2):
+    """
+    Average endpoint distance between two segments, best endpoint ordering.
+    l1, l2: [2,2] (y,x)
+    returns: scalar float
+    """
+    p1, p2 = l1[0], l1[1]
+    q1, q2 = l2[0], l2[1]
+    d1 = (p1 - q1).norm() + (p2 - q2).norm()
+    d2 = (p1 - q2).norm() + (p2 - q1).norm()
+    return float(min(d1, d2) / 2.0)
+
+
+def line_nms(lines, scores, dist_thresh=2.0):
+    """
+    Greedy line-level NMS in heatmap coords.
+
+    lines:  [N, 2, 2]
+    scores: [N]
+    returns: kept_lines, kept_scores, keep_idx
+    """
+    if lines.numel() == 0:
+        return lines, scores, torch.empty(0, dtype=torch.long)
+
+    scores, order = torch.sort(scores, descending=True)
+    lines = lines[order]
+
+    keep_rel = []
+    for i in range(lines.shape[0]):
+        li = lines[i]
+        suppress = False
+        for k in keep_rel:
+            lk = lines[k]
+            d = segment_distance(li, lk)
+            if d < dist_thresh:
+                suppress = True
+                break
+        if not suppress:
+            keep_rel.append(i)
+
+    keep_rel = torch.tensor(keep_rel, dtype=torch.long, device=lines.device)
+    kept_lines = lines[keep_rel]
+    kept_scores = scores[keep_rel]
+    keep_idx = order[keep_rel]  # back to original indices
+    return kept_lines, kept_scores, keep_idx
+
+
+def match_lines(pred: torch.Tensor,
+                gt: torch.Tensor,
+                tau: float) -> Tuple[int, int, int]:
+    """
+    One-to-one matching between predicted and GT line segments.
+
+    pred: [N_pred, 2, 2]  (y, x) in the SAME coordinate system as gt
+    gt:   [N_gt,   2, 2]
+    tau:  max allowed average endpoint error (in pixels / grid units)
+
+    Returns:
+        TP, FP, FN
+    """
+    Np = pred.shape[0]
+    Ng = gt.shape[0]
+
+    if Np == 0 and Ng == 0:
+        return 0, 0, 0
+    if Np == 0:
+        return 0, 0, Ng
+    if Ng == 0:
+        return 0, Np, 0
+
+    # pred endpoints
+    P1 = pred[:, 0, :]  # [Np, 2]
+    P2 = pred[:, 1, :]  # [Np, 2]
+
+    # gt endpoints
+    G1 = gt[:, 0, :]    # [Ng, 2]
+    G2 = gt[:, 1, :]    # [Ng, 2]
+
+    # expand for broadcasting
+    P1e = P1[:, None, :]   # [Np, 1, 2]
+    P2e = P2[:, None, :]   # [Np, 1, 2]
+    G1e = G1[None, :, :]   # [1, Ng, 2]
+    G2e = G2[None, :, :]   # [1, Ng, 2]
+
+    d1 = (P1e - G1e).norm(dim=-1) + (P2e - G2e).norm(dim=-1)
+    d2 = (P1e - G2e).norm(dim=-1) + (P2e - G1e).norm(dim=-1)
+    d = torch.min(d1, d2) / 2.0  # average endpoint error
+
+    # candidate pairs within threshold
+    cand = torch.nonzero(d <= tau, as_tuple=False)
+    if cand.numel() == 0:
+        TP = 0
+        FP = Np
+        FN = Ng
+        return TP, FP, FN
+
+    errors = d[cand[:, 0], cand[:, 1]]
+    order = torch.argsort(errors)
+
+    matched_pred = torch.zeros(Np, dtype=torch.bool, device=pred.device)
+    matched_gt = torch.zeros(Ng, dtype=torch.bool, device=pred.device)
+    TP = 0
+
+    for k in order:
+        i = cand[k, 0].item()
+        j = cand[k, 1].item()
+        if (not matched_pred[i]) and (not matched_gt[j]):
+            matched_pred[i] = True
+            matched_gt[j] = True
+            TP += 1
+
+    FP = (~matched_pred).sum().item()
+    FN = (~matched_gt).sum().item()
+    return TP, FP, FN
+
+
+# ------------------------------------------------------------
+# Main
+# ------------------------------------------------------------
 
 def main():
+    set_seed(0)
     args = docopt(__doc__)
-    config_file = args["<yaml-config>"] or "config/wireframe.yaml"
+    config_file = args["<yaml-config>"]
+
+    # 1. Load config
     C.update(C.from_yaml(filename=config_file))
     M.update(C.model)
     pprint.pprint(C, indent=4)
 
-    num_plots = int(6)
-
+    # 2. Set random seeds
     random.seed(0)
     np.random.seed(0)
     torch.manual_seed(0)
 
+    # 3. Device
     device_name = "cpu"
     os.environ["CUDA_VISIBLE_DEVICES"] = args["--devices"]
     if torch.cuda.is_available():
         device_name = "cuda"
         torch.backends.cudnn.deterministic = True
         torch.cuda.manual_seed(0)
-        print("Let's use", torch.cuda.device_count(), "GPU(s)!")
+        print("Using", torch.cuda.device_count(), "GPU(s)")
     else:
-        print("CUDA is not available")
+        print("CUDA not available, using CPU")
     device = torch.device(device_name)
 
-    ### load vote_index matrix for Hough transform
-    ### defualt settings: (128, 128, 3, 1)
+    # 4. Load / build vote_index for Hough transform
     if os.path.isfile(C.io.vote_index):
-        vote_index = sio.loadmat(C.io.vote_index)['vote_index']
+        vote_index = sio.loadmat(C.io.vote_index)["vote_index"]
     else:
         vote_index = hough_transform(rows=128, cols=128, theta_res=3, rho_res=1)
-        sio.savemat(C.io.vote_index, {'vote_index': vote_index})
+        sio.savemat(C.io.vote_index, {"vote_index": vote_index})
     vote_index = torch.from_numpy(vote_index).float().contiguous().to(device)
-    print('load vote_index', vote_index.shape)
+    print("vote_index:", vote_index.shape)
 
+    # 5. Build model (same as in train.py)
     if M.backbone == "stacked_hourglass":
         model = src.dhlp.lcnn.models.hg(
             depth=M.depth,
@@ -142,17 +333,20 @@ def main():
             vote_index=vote_index,
         )
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unknown backbone {M.backbone}")
 
-    checkpoint = torch.load(args["<checkpoint>"])
     model = MultitaskLearner(model)
     model = LineVectorizer(model)
+
+    # 6. Load checkpoint
+    checkpoint = torch.load(args["<checkpoint>"], map_location="cpu")
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
     model.eval()
+    print("Loaded checkpoint from", args["<checkpoint>"])
 
+    # 7. Data loader (change split to 'valid' / 'test' as you like)
     loader = torch.utils.data.DataLoader(
-        # WireframeDataset(args["<image-dir>"], split="valid"),
         WireframeDataset(rootdir=C.io.datadir, split="test"),
         shuffle=False,
         batch_size=M.batch_size,
@@ -161,118 +355,85 @@ def main():
         pin_memory=True,
     )
 
-    output_dir = C.io.outdir
-    os.makedirs(output_dir, exist_ok=True)
+    # 8. Evaluation loop
+    # Threshold in heatmap pixels; you can override via config (M.line_match_thresh)
+    tau = float(getattr(M, "line_match_thresh", 5.0))
+    print(f"Using line-matching threshold tau = {tau} (heatmap coordinates)")
 
-    output_file = "offset_results_lines_cls1.txt"
-    output_dir = "output_offsets"
-    os.makedirs(output_dir, exist_ok=True)  # Ensure directory exists
-    output_path = os.path.join(output_dir, output_file)
+    total_TP = 0
+    total_FP = 0
+    total_FN = 0
+    n_images = 0
 
-    vis_dir = "output_point_mae_vis_sing"
-    os.makedirs(vis_dir, exist_ok=True)
-    plots_done = 0  # <--- add this
-
-    # Initialize lists to store offsets across all images
-    all_start_offsets = []
-    all_end_offsets = []
-
-    # Open file for writing
-    with open(output_path, "w") as f:
-        f.write("Image_Index, Avg_Start_Offset, Avg_End_Offset\n")  # CSV-style header
-
+    with torch.no_grad():
         for batch_idx, (image, meta, target) in enumerate(loader):
-            with torch.no_grad():
-                input_dict = {
-                    "image": recursive_to(image, device),
-                    "meta": recursive_to(meta, device),
-                    "target": recursive_to(target, device),
-                    "mode": "validation",
-                }
-                H = model(input_dict)["preds"]
+            input_dict = {
+                "image": recursive_to(image, device),
+                "meta": recursive_to(meta, device),
+                "target": recursive_to(target, device),
+                "mode": "validation",
+            }
+            out = model(input_dict)
+            H = out["preds"]
+            B = image.shape[0]
 
-                for i in range(len(image)):
-                    index = batch_idx * M.batch_size + i
-                    print(f'Processing Image Index: {index}')
+            # global index over the whole dataset
+            # (don't depend on batch size; just count)
+            for i in range(B):
+                # compute global index in dataset
+                # we can use a separate counter outside the loop, but easiest:
+                global_idx = batch_idx * loader.batch_size + i
 
-                    # Extract predicted line endpoints
-                    line_endpoints = H["lines"][i].cpu().numpy() * 4  # Scale back
-                    if len(line_endpoints) == 0:
-                        continue  # Skip empty detections
+                # 1) raw predictions in heatmap coords
+                lines_i = H["lines"][i].detach().cpu()  # [n_out_line, 2, 2]
+                scores_i = H["score"][i].detach().cpu()  # [n_out_line]
 
-                    # start_points = line_endpoints[:, 0, :]
-                    # end_points = line_endpoints[:, 1, :]
+                # 2) load corresponding mask npz for this sample (heatmap coords)
+                mask_i = get_mask_for_index(loader.dataset, global_idx)  # [128,128] bool
 
-                    # Ensure start point is always the leftmost (x=0) and end point is rightmost (x=511)
-                    corrected_start_points = []
-                    corrected_end_points = []
+                # 3) filter lines with the mask (heatmap space)
+                lines_i, scores_i, _ = filter_lines_with_mask_heatmap(
+                    lines_i, scores_i, mask_i,
+                    min_frac_inside=0.5,  # tune: 0.5 = at least 50% of samples inside mask
+                    n_samples=16,
+                )
 
-                    for line in line_endpoints:
-                        pt1, pt2 = line  # Two points forming the line
-                        if pt1[0] <= pt2[0]:  # Ensure the leftmost is the start
-                            corrected_start_points.append(pt1)
-                            corrected_end_points.append(pt2)
-                        else:
-                            corrected_start_points.append(pt2)  # Swap to maintain left-to-right order
-                            corrected_end_points.append(pt1)
+                # 4) optional: line-level NMS to reduce overlapping lines
+                lines_i, scores_i, _ = line_nms(
+                    lines_i, scores_i,
+                    dist_thresh=2.0,  # in heatmap pixels; tune this
+                )
 
-                    start_points = np.array(corrected_start_points)
-                    end_points = np.array(corrected_end_points)
+                # 5) evaluate these filtered lines against GT
+                meta_i = meta[i]
+                gt_lines = build_gt_lines_from_meta(meta_i).detach().cpu()
 
-                    # Get ground truth junctions
-                    ground_truth_junctions = meta[i]["junc"].cpu().numpy() * 4  # Scale back
+                pred_lines = lines_i  # already CPU
+                TP, FP, FN = match_lines(pred_lines, gt_lines, tau=tau)
+                total_TP += TP
+                total_FP += FP
+                total_FN += FN
+                n_images += 1
 
-                    # Compute offsets
-                    start_offsets = np.array([
-                        np.linalg.norm(start - nearest_junction(start, ground_truth_junctions))
-                        for start in start_points
-                    ])
-                    end_offsets = np.array([
-                        np.linalg.norm(end - nearest_junction(end, ground_truth_junctions))
-                        for end in end_points
-                    ])
+                print(
+                    f"Image {n_images:05d}: TP={TP:3d}, FP={FP:3d}, FN={FN:3d} "
+                    f"(running totals: TP={total_TP}, FP={total_FP}, FN={total_FN})"
+                )
 
-                    # Compute average offsets for this image
-                    average_start_offset = np.mean(start_offsets) if len(start_offsets) > 0 else 0
-                    average_end_offset = np.mean(end_offsets) if len(end_offsets) > 0 else 0
+    # 9. Final metrics
+    precision = total_TP / (total_TP + total_FP + 1e-8)
+    recall = total_TP / (total_TP + total_FN + 1e-8)
+    f1 = 2 * precision * recall / (precision + recall + 1e-8)
 
-                    # Store for overall computation
-                    all_start_offsets.extend(start_offsets)
-                    all_end_offsets.extend(end_offsets)
+    print("\n===== Line Detection Metrics =====")
+    print(f"Total images:   {n_images}")
+    print(f"Total GT lines: {total_TP + total_FN}")
+    print(f"Total pred lines: {total_TP + total_FP}")
+    print(f"TP: {total_TP}  FP: {total_FP}  FN: {total_FN}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall:    {recall:.4f}")
+    print(f"F1-score:  {f1:.4f}")
 
-                    # Write per-image results
-                    f.write(f"{index}, {average_start_offset:.3f}, {average_end_offset:.3f}\n")
-                    print(
-                        f"Image {index}: Avg Start Offset = {average_start_offset:.3f}, Avg End Offset = {average_end_offset:.3f}")
-
-
-                    if (num_plots == 0) or (plots_done < num_plots):
-                        vis_path = os.path.join(vis_dir, f"img_{index:05d}.png")
-                        title = (f"Idx {index} | "
-                                 f"StartOff={average_start_offset:.2f}, "
-                                 f"EndOff={average_end_offset:.2f}")
-                        visualize_points(
-                            image[i],  # tensor (C,H,W)
-                            ground_truth_junctions,  # (Na,3)
-                            start_points,  # (Ns,2)
-                            end_points,  # (Ne,2)
-                            vis_path,
-                            title=title,
-                        )
-                        plots_done += 1
-
-        # Compute overall average offsets
-        overall_start_offset = np.mean(all_start_offsets) if len(all_start_offsets) > 0 else 0
-        overall_end_offset = np.mean(all_end_offsets) if len(all_end_offsets) > 0 else 0
-
-        # Write overall results to the file
-        f.write(f"\nOverall_Avg_Start_Offset: {overall_start_offset:.3f}\n")
-        f.write(f"Overall_Avg_End_Offset: {overall_end_offset:.3f}\n")
-
-    # Print overall results
-    print(f"\nFinal Results Saved to {output_path}")
-    print(f"Overall Avg Start Offset: {overall_start_offset:.3f}")
-    print(f"Overall Avg End Offset: {overall_end_offset:.3f}")
 
 if __name__ == "__main__":
     main()

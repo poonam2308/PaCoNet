@@ -2,7 +2,7 @@
 io:
   vote_index: data/vote_index_128_128_3_cls.mat
   logdir: ./outputs/logs_clst/
-  datadir: data/pcw_test/
+  datadir: data/pcw_test_cls/
   outdir: ./outputs/results_testcls/
   resume_from:
   num_workers: 4
