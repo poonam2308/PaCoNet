@@ -79,16 +79,16 @@
 # create masks for test data
 #./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_ntest/test data/dhlp/pcw_ntest/masks
 
-#%% ------------ noisy cluster peak images ----------
+#%% ------------ noisy cluster images ----------
 # Step 1
 # output :generate the npz for each image
 # input : using the category separated images and the lines json present in  test.json
 
-#./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_ntest
+./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/cluster data/dhlp/pcw_ntest_cls
 
 # Step 2
 # create masks for test data
-#./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_ntest/test data/dhlp/pcw_ntest/masks
+./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_ntest_cls/test data/dhlp/pcw_ntest_cls/masks
 
 
 #%% ------------ denoised unet cluster  ----------
@@ -96,8 +96,8 @@
 # output :generate the npz for each image
 # input : using the category separated images and the lines json present in  test.json
 
-./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/cluster data/dhlp/pcw_test_cls
+#./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/cluster data/dhlp/pcw_test_cls
 
 # Step 2
 # create masks for test data
-./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test_cls/test data/dhlp/pcw_test_cls/masks
+#./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_test_cls/test data/dhlp/pcw_test_cls/masks

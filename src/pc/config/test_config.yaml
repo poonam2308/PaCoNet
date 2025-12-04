@@ -33,6 +33,7 @@ paths:
   m_color_all_json: "data/synthetic_plots/multi_cat/testing/color/images/all_data.json"
   m_color_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/color/test.json"
 
+  # Multi-category separated by cluster
   m_cluster_sep_plots: "data/synthetic_plots/multi_cat/testing/cluster/images"
   m_cluster_all_json: "data/synthetic_plots/multi_cat/testing/cluster/images/all_data.json"
   m_cluster_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/cluster/test.json"
@@ -62,8 +63,10 @@ paths:
   real_cluster_denoised_plots: "data/real_plots/cluster/denoised"
 
 unet:
-  chkpt_path: "outputs/chkpt/0810-25_1529-52/unet_sd_cluster_mse_model_epoch80.pth"
-  output_dir: "data/synthetic_plots/multi_cat/testing/color/denoised"
+  chkpt_path_color: "outputs/chkpt/0810-25_1529-52/unet_sd_cluster_mse_model_epoch80.pth"  # the name has cluster but it was trained on color separated images
+  output_dir_color: "data/synthetic_plots/multi_cat/testing/color/denoised"
+
+  chkpt_path_cluster: "outputs/chkpt/1011-25_0934-19/unet_sd_cluster_mse_model_epoch80.pth" # cluster
   output_dir_cluster: "data/synthetic_plots/multi_cat/testing/cluster/denoised"
 
 #  input_dir: "data/real_plots/color/images"
