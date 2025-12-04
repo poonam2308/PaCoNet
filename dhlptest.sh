@@ -43,7 +43,7 @@
 #
 #./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best.pth
 
-./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best_c.pth
+#./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/test.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best_c.pth
 
 
 
