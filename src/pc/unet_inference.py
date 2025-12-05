@@ -25,7 +25,7 @@ class UNetTester:
         self._set_seed(self.args.seed)
         self._prepare_dirs()
 
-        self.transform = unet_transformation(self.args)
+        self.transform = unet_transformation()
 
     def _set_seed(self, seed):
         torch.manual_seed(seed)
