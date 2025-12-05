@@ -80,5 +80,5 @@ if __name__ == "__main__":
     output_dir_cls = tester.cfg['unet']['output_dir_cluster']
 
     # tester.run_color(input_dir, output_dir)
-    tester.run_cluster(input_dir_cls, output_dir_cls)
+    tester.run_cluster(input_dir_cls, output_dir_cls, resize_to_original=False)
 
