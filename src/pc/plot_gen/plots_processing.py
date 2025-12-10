@@ -299,7 +299,7 @@ class PlotsPipeline:
             )
 
     def crop_whitebg_lines(self):
-        whiten_backgrounds_in_dir(self.paths['m_crops_white'])
+        # whiten_backgrounds_in_dir(self.paths['m_crops_white'])
         group_crops_to_new_json(self.paths['m_gt_train_json'],self.paths['m_crops_white_train_data'])
         group_crops_to_new_json(self.paths['m_gt_valid_json'], self.paths['m_crops_white_valid_data'])
 

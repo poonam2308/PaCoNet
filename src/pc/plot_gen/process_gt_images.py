@@ -169,14 +169,13 @@ def build_all_data(json_dir, output_path):
     print(f"Saved {len(all_records)} records into {output_path}")
 
 
-import json
 
 def group_crops_to_new_json(input_path: str, output_path: str) -> None:
     """
     Reads a JSON file with a list of items like:
       { "filename": "image_10_crop_2_9kixbtF.png", "lines": [...] }
-    Groups entries by crop (image_X_crop_Y) and writes a new JSON file with:
-      { "filename": "image_10_crop_2", "lines": [merged lines] }
+    Groups entries by crop (image_X_crop_Y.png) and writes a new JSON file with:
+      { "filename": "image_10_crop_2.png", "lines": [merged lines] }
     """
 
     # Read input JSON
@@ -187,9 +186,13 @@ def group_crops_to_new_json(input_path: str, output_path: str) -> None:
 
     for item in items:
         full_name = item.get("filename", "")
-        # remove the random tail + extension, keep "image_X_crop_Y"
-        # e.g. "image_10_crop_2_9kixbtF.png" -> "image_10_crop_2"
-        base_name = full_name.rsplit("_", 1)[0]
+
+        # Split off extension first so we can keep it
+        root, ext = os.path.splitext(full_name)
+        # remove the random tail, keep "image_X_crop_Y"
+        # e.g. "image_10_crop_2_9kixbtF" -> "image_10_crop_2"
+        base_root = root.rsplit("_", 1)[0]
+        base_name = base_root + ext  # add .png back
 
         if base_name not in grouped:
             grouped[base_name] = {
@@ -205,6 +208,7 @@ def group_crops_to_new_json(input_path: str, output_path: str) -> None:
     # Write output JSON
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output_data, f, ensure_ascii=False, indent=2)
+
 
 
 
