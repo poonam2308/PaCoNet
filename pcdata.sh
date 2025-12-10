@@ -56,7 +56,7 @@
 
 # crops with white background and the cat lines are grouped under the crops
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task crop_whitebg_lines
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task white_bg
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task white_bg
 
 # color_space evalaution RGb, Lab, HSV
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task color_space_evaluation
