@@ -85,6 +85,9 @@ def convert_json_to_csv(json_dir):
                 f"crop_{crop}_y2": round(y2, 2),
                 "label": label
             })
+        if not rows:
+            print(f"⚠️ No lines found in {json_file}, skipping CSV.")
+            continue
 
         df = pd.DataFrame(rows)
         csv_path = json_file.with_suffix(".csv")
@@ -129,10 +132,23 @@ def convert_json_to_csv1(json_dir):
 
 
 def stitch_parallel_coordinates(file_paths, column_map, category_id=1, threshold=5.0):
-    dfs = [
-        pd.read_csv(fp).rename(columns={y1: "y1", y2: "y2"})
-        for fp, (y1, y2) in zip(file_paths, column_map)
-    ]
+    dfs = []
+    for fp, (y1, y2) in zip(file_paths, column_map):
+        try:
+            df = pd.read_csv(fp)
+        except pd.errors.EmptyDataError:
+            print(f"⚠️ Empty CSV skipped: {fp}")
+            continue
+
+        if df.empty:
+            print(f"⚠️ CSV has no rows, skipped: {fp}")
+            continue
+
+        dfs.append(df.rename(columns={y1: "y1", y2: "y2"}))
+
+    if not dfs:
+        print(f"⚠️ No valid CSVs for category/label {category_id}, skipping stitching.")
+        return pd.DataFrame()  # empty, caller should handle
 
     paths = [
         {"crop1": row["y1"], "crop2": row["y2"]}
@@ -267,6 +283,9 @@ def generate_plot(df, filename=None, background_value=255,
                   save_png=False, svg_dir=None, do_extraction=False):
     column_names = sorted(list(df.columns)[:-1])
     color_column = df.columns[-1]
+    
+    for col in column_names:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
 
     normalized_columns = [normalize_column_reverse(df, col) for col in column_names]
     unique_categories = sorted(df[color_column].unique())
@@ -393,8 +412,101 @@ def main(base_dir):
     for image_id in image_ids:
         print(f"\n🚀 Starting pipeline for image ID: {image_id}")
         process_all_categories_and_combine(base_dir, image_id=image_id, threshold=10.0)
+        
+def build_category_hsv_map_from_dominant(df, image_id, dominant_colors):
+    """
+    df: combined dataframe (last column is category label)
+    image_id: string from '<image_id>_combined.csv'
+    dominant_colors: dict loaded from dominant_colors.json
+                     keys like '261.png' or 'r261.png',
+                     values = list of [Hdeg, S%, V%]
+    """
+    color_column = df.columns[-1]
+    categories = sorted(df[color_column].unique())
 
-def redesign(combined_dir, output_dir):
+    # Try to find a matching key in the JSON
+    possible_keys = [f"{image_id}.png", f"r{image_id}.png"]
+    hsv_triplets = None
+    for key in possible_keys:
+        if key in dominant_colors:
+            hsv_triplets = dominant_colors[key]
+            break
+
+    if not hsv_triplets:
+        print(f"⚠️ No dominant colors found for image_id={image_id} in JSON.")
+        return None
+
+    # JSON values are [Hdeg, S%, V%]; convert to 0–1 range
+    normalized_hsvs = []
+    for Hdeg, Sperc, Vperc in hsv_triplets:
+        h = (Hdeg % 360.0) / 360.0
+        s = max(0.0, min(1.0, Sperc / 100.0))
+        v = max(0.0, min(1.0, Vperc / 100.0))
+        normalized_hsvs.append({"h": h, "s": s, "v": v})
+
+    if not normalized_hsvs:
+        return None
+
+    # Map categories → colors (cycle if there are more categories than colors)
+    category_hsv_map = {}
+    for i, cat in enumerate(categories):
+        hsv = normalized_hsvs[i % len(normalized_hsvs)]
+        category_hsv_map[cat] = hsv
+
+    return category_hsv_map
+
+
+def redesign(combined_dir, output_dir, dominant_colors_json=None):
+    combined_dir = os.fspath(combined_dir)
+    output_dir = os.fspath(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load dominant colors once (if provided)
+    dominant_colors = None
+    if dominant_colors_json is not None:
+        try:
+            with open(dominant_colors_json, "r") as f:
+                dominant_colors = json.load(f)
+            print(f"✅ Loaded dominant colors from: {dominant_colors_json}")
+        except Exception as e:
+            print(f"⚠️ Could not load dominant colors JSON: {e}")
+            dominant_colors = None
+
+    # find all combined CSVs in the directory
+    csv_files = sorted(glob(os.path.join(combined_dir, "*_combined.csv")))
+    if not csv_files:
+        print(f"⚠️ No *_combined.csv files found in: {combined_dir}")
+        return
+
+    for csv_path in csv_files:
+        try:
+            df = pd.read_csv(csv_path)
+            if df.empty:
+                print(f"⚠️ Skipping empty file: {csv_path}")
+                continue
+        except Exception as e:
+            print(f"❌ Error reading {csv_path}: {e}")
+            continue
+
+        # image id from the filename (not the full path)
+        base = os.path.basename(csv_path)
+        m = re.match(r"(.+)_combined\.csv$", base)
+        image_id = m.group(1) if m else "Unknown"
+
+        out_svg = os.path.join(output_dir, f"{image_id}_combined.svg")
+
+        # Build category_hsv_map from dominant_colors.json (if available)
+        category_hsv_map = None
+        if dominant_colors is not None and image_id != "Unknown":
+            category_hsv_map = build_category_hsv_map_from_dominant(df, image_id, dominant_colors)
+
+        # If category_hsv_map is None, generate_plot will fall back to random colors
+        generate_plot(df, filename=out_svg, category_hsv_map=category_hsv_map)
+
+        print(f"✅ Plot saved: {out_svg}")
+
+
+def redesign_old(combined_dir, output_dir):
     combined_dir = os.fspath(combined_dir)
     output_dir = os.fspath(output_dir)
     os.makedirs(output_dir, exist_ok=True)
@@ -468,10 +580,10 @@ def redesign(combined_dir, output_dir):
 # Run
 # -----------------------------
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     #main("/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1")
 
-    main("/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output")
+    #main("/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output")
     #redesign("/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1", "/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1_plots")
-    redesign("/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output",
-             "/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output/redesigned/s15")
+    #redesign("/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output",
+             #"/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output/redesigned/s15")

@@ -8,7 +8,7 @@ import torch
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 
-from src.pc.plot_gen.process_gt_images import run_rename
+from src.pc.plot_gen.process_gt_images import run_rename, whiten_backgrounds_in_dir, group_crops_to_new_json
 from src.pc.plot_gen.color_space_evaluator import RGBKMeansEvaluator, LabKMeansEvaluator, HSVFullKMeansEvaluator, \
     HSVHueKMeansEvaluator, DinoKMeansEvaluator
 from src.pc.plot_gen.hdbscan_category_separation import HDBSCANCategorySeparator
@@ -297,6 +297,11 @@ class PlotsPipeline:
                 train_file=self.paths['m_gt_train_json'],
                 valid_file=self.paths['m_gt_valid_json']
             )
+
+    def crop_whitebg_lines(self):
+        whiten_backgrounds_in_dir(self.paths['m_crops_white'])
+        group_crops_to_new_json(self.paths['m_gt_train_json'],self.paths['m_crops_white_train_data'])
+        group_crops_to_new_json(self.paths['m_gt_valid_json'], self.paths['m_crops_white_valid_data'])
 
 
     def run_dist(self):

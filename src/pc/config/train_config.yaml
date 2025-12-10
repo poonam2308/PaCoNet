@@ -20,7 +20,14 @@ paths:
   m_gt_axes_file: "data/synthetic_plots/multi_cat/training/gt/gt_axes_annotations.json"
   m_gt_crops: "data/synthetic_plots/multi_cat/training/gt/gt_crops"
   m_gt_line_color: "data/synthetic_plots/multi_cat/training/gt/gt_line_color.json"
-  
+
+
+  # grouth crops with all cat in it to train dhlp when no cat sep is done
+  m_crops_white: "data/synthetic_plots/multi_cat/training/crops_white/images"
+  m_crops_white_train_data : "data/synthetic_plots/multi_cat/training/crops_white/train.json"
+  m_crops_white_valid_data : "data/synthetic_plots/multi_cat/training/crops_white/valid.json"
+
+
   # Ground truth plots for individual category
   m_gt_plots_cat: "data/synthetic_plots/multi_cat/training/gt/gt_cat"
   m_gt_plots_cat_crops: "data/synthetic_plots/multi_cat/training/gt/gt_cat_crops"

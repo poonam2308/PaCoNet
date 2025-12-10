@@ -50,9 +50,12 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines_hdbscan
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_hdbscan
 
-#
+# gt name categories with white background and the lines data changed to train and valid split
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task gt_rename
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_gt
+
+# crops with white background and the cat lines are grouped under the crops
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task crop_whitebg_lines
 
 # color_space evalaution RGb, Lab, HSV
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task color_space_evaluation

@@ -5,6 +5,7 @@ import shutil
 
 from PIL import Image
 import numpy as np
+from collections import defaultdict
 
 # ========== PART 1: RENAME IMAGES ==========
 
@@ -168,7 +169,46 @@ def build_all_data(json_dir, output_path):
     print(f"Saved {len(all_records)} records into {output_path}")
 
 
-def run_rename(image_dir, json_dir, out_image_dir, all_data):
+import json
+
+def group_crops_to_new_json(input_path: str, output_path: str) -> None:
+    """
+    Reads a JSON file with a list of items like:
+      { "filename": "image_10_crop_2_9kixbtF.png", "lines": [...] }
+    Groups entries by crop (image_X_crop_Y) and writes a new JSON file with:
+      { "filename": "image_10_crop_2", "lines": [merged lines] }
+    """
+
+    # Read input JSON
+    with open(input_path, "r", encoding="utf-8") as f:
+        items = json.load(f)
+
+    grouped = {}
+
+    for item in items:
+        full_name = item.get("filename", "")
+        # remove the random tail + extension, keep "image_X_crop_Y"
+        # e.g. "image_10_crop_2_9kixbtF.png" -> "image_10_crop_2"
+        base_name = full_name.rsplit("_", 1)[0]
+
+        if base_name not in grouped:
+            grouped[base_name] = {
+                "filename": base_name,
+                "lines": []
+            }
+
+        grouped[base_name]["lines"].extend(item.get("lines", []))
+
+    # Convert dict -> list
+    output_data = list(grouped.values())
+
+    # Write output JSON
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(output_data, f, ensure_ascii=False, indent=2)
+
+
+
+def run_rename(image_dir, json_dir, out_image_dir, all_data, all_data_cat , all_data_crop_group):
     """
     image_dir    : directory with original crops (old names)
     json_dir     : directory with per-image JSONs
@@ -185,6 +225,12 @@ def run_rename(image_dir, json_dir, out_image_dir, all_data):
 
     # 3. Build all_data.json (filenames match the renamed images)
     print("\n=== Building all_data.json ===")
-    build_all_data(json_dir, all_data)
+    # build_all_data(json_dir, all_data)
 
     print("\nDone.")
+
+
+# def run_crops(crop_dir, all_data_cat, all_data_crop_group):
+#     whiten_backgrounds_in_dir(crop_dir)
+#     # 4. this for placing the cat lines with crops.
+#     group_crops_to_new_json(all_data_cat, all_data_crop_group)

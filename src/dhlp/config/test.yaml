@@ -24,9 +24,9 @@
 
 io:
   vote_index: data/vote_index_128_128_3_c.mat
-  logdir: ./outputs/logs_clst5kdenew/
+  logdir: ./outputs/logs/c
   datadir: data/pcw_test/
-  outdir: ./outputs/results_test3/
+  outdir: ./outputs/results/c
   resume_from:
   num_workers: 4
   tensorboard_port: 0

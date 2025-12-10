@@ -21,38 +21,40 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from docopt import docopt
+import random
+import torch
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
 import src.dhlp.lcnn.utils
 import src.dhlp.lcnn.metric
 from src.dhlp import lcnn
 
-
-GT = "./data/pcw_test/test/*.npz"
-MASK_PATH = "./data/pcw_test/masks/*.npz"
-
-# GT = "data/pcwireframe_test/test/*.npz"
-# MASK_PATH = "data/pcwireframe_test/masks/*.npz"
-
-# python eval-sAP.py results_scat
-# GT = "data/pcwireframe_scat/test/*.npz"
-# MASK_PATH = "data/pcwireframe_scat/masks/*.npz"
-
-#color
+# color
+# GT = "./data/pcw_test/test/*.npz"
+# MASK_PATH = "./data/pcw_test/masks/*.npz"
 #
-# GT = "data/pcwireframe_ct5k1/test/*.npz"
-# MASK_PATH = "data/pcwireframe_ct5k1/masks/*.npz"
-
-# GT = "data/pcwireframe_ct5kde1/test/*.npz"
-# MASK_PATH = "data/pcwireframe_ct5kde1/masks/*.npz"
-
-# cluster
+# # cluster
+# GT = "./data/pcw_test_cls/test/*.npz"
+# MASK_PATH = "./data/pcw_test_cls/masks/*.npz"
 #
-# GT = "data/pcwireframe_clst5knew/test/*.npz"
-# MASK_PATH = "data/pcwireframe_clst5knew/masks/*.npz"
+# # color no unet
+GT = "./data/pcw_ntest/test/*.npz"
+MASK_PATH = "./data/pcw_ntest/masks/*.npz"
 #
-# GT = "data/pcwireframe_clst5kdenew/test/*.npz"
-# MASK_PATH = "data/pcwireframe_clst5kdenew/masks/*.npz"
+# # cluster no unet
+# GT = "./data/pcw_ntest_cls/test/*.npz"
+# MASK_PATH = "./data/pcw_ntest_cls/masks/*.npz"
+
+
+def set_seed(seed: int = 0):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def line_score(pred_path, threshold=1):
@@ -322,19 +324,24 @@ def process_multiple_files(pred_dir, threshold, output_json_path):
     avg_map = total_map / valid_count if valid_count > 0 else 0
     print(f"\nTotal Processed Files: {valid_count}")
     # print(f"Average mAP Score: {avg_map:.4f}")
-    print(f"Average mAP Score for t={threshold}: {avg_map:.4f}")
+    print(f"Average sAP Score for t={threshold}: {avg_map:.4f}")
     return avg_map
 
 if __name__ == "__main__":
+    set_seed(0)
     args = docopt(__doc__)
 
 
     def work(path):
         print(f"Working on {path}")
+        ms = []
         for t in [5,10,15]:
             print(f"\nRunning process_multiple_files for threshold t={t}\n")
-            avg_map = 100 * process_multiple_files(f"{path}/*.npz", t,
-                                                   "./outputs/output_json_data/results_clst5kdenew1_2.json")
+            avg_sap = process_multiple_files(f"{path}/*.npz",t,
+                                                   "./outputs/output_json_data_seed/results_nc.json"
+                                                   )
+            ms.append(avg_sap)
+        return ms
 
         # return 100 * process_multiple_files(f"{path}/*.npz")
         # return [100 * line_score(f"{path}/*.npz", t) for t in [5, 10, 15]]
@@ -343,69 +350,7 @@ if __name__ == "__main__":
     dirs = sorted(sum([glob.glob(p) for p in args["<path>"]], []))
     results = lcnn.utils.parmap(work, dirs)
 
-    for d, msAP in zip(dirs, results):
-        print(f"{d}: {msAP[0]:2.1f} {msAP[1]:2.1f} {msAP[2]:2.1f}")
+    for d, sAP in zip(dirs, results):
+        print(f"{d}: {sAP[0]:2.1f} {sAP[1]:2.1f} {sAP[2]:2.1f}")
 
-# results_ct5k1 54.2 54.5 54.6
-# results_ct5kde1: 61.3 62.0 62.3
-# results_clst5kdenew: 57.1 58.5 58.9
-# results_all: 42.8 42.9 42.9
-
-
-# Total Processed Files: 1169
-# Average mAP Score for t=5: 28.8290
-#
-# Running process_multiple_files for threshold t=10
-#
-# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
-#
-# Total Processed Files: 1169
-# Average mAP Score for t=10: 33.7513
-#
-# Running process_multiple_files for threshold t=15
-#
-# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
-#
-# Total Processed Files: 1169
-# Average mAP Score for t=15: 36.8419
-
-# pcw_test
-# Total Processed Files: 1241
-# Average mAP Score for t=5: 32.2306
-
-
-
-# Total Processed Files: 1241
-# Average mAP Score for t=10: 34.8777
-#
-# Running process_multiple_files for threshold t=15
-#
-# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
-#
-# Total Processed Files: 1241
-# Average mAP Score for t=15: 36.1664
-
-
-# Working on ./outputs/results_test3
-#
-# Running process_multiple_files for threshold t=5
-#
-#   0%|                                                                                                                            | 0/1 [00:00<?, ?it/s]Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
-#
-# Total Processed Files: 1241
-# Average mAP Score for t=5: 57.1862
-#
-# Running process_multiple_files for threshold t=10
-#
-# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
-#
-# Total Processed Files: 1241
-# Average mAP Score for t=10: 62.3498
-#
-# Running process_multiple_files for threshold t=15
-#
-# Results saved to ./outputs/output_json_data/results_clst5kdenew1_2.json
-#
-# Total Processed Files: 1241
-# Average mAP Score for t=15: 64.9340
 

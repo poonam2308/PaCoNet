@@ -46,7 +46,25 @@ from src.dhlp.lcnn.models.HT import hough_transform
 # directory containing your mask npz files (same names as label npz)
 # e.g. if labels are in:  data/pcw_test/test/*.npz
 # and masks are in:       data/pcw_test_masks/test/*.npz
-MASK_ROOT = "data/pcw_test/masks"
+
+# # masks path for the color + unet 1
+# MASK_ROOT = "data/pcw_test/masks"
+
+# masks path for color  without unet 2
+# MASK_ROOT = "data/pcw_ntest/masks"
+
+# masks path for the cluster  + unet  3
+# MASK_ROOT = "data/pcw_test_cls/masks"
+
+# masks path for cluster without unet 4
+MASK_ROOT = "data/pcw_ntest_cls/masks"
+
+
+
+# ---- soft toggles ----
+USE_MASK = False   # set to False to ignore masks
+USE_NMS  = True   # set to False to skip line_nms
+# ----------------------
 
 HEATMAP_H, HEATMAP_W = 128, 128          # jmap / lmap size
 
@@ -388,21 +406,24 @@ def main():
                 lines_i = H["lines"][i].detach().cpu()  # [n_out_line, 2, 2]
                 scores_i = H["score"][i].detach().cpu()  # [n_out_line]
 
-                # 2) load corresponding mask npz for this sample (heatmap coords)
-                mask_i = get_mask_for_index(loader.dataset, global_idx)  # [128,128] bool
+                # 2–3) optional mask filtering
+                if USE_MASK:
+                    mask_i = get_mask_for_index(loader.dataset, global_idx)  # [128,128] bool
 
-                # 3) filter lines with the mask (heatmap space)
-                lines_i, scores_i, _ = filter_lines_with_mask_heatmap(
-                    lines_i, scores_i, mask_i,
-                    min_frac_inside=0.5,  # tune: 0.5 = at least 50% of samples inside mask
-                    n_samples=16,
-                )
+                    lines_i, scores_i, _ = filter_lines_with_mask_heatmap(
+                        lines_i, scores_i, mask_i,
+                        min_frac_inside=0.5,
+                        n_samples=16,
+                    )
+                # else: keep raw lines_i / scores_i
 
                 # 4) optional: line-level NMS to reduce overlapping lines
-                lines_i, scores_i, _ = line_nms(
-                    lines_i, scores_i,
-                    dist_thresh=2.0,  # in heatmap pixels; tune this
-                )
+                if USE_NMS:
+                    lines_i, scores_i, _ = line_nms(
+                        lines_i, scores_i,
+                        dist_thresh=2.0,
+                    )
+                # else: keep whatever we currently have
 
                 # 5) evaluate these filtered lines against GT
                 meta_i = meta[i]
