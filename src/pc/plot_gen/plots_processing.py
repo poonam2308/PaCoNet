@@ -303,6 +303,12 @@ class PlotsPipeline:
         group_crops_to_new_json(self.paths['m_gt_train_json'],self.paths['m_crops_white_train_data'])
         group_crops_to_new_json(self.paths['m_gt_valid_json'], self.paths['m_crops_white_valid_data'])
 
+    def white_bg(self):
+        whiten_backgrounds_in_dir(self.paths['pcw_test'])
+        whiten_backgrounds_in_dir(self.paths['pcw_test_cls'])
+        whiten_backgrounds_in_dir(self.paths['pcw_ntest'])
+        whiten_backgrounds_in_dir(self.paths['pcw_ntest_cls'])
+
 
     def run_dist(self):
         self.generate_data_from_excel_distribution()

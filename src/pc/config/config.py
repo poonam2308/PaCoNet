@@ -31,7 +31,7 @@ def get_args():
                                 'color_space_evaluation', 'dino_features_evaluation',
                                 'separate_by_color_wbg', 'split_data_wbg',
                                 'gt_rename', 'split_data_gt',
-                                'crop_whitebg_lines',
+                                'crop_whitebg_lines', 'white_bg',
                                 'color_unet', 'cluster_unet'])
 
     # Network Training Parameters

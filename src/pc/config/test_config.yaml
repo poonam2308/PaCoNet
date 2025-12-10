@@ -52,6 +52,13 @@ paths:
   m_color_space: "data/synthetic_plots/multi_cat/testing/color_space"
 
 
+  # dhlp specific
+  pcw_test: "data/dhlp/pcw_test/test"
+  pcw_test_cls: "data/dhlp/pcw_test_cls/test"
+  pcw_ntest: "data/dhlp/pcw_ntest/test"
+  pcw_ntest_cls: "data/dhlp/pcw_ntest_cls/test"
+
+
   # Real-world plots
   real_plots: "data/real_plots/images"
   real_crops: "data/real_plots/crops"
