@@ -1,10 +1,10 @@
 # step 1
 # generate np for each image using crops_white images and the lines present in train and valid json
-#./src/dhlp/dataset/wireframe_crops.py data/synthetic_plots/multi_cat/training/color data/dhlp/pcw_crops
+./src/dhlp/dataset/wireframe_crops.py data/synthetic_plots/multi_cat/training/crops_white data/dhlp/pcw_crops
 
 # Step 2
 # once the data is present provide the same path in the yaml where data is preset and start the training
-python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/crops.yaml
+#python ./src/dhlp/train.py --identifier baseline ./src/dhlp/config/crops.yaml
 
 
 # Step 1
