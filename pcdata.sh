@@ -58,6 +58,8 @@
 # python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task crop_whitebg_lines
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task white_bg
 
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task white_bg
+
 # color_space evalaution RGb, Lab, HSV
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task color_space_evaluation
 
@@ -69,7 +71,7 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_cluster
 
 # resize the images to 224 224 which are not denoised using unet
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task resize_noisy_images
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task resize_noisy_images
 
 
 #-----------------------------------------------------------------------------------------------------------
@@ -90,7 +92,7 @@ python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines_lab_cluster
 
 # resize the images to 224 224 which are not denoised using unet
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task resize_noisy_images
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task resize_noisy_images
 
 ######--------------------------------------------------
 # category separation where the background is white  not required anymore

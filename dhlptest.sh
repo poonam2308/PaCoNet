@@ -53,7 +53,7 @@
 #./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/testCluster.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best_cls.pth
 
 # cluster no unet 4
-./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/noisedClusterTest.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best_ncls.pth
+#./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/noisedClusterTest.yaml ./outputs/logs_clst5kdenew/250224-133604-baseline/checkpoint_best_ncls.pth
 
 
 # ------------ -------------------------------
@@ -85,11 +85,11 @@
 # output :generate the npz for each image
 # input : using the category separated images and the lines json present in  test.json
 
-#./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_ntest
+./src/dhlp/dataset/wireframe_test.py data/synthetic_plots/multi_cat/testing/color data/dhlp/pcw_ntest
 
 # Step 2
 # create masks for test data
-#./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_ntest/test data/dhlp/pcw_ntest/masks
+./src/dhlp//dataset/gen_mask.py data/dhlp/pcw_ntest/test data/dhlp/pcw_ntest/masks
 
 #%% ------------ noisy cluster images ----------
 # Step 1

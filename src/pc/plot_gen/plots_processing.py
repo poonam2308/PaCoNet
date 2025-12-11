@@ -298,17 +298,6 @@ class PlotsPipeline:
                 valid_file=self.paths['m_gt_valid_json']
             )
 
-    def crop_whitebg_lines(self):
-        # whiten_backgrounds_in_dir(self.paths['m_crops_white'])
-        group_crops_to_new_json(self.paths['m_gt_train_json'],self.paths['m_crops_white_train_data'])
-        group_crops_to_new_json(self.paths['m_gt_valid_json'], self.paths['m_crops_white_valid_data'])
-
-    def white_bg(self):
-        whiten_backgrounds_in_dir(self.paths['pcw_test'])
-        whiten_backgrounds_in_dir(self.paths['pcw_test_cls'])
-        whiten_backgrounds_in_dir(self.paths['pcw_ntest'])
-        whiten_backgrounds_in_dir(self.paths['pcw_ntest_cls'])
-
 
     def run_dist(self):
         self.generate_data_from_excel_distribution()
@@ -370,6 +359,20 @@ class PlotsPipeline:
         dino_eval.evaluate_batch(input_dir=self.paths['m_crops'],
             json_dir=self.paths['m_plots'],
             output_dir=self.paths['m_color_space'])
+
+    def crop_whitebg_lines(self):
+        # whiten_backgrounds_in_dir(self.paths['m_crops_white'])
+        group_crops_to_new_json(self.paths['m_gt_train_json'],self.paths['m_crops_white_train_data'])
+        group_crops_to_new_json(self.paths['m_gt_valid_json'], self.paths['m_crops_white_valid_data'])
+
+    def white_bg(self):
+        # whiten_backgrounds_in_dir(self.paths['pcw_test'])
+        # whiten_backgrounds_in_dir(self.paths['pcw_test_cls'])
+        # whiten_backgrounds_in_dir(self.paths['pcw_ntest'])
+        # whiten_backgrounds_in_dir(self.paths['pcw_ntest_cls'])
+
+        whiten_backgrounds_in_dir(self.paths['m_cluster_sep_plots_224'])
+        whiten_backgrounds_in_dir(self.paths['m_color_sep_plots_224'])
 
     def resize_noisy_images(self):
         resize_images_to_224(self.paths['m_color_sep_plots'], self.paths['m_color_sep_plots_224'])
