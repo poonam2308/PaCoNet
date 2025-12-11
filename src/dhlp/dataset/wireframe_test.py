@@ -123,8 +123,9 @@ def save_heatmap(prefix, image, lines):
 
 
 def handle(data,data_root, data_output, batch):
-    im = cv2.imread(os.path.join(data_root, "denoised", data["filename"]))
+    # im = cv2.imread(os.path.join(data_root, "denoised", data["filename"]))
     # im = cv2.imread(os.path.join(data_root, "images", data["filename"]))
+    im = cv2.imread(os.path.join(data_root, "images_224", data["filename"]))
     if im is None:
         print(f"Warning: Unable to read image {data['filename']}. Skipping.")
         return
