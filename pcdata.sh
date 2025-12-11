@@ -68,6 +68,11 @@
 #
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_cluster
 
+# resize the images to 224 224 which are not denoised using unet
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task resize_noisy_images
+
+
+#-----------------------------------------------------------------------------------------------------------
 # step 1-4 for testing data
 # testing - one time
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --num_files 1000 --seed 0 --task run_dist
@@ -84,7 +89,8 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task separate_by_lab_cluster
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task rescale_lines_lab_cluster
 
-
+# resize the images to 224 224 which are not denoised using unet
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 --task resize_noisy_images
 
 ######--------------------------------------------------
 # category separation where the background is white  not required anymore

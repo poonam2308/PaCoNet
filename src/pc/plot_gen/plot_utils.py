@@ -1,5 +1,6 @@
 import math
-
+from pathlib import Path
+from PIL import Image, ImageOps
 import pandas as pd
 import numpy as np
 import colorsys
@@ -128,3 +129,34 @@ def update_lines(json_file, output_file):
         json.dump(new_data, file, indent=4)
 
     print(f"Updated JSON saved to {output_file}")
+
+def resize_images_to_224(input_dir, output_dir):
+    """
+    Resize all images in input_dir to exactly 224x224 (no aspect ratio preserved),
+    equivalent to torchvision.transforms.Resize((224, 224)).
+    """
+    input_dir = Path(input_dir)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    size = (224, 224)
+    valid_exts = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp"}
+
+    for path in input_dir.iterdir():
+        if path.suffix.lower() not in valid_exts:
+            continue
+
+        out_path = output_dir / path.name
+
+        try:
+            with Image.open(path) as img:
+                img = img.convert("RGB")
+
+                # This matches transforms.Resize((224, 224)) geometrically
+                img_resized = img.resize(size, Image.BILINEAR)
+
+                img_resized.save(out_path)
+                print(f"Saved: {out_path}")
+        except Exception as e:
+            print(f"Skipping {path}: {e}")
+

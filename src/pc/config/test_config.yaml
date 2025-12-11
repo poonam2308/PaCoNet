@@ -30,11 +30,13 @@ paths:
 
   # Multi-category separated by color
   m_color_sep_plots: "data/synthetic_plots/multi_cat/testing/color/images"
+  m_color_sep_plots_224: "data/synthetic_plots/multi_cat/testing/color/images_224"
   m_color_all_json: "data/synthetic_plots/multi_cat/testing/color/images/all_data.json"
   m_color_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/color/test.json"
 
   # Multi-category separated by cluster
   m_cluster_sep_plots: "data/synthetic_plots/multi_cat/testing/cluster/images"
+  m_cluster_sep_plots_224: "data/synthetic_plots/multi_cat/testing/cluster/images_224"
   m_cluster_all_json: "data/synthetic_plots/multi_cat/testing/cluster/images/all_data.json"
   m_cluster_rescaled_all_json: "data/synthetic_plots/multi_cat/testing/cluster/test.json"
 

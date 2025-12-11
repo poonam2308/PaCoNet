@@ -24,7 +24,7 @@ from src.pc.plot_gen.multi_cat import MultiCatPCPGenerator
 from src.pc.plot_gen.axes_crop import CroppingProcessor
 from src.pc.plot_gen.category_separation import CategorySeparator
 from src.pc.plot_gen.clustering_category_separation import ClusteringCategorySeparator
-from src.pc.plot_gen.plot_utils import split_data, update_lines
+from src.pc.plot_gen.plot_utils import split_data, update_lines, resize_images_to_224
 from src.pc.plot_gen.cat_sep_evaluation import evaluate_catsep_vs_gt
 
 
@@ -371,7 +371,9 @@ class PlotsPipeline:
             json_dir=self.paths['m_plots'],
             output_dir=self.paths['m_color_space'])
 
-
+    def resize_noisy_images(self):
+        resize_images_to_224(self.paths['m_color_sep_plots'], self.paths['m_color_sep_plots_224'])
+        resize_images_to_224(self.paths['m_cluster_sep_plots'], self.paths['m_cluster_sep_plots_224'])
 
 
 if __name__ == "__main__":

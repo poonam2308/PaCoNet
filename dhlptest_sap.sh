@@ -13,7 +13,7 @@
 #----------------------------------- color no unet-----------------------------------------------------------------------
 #./src/dhlp/process_original.py ./src/dhlp/config/noisedTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_nc.pth
 #
-./src/dhlp/eval-sAP.py ./outputs/results/nc
+#./src/dhlp/eval-sAP.py ./outputs/results/nc
 
 #----------------------------------- cluster no unet----------------------------------------------------------------------
 #./src/dhlp/process_original.py ./src/dhlp/config/noisedClusterTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_ncls.pth

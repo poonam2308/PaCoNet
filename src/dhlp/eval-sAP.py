@@ -38,12 +38,12 @@ from src.dhlp import lcnn
 # MASK_PATH = "./data/pcw_test_cls/masks/*.npz"
 #
 # # color no unet
-GT = "./data/pcw_ntest/test/*.npz"
-MASK_PATH = "./data/pcw_ntest/masks/*.npz"
+# GT = "./data/pcw_ntest/test/*.npz"
+# MASK_PATH = "./data/pcw_ntest/masks/*.npz"
 #
-# # cluster no unet
-# GT = "./data/pcw_ntest_cls/test/*.npz"
-# MASK_PATH = "./data/pcw_ntest_cls/masks/*.npz"
+# cluster no unet
+GT = "./data/pcw_ntest_cls/test/*.npz"
+MASK_PATH = "./data/pcw_ntest_cls/masks/*.npz"
 
 
 def set_seed(seed: int = 0):
@@ -338,7 +338,7 @@ if __name__ == "__main__":
         for t in [5,10,15]:
             print(f"\nRunning process_multiple_files for threshold t={t}\n")
             avg_sap = process_multiple_files(f"{path}/*.npz",t,
-                                                   "./outputs/output_json_data_seed/results_nc.json"
+                                                   "./outputs/output_json_data_seed/results_ncls.json"
                                                    )
             ms.append(avg_sap)
         return ms
@@ -351,6 +351,6 @@ if __name__ == "__main__":
     results = lcnn.utils.parmap(work, dirs)
 
     for d, sAP in zip(dirs, results):
-        print(f"{d}: {sAP[0]:2.1f} {sAP[1]:2.1f} {sAP[2]:2.1f}")
+        print(f"{d}: {sAP[0]:2.2f} {sAP[1]:2.2f} {sAP[2]:2.2f}")
 
 

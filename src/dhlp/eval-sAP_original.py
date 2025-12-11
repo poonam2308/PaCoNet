@@ -32,6 +32,7 @@ from src.dhlp import lcnn
 # GT = "data/wireframe/valid/*.npz"
 
 # poonam added 10/12/2025
+# color
 # GT = "./data/pcw_test/test/*.npz"
 
 # # cluster
@@ -41,7 +42,7 @@ from src.dhlp import lcnn
 # GT = "./data/pcw_ntest/test/*.npz"
 
 # # cluster no unet
-GT = "./data/pcw_ntest_cls/test/*.npz"
+# GT = "./data/pcw_ntest_cls/test/*.npz"
 
 
 
