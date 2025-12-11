@@ -120,7 +120,7 @@ def save_heatmap(prefix, image, lines):
 
 
 def handle(data, data_root, data_output, batch ):
-    image_path = os.path.join(data_root, "images", data["filename"])
+    image_path = os.path.join(data_root, "images_224", data["filename"])
     # Check if the image file exists before processing
     if not os.path.exists(image_path):
         print(f"Error: Image file '{data['filename']}' not found! Skipping.")
