@@ -63,6 +63,9 @@ metric = LineSegmentSAPMetric(thresholds=(5.0, 10.0, 15.0))
 # masks path for cluster without unet 4
 # MASK_ROOT = "data/pcw_ntest_cls/masks"
 
+# all cat in crops
+MASK_ROOT = "data/pcw_crops_test/masks"
+
 
 
 # ---- soft toggles ----

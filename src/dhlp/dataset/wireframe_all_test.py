@@ -123,7 +123,7 @@ def save_heatmap(prefix, image, lines):
 
 
 def handle(data,data_root, data_output, batch):
-    im = cv2.imread(os.path.join(data_root, "images", data["filename"]))
+    im = cv2.imread(os.path.join(data_root, "images_224", data["filename"]))
     if im is None:
         print(f"Warning: Unable to read image {data['filename']}. Skipping.")
         return
@@ -162,7 +162,7 @@ def main():
     data_output = args["<dst>"]
 
     os.makedirs(data_output, exist_ok=True)
-    for batch in ["all_test", "valid"]:
+    for batch in ["test", "valid"]:
         anno_file = os.path.join(data_root, f"{batch}.json")
 
         with open(anno_file, "r") as f:

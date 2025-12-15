@@ -13,3 +13,7 @@
 # cluster no unet 4
 #./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/noisedClusterTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_ncls.pth
 #
+
+
+# crops
+./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/cropsTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_crop.pth
