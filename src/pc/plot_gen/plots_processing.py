@@ -100,10 +100,14 @@ class PlotsPipeline:
     def separate_by_color(self):
         print(f"🎨 Separating by color using {method} method...")
         sep = CategorySeparator()
-        sep.process_batch(
-            input_dir=self.paths['m_crops'],
+        # sep.process_batch(
+        #     input_dir=self.paths['m_crops'],
+        #     json_dir=self.paths['m_plots'],
+        #     output_dir=self.paths['m_color_sep_plots']
+        # )
+        sep.save_cluster_vs_gt_only(
+            input_dir=self.paths['m_color_sep_plots'],
             json_dir=self.paths['m_plots'],
-            output_dir=self.paths['m_color_sep_plots']
         )
 
     def rescale_lines(self):
@@ -390,7 +394,6 @@ class PlotsPipeline:
                 json_file=self.paths['m_crops_combined_data'],
                 output_file=self.paths['m_crops_rescaled_data']
             )
-
 
 if __name__ == "__main__":
     pipeline = PlotsPipeline()

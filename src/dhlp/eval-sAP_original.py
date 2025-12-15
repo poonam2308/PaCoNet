@@ -36,13 +36,15 @@ from src.dhlp import lcnn
 # GT = "./data/pcw_test/test/*.npz"
 
 # # cluster
-GT = "./data/pcw_test_cls/test/*.npz"
+# GT = "./data/pcw_test_cls/test/*.npz"
 
 # # color no unet
 # GT = "./data/pcw_ntest/test/*.npz"
 
 # # cluster no unet
 # GT = "./data/pcw_ntest_cls/test/*.npz"
+
+GT = "./data/pcw_crops_test/test/*.npz"
 
 
 
