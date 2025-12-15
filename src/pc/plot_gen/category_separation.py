@@ -315,26 +315,19 @@ class CategorySeparator:
 
         print(f"Saved batch results in {output_dir}")
 
-    def save_cluster_vs_gt_only(
-            self,
-            input_dir,
-            json_dir=None,
-            output_dir=".",
-    ):
+    def save_cluster_vs_gt_only(self, input_dir, json_dir=None, output_dir="."):
         """
-        JSON-only method:
-          - NO image processing
-          - Filename parsing EXACTLY matches clustering logic
-          - pred_clusters is derived from already-separated filenames (*_cat_#)
-          - Writes:
-              cluster_vs_gt.json
-              cluster_vs_gt_summary.json
+        JSON-only:
+          - Reads already-separated images in input_dir
+          - Base parsing matches clustering for `_crop_#` (token-based)
+          - Also strips category suffix `_cat_1` (clustering) AND `_cat1` (CategorySeparator)
+          - Writes cluster_vs_gt.json + cluster_vs_gt_summary.json
         """
         os.makedirs(output_dir, exist_ok=True)
         comparisons = []
 
-        # ---------- SAME base parsing as clustering ----------
-        def base_stem(stem: str) -> str:
+        # --- same logic as clustering for stripping `_crop_#` tokens ---
+        def base_stem_like_clustering(stem: str) -> str:
             toks = [t for t in stem.split("_") if t]
             out = []
             i = 0
@@ -346,18 +339,29 @@ class CategorySeparator:
                     i += 1
             return "_".join(out)
 
-        # ---------- inventory images ----------
+        # --- remove cat suffix from separated outputs BEFORE computing base/json name ---
+        def strip_cat_suffix(stem: str) -> str:
+            # handles "..._cat_12" and "..._cat12" at end of stem
+            stem = re.sub(r"_cat_(\d+)$", "", stem, flags=re.IGNORECASE)
+            stem = re.sub(r"_cat(\d+)$", "", stem, flags=re.IGNORECASE)
+            return stem
+
         files = [f for f in os.listdir(input_dir)
                  if f.lower().endswith((".png", ".jpg", ".jpeg"))]
 
-        groups = {}  # base -> {"files": [], "cat_ids": set()}
+        groups = {}  # base -> {"files": [...], "cat_ids": set(int)}
         for f in files:
             stem = Path(f).stem
-            base = base_stem(stem)
 
-            # EXACT same _cat_# reading logic
-            m = re.search(r"_cat_(\d+)", stem, flags=re.IGNORECASE)
+            # read cat id from either naming style
+            m = re.search(r"_cat_(\d+)$", stem, flags=re.IGNORECASE)
+            if not m:
+                m = re.search(r"_cat(\d+)$", stem, flags=re.IGNORECASE)
             cat_id = int(m.group(1)) if m else None
+
+            # compute base name used for grouping + json lookup
+            stem_no_cat = strip_cat_suffix(stem)
+            base = base_stem_like_clustering(stem_no_cat)
 
             if base not in groups:
                 groups[base] = {"files": [], "cat_ids": set()}
@@ -365,21 +369,18 @@ class CategorySeparator:
             if cat_id is not None:
                 groups[base]["cat_ids"].add(cat_id)
 
-        # ---------- per-base comparison ----------
         for base, info in groups.items():
             crops = sorted(info["files"])
-
-            # pred_clusters = number of already-produced categories
             pred_clusters = len(info["cat_ids"])
 
-            # GT JSON (same lookup as clustering)
+            # per-base GT json (same lookup pattern as clustering)
             json_path = None
             if json_dir:
                 cand = os.path.join(json_dir, base + ".json")
                 if os.path.exists(cand):
                     json_path = cand
 
-            # SAME GT counting logic as clustering
+            # same GT counting rule as clustering’s _count_gt_categories_for_base :contentReference[oaicite:2]{index=2}
             gt_cat_count = 0
             if json_path and os.path.exists(json_path):
                 with open(json_path, "r") as f:
@@ -387,18 +388,16 @@ class CategorySeparator:
 
                 lines_root = (data.get("lines") or {})
                 present = set()
-
                 for crop_name in crops:
-                    m = re.search(r"_crop_(\d+)", Path(crop_name).stem)
-                    if not m:
+                    m2 = re.search(r"_crop_(\d+)", Path(crop_name).stem)
+                    if not m2:
                         continue
-                    crop_key = f"crop_{m.group(1)}"
+                    crop_key = f"crop_{m2.group(1)}"
                     v = lines_root.get(crop_key, [])
                     if isinstance(v, dict):
                         for cat, coords in v.items():
                             if coords:
                                 present.add(cat)
-
                 gt_cat_count = len(present)
 
             delta = int(pred_clusters) - int(gt_cat_count)
@@ -412,7 +411,6 @@ class CategorySeparator:
                 "delta": int(delta),
             })
 
-        # ---------- write outputs ----------
         with open(os.path.join(output_dir, "cluster_vs_gt.json"), "w") as f:
             json.dump(comparisons, f, indent=2)
 
@@ -437,5 +435,5 @@ class CategorySeparator:
         with open(os.path.join(output_dir, "cluster_vs_gt_summary.json"), "w") as f:
             json.dump(summary, f, indent=2)
 
-        print(f"[DONE] cluster_vs_gt.json written to {output_dir}")
+        print(f"[DONE] Wrote cluster_vs_gt.json + summary to: {output_dir}")
         return comparisons, summary
