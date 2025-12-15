@@ -318,15 +318,18 @@ class CategorySeparator:
     def save_cluster_vs_gt_only(self, input_dir, json_dir=None, output_dir="."):
         """
         JSON-only:
-          - Reads already-separated images in input_dir
-          - Base parsing matches clustering for `_crop_#` (token-based)
-          - Also strips category suffix `_cat_1` (clustering) AND `_cat1` (CategorySeparator)
-          - Writes cluster_vs_gt.json + cluster_vs_gt_summary.json
+          - input images are already separated and named:
+              image_<id>_crop_<k>_<catstring>.png
+          - base parsing matches clustering's token logic for removing `crop_<k>`
+          - pred_clusters = number of distinct <catstring> per base
+          - writes:
+              cluster_vs_gt.json
+              cluster_vs_gt_summary.json
         """
         os.makedirs(output_dir, exist_ok=True)
         comparisons = []
 
-        # --- same logic as clustering for stripping `_crop_#` tokens ---
+        # --- EXACT clustering-style base stem logic (removes 'crop' + number tokens) ---
         def base_stem_like_clustering(stem: str) -> str:
             toks = [t for t in stem.split("_") if t]
             out = []
@@ -339,66 +342,64 @@ class CategorySeparator:
                     i += 1
             return "_".join(out)
 
-        # --- remove cat suffix from separated outputs BEFORE computing base/json name ---
-        def strip_cat_suffix(stem: str) -> str:
-            # handles "..._cat_12" and "..._cat12" at end of stem
-            stem = re.sub(r"_cat_(\d+)$", "", stem, flags=re.IGNORECASE)
-            stem = re.sub(r"_cat(\d+)$", "", stem, flags=re.IGNORECASE)
-            return stem
+        # --- GT category counting logic (same as clustering) ---
+        def count_gt_categories_for_base(json_path, crops):
+            if not self._json_exists(json_path):
+                return 0
+            with open(json_path, "r") as f:
+                data = json.load(f)
 
+            lines_root = (data.get("lines") or {})
+            present = set()
+
+            for crop_name in crops:
+                m = re.search(r"_crop_(\d+)", Path(crop_name).stem)
+                if not m:
+                    continue
+                crop_key = f"crop_{m.group(1)}"
+                v = lines_root.get(crop_key, [])
+                if isinstance(v, dict):
+                    for cat, coords in v.items():
+                        if coords and len(coords) > 0:
+                            present.add(cat)
+            return len(present)
+
+        # --- list images ---
         files = [f for f in os.listdir(input_dir)
                  if f.lower().endswith((".png", ".jpg", ".jpeg"))]
 
-        groups = {}  # base -> {"files": [...], "cat_ids": set(int)}
+        # group by base, track catstrings
+        groups = {}  # base -> {"files": [...], "cats": set(str)}
         for f in files:
             stem = Path(f).stem
 
-            # read cat id from either naming style
-            m = re.search(r"_cat_(\d+)$", stem, flags=re.IGNORECASE)
-            if not m:
-                m = re.search(r"_cat(\d+)$", stem, flags=re.IGNORECASE)
-            cat_id = int(m.group(1)) if m else None
+            # catstring is the LAST underscore token
+            # e.g. image_12_crop_3_red -> catstring = "red"
+            if "_" not in stem:
+                continue
+            catstring = stem.split("_")[-1]
 
-            # compute base name used for grouping + json lookup
-            stem_no_cat = strip_cat_suffix(stem)
-            base = base_stem_like_clustering(stem_no_cat)
+            # remove the last "_<catstring>" BEFORE base extraction
+            stem_wo_cat = stem.rsplit("_", 1)[0]  # image_12_crop_3
+            base = base_stem_like_clustering(stem_wo_cat)  # -> image_12
 
-            if base not in groups:
-                groups[base] = {"files": [], "cat_ids": set()}
+            groups.setdefault(base, {"files": [], "cats": set()})
             groups[base]["files"].append(f)
-            if cat_id is not None:
-                groups[base]["cat_ids"].add(cat_id)
+            groups[base]["cats"].add(catstring)
 
+        # build comparisons + write json
         for base, info in groups.items():
             crops = sorted(info["files"])
-            pred_clusters = len(info["cat_ids"])
 
-            # per-base GT json (same lookup pattern as clustering)
+            pred_clusters = len(info["cats"])  # distinct <catstring> per base
+
             json_path = None
             if json_dir:
                 cand = os.path.join(json_dir, base + ".json")
                 if os.path.exists(cand):
                     json_path = cand
 
-            # same GT counting rule as clustering’s _count_gt_categories_for_base :contentReference[oaicite:2]{index=2}
-            gt_cat_count = 0
-            if json_path and os.path.exists(json_path):
-                with open(json_path, "r") as f:
-                    data = json.load(f)
-
-                lines_root = (data.get("lines") or {})
-                present = set()
-                for crop_name in crops:
-                    m2 = re.search(r"_crop_(\d+)", Path(crop_name).stem)
-                    if not m2:
-                        continue
-                    crop_key = f"crop_{m2.group(1)}"
-                    v = lines_root.get(crop_key, [])
-                    if isinstance(v, dict):
-                        for cat, coords in v.items():
-                            if coords:
-                                present.add(cat)
-                gt_cat_count = len(present)
+            gt_cat_count = count_gt_categories_for_base(json_path, crops)
 
             delta = int(pred_clusters) - int(gt_cat_count)
             relation = "equal" if delta == 0 else ("greater" if delta > 0 else "less")
@@ -435,5 +436,5 @@ class CategorySeparator:
         with open(os.path.join(output_dir, "cluster_vs_gt_summary.json"), "w") as f:
             json.dump(summary, f, indent=2)
 
-        print(f"[DONE] Wrote cluster_vs_gt.json + summary to: {output_dir}")
+        print(f"[DONE] Wrote cluster_vs_gt.json + cluster_vs_gt_summary.json to: {output_dir}")
         return comparisons, summary
