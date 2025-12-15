@@ -38,6 +38,10 @@ from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
 
+from src.dhlp.sap_metric import LineSegmentSAPMetric  # wherever you put the class
+
+metric = LineSegmentSAPMetric(thresholds=(5.0, 10.0, 15.0))
+
 
 # ------------------------------------------------------------
 # Line matching utilities
@@ -48,7 +52,7 @@ from src.dhlp.lcnn.models.HT import hough_transform
 # and masks are in:       data/pcw_test_masks/test/*.npz
 
 # # masks path for the color + unet 1
-# MASK_ROOT = "data/pcw_test/masks"
+MASK_ROOT = "data/pcw_test/masks"
 
 # masks path for color  without unet 2
 # MASK_ROOT = "data/pcw_ntest/masks"
@@ -57,12 +61,12 @@ from src.dhlp.lcnn.models.HT import hough_transform
 # MASK_ROOT = "data/pcw_test_cls/masks"
 
 # masks path for cluster without unet 4
-MASK_ROOT = "data/pcw_ntest_cls/masks"
+# MASK_ROOT = "data/pcw_ntest_cls/masks"
 
 
 
 # ---- soft toggles ----
-USE_MASK = False   # set to False to ignore masks
+USE_MASK = True   # set to False to ignore masks
 USE_NMS  = True   # set to False to skip line_nms
 # ----------------------
 
@@ -441,6 +445,8 @@ def main():
                     f"(running totals: TP={total_TP}, FP={total_FP}, FN={total_FN})"
                 )
 
+                metric.add_image(lines_i, scores_i, gt_lines)
+
     # 9. Final metrics
     precision = total_TP / (total_TP + total_FP + 1e-8)
     recall = total_TP / (total_TP + total_FN + 1e-8)
@@ -455,6 +461,13 @@ def main():
     print(f"Recall:    {recall:.4f}")
     print(f"F1-score:  {f1:.4f}")
 
+    print( "\n =============== sap===============")
+
+    # After the loop:
+    sap = metric.compute_sap()
+    print("sAP5, sAP10, sAP15:", sap[5.0], sap[10.0], sap[15.0])
+    print("sAP5%, sAP10%, sAP15%:",
+          100.0 * sap[5.0], 100.0 * sap[10.0], 100.0 * sap[15.0])
 
 if __name__ == "__main__":
     main()

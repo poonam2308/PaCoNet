@@ -30,12 +30,12 @@ import src.dhlp.lcnn.metric
 from src.dhlp import lcnn
 
 # color
-GT = "./data/pcw_test/test/*.npz"
-MASK_PATH = "./data/pcw_test/masks/*.npz"
-
+# GT = "./data/pcw_test/test/*.npz"
+# MASK_PATH = "./data/pcw_test/masks/*.npz"
+#
 # # cluster
-# GT = "./data/pcw_test_cls/test/*.npz"
-# MASK_PATH = "./data/pcw_test_cls/masks/*.npz"
+GT = "./data/pcw_test_cls/test/*.npz"
+MASK_PATH = "./data/pcw_test_cls/masks/*.npz"
 #
 # # color no unet
 # GT = "./data/pcw_ntest/test/*.npz"
@@ -56,6 +56,105 @@ def set_seed(seed: int = 0):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
+def line_score_masked(pred_glob, threshold=1):
+    """
+    Pooled sAP like LCNN:
+      - filter predicted lines using mask (endpoints must be inside mask)
+      - pool TP/FP across dataset
+      - sort by prediction score
+      - compute AP
+    Returns AP in [0,1].
+    """
+    pred_files = sorted(glob.glob(pred_glob))
+    gt_files = sorted(glob.glob(GT))
+    mask_files = sorted(glob.glob(MASK_PATH))
+
+    pred_dict = {os.path.splitext(os.path.basename(f))[0]: f for f in pred_files}
+    gt_dict = {os.path.splitext(os.path.basename(f))[0]: f for f in gt_files}
+    mask_dict = {os.path.splitext(os.path.basename(f))[0]: f for f in mask_files}
+
+    common = sorted(set(pred_dict) & set(gt_dict) & set(mask_dict))
+    if not common:
+        print("Error: No matching files found across pred/gt/mask.")
+        return 0.0
+
+    n_gt = 0
+    all_tp, all_fp, all_scores = [], [], []
+
+    def ensure_left_to_right(lines):
+        corrected = []
+        for line in lines:
+            (x0, y0), (x1, y1) = line
+            if x0 > x1:
+                line = [[x1, y1], [x0, y0]]
+            corrected.append(line)
+        return np.array(corrected)
+
+    def filter_lines_with_mask(lines, mask):
+        valid = []
+        h, w = mask.shape
+        for line in lines:
+            (a, b) = line.astype(int)
+            y0, x0 = a[0], a[1]
+            y1, x1 = b[0], b[1]
+            if 0 <= y0 < h and 0 <= x0 < w and 0 <= y1 < h and 0 <= x1 < w:
+                if mask[y0, x0] == 1 and mask[y1, x1] == 1:
+                    valid.append(line)
+        return np.array(valid)
+
+    for key in common:
+        with np.load(pred_dict[key]) as fpred:
+            pred_lines = fpred["lines"][:, :, :2]
+            pred_scores = fpred["score"]
+
+        with np.load(gt_dict[key]) as fgt:
+            gt_lines = fgt["lpos"][:, :, :2]
+
+        with np.load(mask_dict[key]) as fmask:
+            mask = fmask["mask"]
+
+        pred_lines = ensure_left_to_right(pred_lines)
+        gt_lines = ensure_left_to_right(gt_lines)
+
+        # Mask filter
+        pred_lines_f = filter_lines_with_mask(pred_lines, mask)
+        if pred_lines_f.size == 0:
+            continue
+
+        # Keep scores aligned with filtered lines:
+        # filter_lines_with_mask returns subset in order, so we need indices.
+        # Recompute indices by checking membership (safe because lines are small arrays).
+        # More efficient: do filtering with indices, but this is fine.
+        keep_idx = []
+        h, w = mask.shape
+        for i, line in enumerate(pred_lines):
+            (a, b) = line.astype(int)
+            y0, x0 = a[0], a[1]
+            y1, x1 = b[0], b[1]
+            if 0 <= y0 < h and 0 <= x0 < w and 0 <= y1 < h and 0 <= x1 < w:
+                if mask[y0, x0] == 1 and mask[y1, x1] == 1:
+                    keep_idx.append(i)
+        pred_scores_f = pred_scores[np.array(keep_idx, dtype=int)]
+
+        n_gt += len(gt_lines)
+
+        tp, fp = lcnn.metric.msTPFP(pred_lines_f, gt_lines, threshold)
+        all_tp.append(tp)
+        all_fp.append(fp)
+        all_scores.append(pred_scores_f)
+
+    if n_gt == 0 or not all_scores:
+        print("Warning: No GT or no valid predictions after filtering.")
+        return 0.0
+
+    tp = np.concatenate(all_tp)
+    fp = np.concatenate(all_fp)
+    scores = np.concatenate(all_scores)
+
+    order = np.argsort(-scores)
+    tp = np.cumsum(tp[order]) / n_gt
+    fp = np.cumsum(fp[order]) / n_gt
+    return float(lcnn.metric.ap(tp, fp))
 
 def line_score(pred_path, threshold=1):
     pred_files = sorted(glob.glob(pred_path))  # Load predicted npz files
@@ -121,8 +220,6 @@ def line_score(pred_path, threshold=1):
         return lcnn.metric.ap(lcnn_tp, lcnn_fp)
 
     return 0  # No valid predictions
-
-
 def plot_data(pred_lines_example, gt_lines_example, threshold_example, tp_example, fp_example):
     """Plots three figures: (1) Combined GT + Predicted, (2) GT Only, (3) Predicted Only"""
 
@@ -169,13 +266,13 @@ def plot_data(pred_lines_example, gt_lines_example, threshold_example, tp_exampl
     ax.invert_yaxis()
 
     plt.show()
-
-
 def process_line_detection(gt_path, pred_path, mask_path, threshold=1, eps=5):
     try:
         # Load predicted lines and scores
         predictions_data = np.load(pred_path)
         predicted_lines = predictions_data["lines"]  # Shape: (N, 2, 2)
+
+
 
         # Load the binary mask
         mask_data = np.load(mask_path)
@@ -222,7 +319,7 @@ def process_line_detection(gt_path, pred_path, mask_path, threshold=1, eps=5):
                     unique_lines.append(line)
             return np.array(unique_lines)
 
-        filtered_lines = remove_duplicate_lines(filtered_lines, eps)
+        # filtered_lines = remove_duplicate_lines(filtered_lines, eps)
 
         # Compute mAP for filtered lines
         def msTPFP(line_pred, line_gt, threshold):
@@ -246,10 +343,8 @@ def process_line_detection(gt_path, pred_path, mask_path, threshold=1, eps=5):
                     fp[i] = 1
             return tp, fp
 
-        def compute_ap(tp, fp, n_gt):
-            # recall = np.cumsum(tp) / max(len(tp), 1)
-            recall = np.cumsum(tp) / max(n_gt, 1)
-
+        def compute_ap(tp, fp):
+            recall = np.cumsum(tp) / max(len(tp), 1)
             precision = np.cumsum(tp) / np.maximum(np.cumsum(tp) + np.cumsum(fp), 1e-9)
 
             recall = np.concatenate(([0.0], recall, [1.0]))
@@ -262,11 +357,10 @@ def process_line_detection(gt_path, pred_path, mask_path, threshold=1, eps=5):
             return np.sum((recall[i + 1] - recall[i]) * precision[i + 1])
 
         def compute_map(filtered_lines, ground_truth_lines, threshold=10):
-            n_gt = len(ground_truth_lines)
             if len(filtered_lines) == 0 or len(ground_truth_lines) == 0:
                 return 0
             tp, fp = msTPFP(filtered_lines, ground_truth_lines, threshold)
-            return compute_ap(tp, fp,n_gt)
+            return compute_ap(tp, fp)
 
         map_score = compute_map(filtered_lines, ground_truth_lines, threshold)
         return map_score * 100, filtered_lines.tolist(), ground_truth_lines.tolist() # Convert to percentage
@@ -274,8 +368,7 @@ def process_line_detection(gt_path, pred_path, mask_path, threshold=1, eps=5):
         print(f"Error processing {gt_path}: {e}")
         return None
 
-
-def process_multiple_files(pred_dir, threshold, output_json_path):
+def process_multiple_files1(pred_dir, threshold, output_json_path):
 
     gt_files = sorted(glob.glob(GT))
     pred_files = sorted(glob.glob(pred_dir))
@@ -329,11 +422,16 @@ def process_multiple_files(pred_dir, threshold, output_json_path):
     # print(f"Average mAP Score: {avg_map:.4f}")
     print(f"Average sAP Score for t={threshold}: {avg_map:.4f}")
     return avg_map
+def process_multiple_files(pred_dir, threshold, output_json_path=None):
+    sap = line_score_masked(pred_dir, threshold=threshold)
+
+    print(f"\nTotal Processed Files: (pooled over matches)")
+    print(f"Average sAP Score for t={threshold}: {sap:.4f}")  # in [0,1]
+    return sap
 
 if __name__ == "__main__":
     set_seed(0)
     args = docopt(__doc__)
-
 
     def work(path):
         print(f"Working on {path}")
@@ -341,14 +439,10 @@ if __name__ == "__main__":
         for t in [5,10,15]:
             print(f"\nRunning process_multiple_files for threshold t={t}\n")
             avg_sap = process_multiple_files(f"{path}/*.npz",t,
-                                                   "./outputs/output_json_data_seed/results_c.json"
+                                                   "./outputs/output_json_data_seed/results_cls1.json"
                                                    )
             ms.append(avg_sap)
         return ms
-
-        # return 100 * process_multiple_files(f"{path}/*.npz")
-        # return [100 * line_score(f"{path}/*.npz", t) for t in [5, 10, 15]]
-
 
     dirs = sorted(sum([glob.glob(p) for p in args["<path>"]], []))
     results = lcnn.utils.parmap(work, dirs)
