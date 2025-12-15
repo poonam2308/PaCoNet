@@ -320,61 +320,44 @@ class CategorySeparator:
             input_dir,
             json_dir=None,
             output_dir=".",
-            pred_from="cat_token",  # "cat_token" (uses _cat_#) or "file_count"
     ):
         """
-        JSON-only pass:
-          - DOES NOT run separation.
-          - Reads already separated image filenames in input_dir.
+        JSON-only method:
+          - NO image processing
+          - Filename parsing EXACTLY matches clustering logic
+          - pred_clusters is derived from already-separated filenames (*_cat_#)
           - Writes:
               cluster_vs_gt.json
               cluster_vs_gt_summary.json
-
-        pred_clusters:
-          - "cat_token": count distinct `_cat_#` per base (recommended if your separated files include _cat_1, _cat_2, ...)
-          - "file_count": pred_clusters = number of files for that base
         """
         os.makedirs(output_dir, exist_ok=True)
         comparisons = []
 
-        # ---- helper: base key like your batch code (strip _crop_#) ----
-        def base_key_from_filename(fname: str) -> str:
-            return re.sub(r"_crop_\d+", "", Path(fname).stem)
+        # ---------- SAME base parsing as clustering ----------
+        def base_stem(stem: str) -> str:
+            toks = [t for t in stem.split("_") if t]
+            out = []
+            i = 0
+            while i < len(toks):
+                if toks[i].lower() == "crop" and i + 1 < len(toks) and toks[i + 1].isdigit():
+                    i += 2
+                else:
+                    out.append(toks[i])
+                    i += 1
+            return "_".join(out)
 
-        # ---- helper: count GT categories present for a base across its crops ----
-        def count_gt_categories_for_base(json_path, crops):
-            if not self._json_exists(json_path):
-                return 0
-            with open(json_path, "r") as f:
-                data = json.load(f)
+        # ---------- inventory images ----------
+        files = [f for f in os.listdir(input_dir)
+                 if f.lower().endswith((".png", ".jpg", ".jpeg"))]
 
-            lines_root = (data.get("lines") or {})
-            present = set()
-
-            for crop_name in crops:
-                m = re.search(r"_crop_(\d+)", Path(crop_name).stem)
-                if not m:
-                    continue
-                crop_key = f"crop_{m.group(1)}"
-                v = lines_root.get(crop_key, [])
-                if isinstance(v, dict):
-                    for cat, coords in v.items():
-                        if coords and len(coords) > 0:
-                            present.add(cat)
-                # if list -> no per-category GT to count
-            return len(present)
-
-        # ---- inventory files (your already-separated images) ----
-        files = [f for f in os.listdir(input_dir) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
-
-        # group by base, track cat ids if needed
-        groups = {}  # base -> {"files": [...], "cat_ids": set(int)}
+        groups = {}  # base -> {"files": [], "cat_ids": set()}
         for f in files:
             stem = Path(f).stem
-            base = base_key_from_filename(f)
+            base = base_stem(stem)
 
-            mcat = re.search(r"_cat_(\d+)", stem, flags=re.IGNORECASE)
-            cat_id = int(mcat.group(1)) if mcat else None
+            # EXACT same _cat_# reading logic
+            m = re.search(r"_cat_(\d+)", stem, flags=re.IGNORECASE)
+            cat_id = int(m.group(1)) if m else None
 
             if base not in groups:
                 groups[base] = {"files": [], "cat_ids": set()}
@@ -382,24 +365,41 @@ class CategorySeparator:
             if cat_id is not None:
                 groups[base]["cat_ids"].add(cat_id)
 
-        # ---- build comparisons ----
+        # ---------- per-base comparison ----------
         for base, info in groups.items():
             crops = sorted(info["files"])
 
-            if pred_from == "cat_token":
-                pred_clusters = len(info["cat_ids"])
-            elif pred_from == "file_count":
-                pred_clusters = len(crops)
-            else:
-                raise ValueError("pred_from must be 'cat_token' or 'file_count'")
+            # pred_clusters = number of already-produced categories
+            pred_clusters = len(info["cat_ids"])
 
+            # GT JSON (same lookup as clustering)
             json_path = None
             if json_dir:
                 cand = os.path.join(json_dir, base + ".json")
                 if os.path.exists(cand):
                     json_path = cand
 
-            gt_cat_count = count_gt_categories_for_base(json_path, crops)
+            # SAME GT counting logic as clustering
+            gt_cat_count = 0
+            if json_path and os.path.exists(json_path):
+                with open(json_path, "r") as f:
+                    data = json.load(f)
+
+                lines_root = (data.get("lines") or {})
+                present = set()
+
+                for crop_name in crops:
+                    m = re.search(r"_crop_(\d+)", Path(crop_name).stem)
+                    if not m:
+                        continue
+                    crop_key = f"crop_{m.group(1)}"
+                    v = lines_root.get(crop_key, [])
+                    if isinstance(v, dict):
+                        for cat, coords in v.items():
+                            if coords:
+                                present.add(cat)
+
+                gt_cat_count = len(present)
 
             delta = int(pred_clusters) - int(gt_cat_count)
             relation = "equal" if delta == 0 else ("greater" if delta > 0 else "less")
@@ -412,14 +412,14 @@ class CategorySeparator:
                 "delta": int(delta),
             })
 
-        # ---- write outputs ----
+        # ---------- write outputs ----------
         with open(os.path.join(output_dir, "cluster_vs_gt.json"), "w") as f:
             json.dump(comparisons, f, indent=2)
 
         total = len(comparisons)
-        less = sum(1 for r in comparisons if r.get("relation") == "less")
-        equal = sum(1 for r in comparisons if r.get("relation") == "equal")
-        more = sum(1 for r in comparisons if r.get("relation") == "greater")
+        less = sum(1 for r in comparisons if r["relation"] == "less")
+        equal = sum(1 for r in comparisons if r["relation"] == "equal")
+        more = sum(1 for r in comparisons if r["relation"] == "greater")
 
         def pct(x, n):
             return round((x / n) * 100.0, 2) if n else 0.0
@@ -437,6 +437,5 @@ class CategorySeparator:
         with open(os.path.join(output_dir, "cluster_vs_gt_summary.json"), "w") as f:
             json.dump(summary, f, indent=2)
 
-        print(f"[DONE] Wrote cluster_vs_gt.json and cluster_vs_gt_summary.json to: {output_dir}")
+        print(f"[DONE] cluster_vs_gt.json written to {output_dir}")
         return comparisons, summary
-
