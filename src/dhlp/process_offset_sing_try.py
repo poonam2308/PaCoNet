@@ -52,13 +52,13 @@ metric = LineSegmentSAPMetric(thresholds=(5.0, 10.0, 15.0))
 # and masks are in:       data/pcw_test_masks/test/*.npz
 
 # # masks path for the color + unet 1
-MASK_ROOT = "data/pcw_test/masks"
+# MASK_ROOT = "data/pcw_test/masks"
 
-# masks path for color  without unet 2
-# MASK_ROOT = "data/pcw_ntest/masks"
-
-# masks path for the cluster  + unet  3
+# masks path for the cluster  + unet  2
 # MASK_ROOT = "data/pcw_test_cls/masks"
+
+# # masks path for color  without unet 3
+# MASK_ROOT = "data/pcw_ntest/masks"
 
 # masks path for cluster without unet 4
 # MASK_ROOT = "data/pcw_ntest_cls/masks"

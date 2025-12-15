@@ -16,6 +16,13 @@ paths:
   m_axes_file: "data/synthetic_plots/multi_cat/testing/axes_annotations.json"
   m_crops: "data/synthetic_plots/multi_cat/testing/m_crops/images"
 
+  m_crops_224: "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
+  m_crops_all_data: "data/synthetic_plots/multi_cat/testing/m_crops/all_test.json"
+  m_crops_combined_data : "data/synthetic_plots/multi_cat/testing/m_crops/all_combined_test.json"
+  m_crops_rescaled_data : "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+
+
+
   # Mult-Category Ground truth plots
   m_gt_plots: "data/synthetic_plots/multi_cat/testing/gt/images"
   m_gt_axes_file: "data/synthetic_plots/multi_cat/testing/gt/gt_axes_annotations.json"

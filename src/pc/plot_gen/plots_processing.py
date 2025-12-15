@@ -360,23 +360,36 @@ class PlotsPipeline:
             json_dir=self.paths['m_plots'],
             output_dir=self.paths['m_color_space'])
 
-    def crop_whitebg_lines(self):
-        # whiten_backgrounds_in_dir(self.paths['m_crops_white'])
-        group_crops_to_new_json(self.paths['m_gt_train_json'],self.paths['m_crops_white_train_data'])
-        group_crops_to_new_json(self.paths['m_gt_valid_json'], self.paths['m_crops_white_valid_data'])
+
+
+    def resize_noisy_images(self):
+        # resize_images_to_224(self.paths['m_color_sep_plots'], self.paths['m_color_sep_plots_224'])
+        resize_images_to_224(self.paths['m_cluster_sep_plots'], self.paths['m_cluster_sep_plots_224'])
+
 
     def white_bg(self):
         # whiten_backgrounds_in_dir(self.paths['pcw_test'])
         # whiten_backgrounds_in_dir(self.paths['pcw_test_cls'])
         # whiten_backgrounds_in_dir(self.paths['pcw_ntest'])
         # whiten_backgrounds_in_dir(self.paths['pcw_ntest_cls'])
-
         whiten_backgrounds_in_dir(self.paths['m_cluster_sep_plots_224'])
-        whiten_backgrounds_in_dir(self.paths['m_color_sep_plots_224'])
 
-    def resize_noisy_images(self):
-        resize_images_to_224(self.paths['m_color_sep_plots'], self.paths['m_color_sep_plots_224'])
-        resize_images_to_224(self.paths['m_cluster_sep_plots'], self.paths['m_cluster_sep_plots_224'])
+
+    def crop_whitebg_lines(self):
+        # whiten_backgrounds_in_dir(self.paths['m_crops_white'])
+        # group_crops_to_new_json(self.paths['m_gt_train_json'], self.paths['m_crops_white_train_data'])
+        group_crops_to_new_json(self.paths['m_gt_valid_json'], self.paths['m_crops_white_valid_data'])
+
+
+    def test_crops(self):
+        resize_images_to_224(self.paths['m_crops'], self.paths['m_crops_224'])
+        whiten_backgrounds_in_dir(self.paths['m_crops_224'])
+        group_crops_to_new_json(self.paths['m_crops_all_data'], self.paths['m_crops_combined_data'])
+        if 'm_crops_combined_data' in self.paths:
+            update_lines(
+                json_file=self.paths['m_crops_combined_data'],
+                output_file=self.paths['m_crops_rescaled_data']
+            )
 
 
 if __name__ == "__main__":

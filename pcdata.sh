@@ -98,3 +98,6 @@
 # category separation where the background is white  not required anymore
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_color_wbg
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_wbg
+
+# crops  resize
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --seed 0 test_crops
