@@ -33,6 +33,7 @@ def get_args():
                                 'gt_rename', 'split_data_gt',
                                 'crop_whitebg_lines', 'white_bg',
                                 'resize_noisy_images', 'test_crops',
+                                'separate_peak_downsample',
                                 'color_unet', 'cluster_unet'])
 
     # Network Training Parameters

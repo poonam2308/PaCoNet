@@ -412,8 +412,90 @@ def main(base_dir):
     for image_id in image_ids:
         print(f"\n🚀 Starting pipeline for image ID: {image_id}")
         process_all_categories_and_combine(base_dir, image_id=image_id, threshold=10.0)
-        
+
 def build_category_hsv_map_from_dominant(df, image_id, dominant_colors):
+    """
+    dominant_colors JSON expected format:
+    {
+      "78.png": {
+        "cat1": {"h": 0.95, "s": 1, "v": 1},
+        "cat2": {"h": 0.51, "s": 1, "v": 1}
+      },
+      ...
+    }
+    """
+    color_column = df.columns[-1]
+    categories = sorted(df[color_column].unique())
+
+    # Try to find matching key in dominant_colors JSON
+    possible_keys = [f"{image_id}.png", f"r{image_id}.png"]
+    cat_dict = None
+    for key in possible_keys:
+        if key in dominant_colors:
+            cat_dict = dominant_colors[key]
+            break
+
+    if not cat_dict or not isinstance(cat_dict, dict):
+        print(f"⚠️ No dominant colors found for image_id={image_id} in JSON.")
+        return None
+
+    # Sort cat1,cat2,... in numeric order
+    def cat_sort_key(k):
+        m = re.match(r"cat(\d+)$", str(k))
+        return int(m.group(1)) if m else 10**9
+
+    ordered_keys = sorted(cat_dict.keys(), key=cat_sort_key)
+
+    # Build HSV list (already 0..1). Clamp just in case.
+    hsv_list = []
+    for k in ordered_keys:
+        hsv = cat_dict.get(k, {})
+        if not isinstance(hsv, dict):
+            continue
+        h = float(hsv.get("h", 0.0)) % 1.0
+        s = max(0.0, min(1.0, float(hsv.get("s", 1.0))))
+        v = max(0.0, min(1.0, float(hsv.get("v", 1.0))))
+        hsv_list.append({"h": h, "s": s, "v": v})
+
+    if not hsv_list:
+        return None
+
+    # Map dataframe categories -> HSV colors (cycle if more categories than colors)
+    category_hsv_map = {}
+    for i, cat in enumerate(categories):
+        category_hsv_map[cat] = hsv_list[i % len(hsv_list)]
+
+    return category_hsv_map
+
+def find_image_json(image_id: str, json_root_dir, recursive: bool = True):
+    """
+    Looks for a file named image_<image_id>.json under json_root_dir.
+    Returns a Path or None.
+    """
+    if image_id is None or image_id == "Unknown":
+        return None
+
+    json_root_dir = Path(json_root_dir)
+    target_name = f"image_{image_id}.json"
+
+    if recursive:
+        matches = list(json_root_dir.rglob(target_name))
+    else:
+        matches = list(json_root_dir.glob(target_name))
+
+    if not matches:
+        return None
+
+    # If multiple found, pick the first deterministically (sorted path)
+    return sorted(matches)[0]
+
+
+def load_json_file(path: Path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def build_category_hsv_map_from_dominant_old(df, image_id, dominant_colors):
     """
     df: combined dataframe (last column is category label)
     image_id: string from '<image_id>_combined.csv'
@@ -454,9 +536,53 @@ def build_category_hsv_map_from_dominant(df, image_id, dominant_colors):
         category_hsv_map[cat] = hsv
 
     return category_hsv_map
+def build_category_hsv_map_from_category_colors_json(df, category_colors_config):
+    """
+    category_colors_config can be:
+      - a dict already loaded from JSON
+      - OR a path to a JSON file
+
+    Expected JSON format (like image_2.json):
+    {
+      "filename": "...",
+      "category_colors": {
+        "SomeCategoryName": {"h": 0.33, "s": 1, "v": 1},
+        "OtherCategory":    {"h": 0.23, "s": 1, "v": 1}
+      }
+    }
+    """
+    # Load JSON if a filepath was passed
+    if isinstance(category_colors_config, (str, Path)):
+        with open(category_colors_config, "r", encoding="utf-8") as f:
+            category_colors_config = json.load(f)
+
+    if not isinstance(category_colors_config, dict):
+        return None
+
+    # Pull out category_colors (your requested "category_color is the item")
+    cat_dict = category_colors_config.get("category_colors")
+    if not isinstance(cat_dict, dict) or not cat_dict:
+        return None
+
+    color_column = df.columns[-1]
+    categories = sorted(df[color_column].unique())
+
+    # Build mapping for categories that exist in df.
+    # If some df categories are missing from JSON, we’ll just skip them (plot code can fallback if you want).
+    category_hsv_map = {}
+
+    for cat in categories:
+        hsv = cat_dict.get(str(cat))
+        if isinstance(hsv, dict):
+            h = float(hsv.get("h", 0.0)) % 1.0
+            s = max(0.0, min(1.0, float(hsv.get("s", 1.0))))
+            v = max(0.0, min(1.0, float(hsv.get("v", 1.0))))
+            category_hsv_map[cat] = {"h": h, "s": s, "v": v}
+
+    return category_hsv_map if category_hsv_map else None
 
 
-def redesign(combined_dir, output_dir, dominant_colors_json=None):
+def redesign(combined_dir, output_dir, dominant_colors_json=None, category_colors_dir=None):
     combined_dir = os.fspath(combined_dir)
     output_dir = os.fspath(output_dir)
     os.makedirs(output_dir, exist_ok=True)
@@ -496,11 +622,20 @@ def redesign(combined_dir, output_dir, dominant_colors_json=None):
         out_svg = os.path.join(output_dir, f"{image_id}_combined.svg")
 
         # Build category_hsv_map from dominant_colors.json (if available)
+        # Option A: prefer explicit category_colors JSON (like image_2.json)
         category_hsv_map = None
-        if dominant_colors is not None and image_id != "Unknown":
+
+        # Prefer per-image jsons from folder: image_<id>.json
+        if category_colors_dir is not None and image_id != "Unknown":
+            json_path = find_image_json(image_id, category_colors_dir, recursive=True)
+            if json_path is not None:
+                category_colors_config = load_json_file(json_path)
+                category_hsv_map = build_category_hsv_map_from_category_colors_json(df, category_colors_config)
+
+        # Fallback to dominant colors if no per-image mapping found
+        if category_hsv_map is None and dominant_colors is not None and image_id != "Unknown":
             category_hsv_map = build_category_hsv_map_from_dominant(df, image_id, dominant_colors)
 
-        # If category_hsv_map is None, generate_plot will fall back to random colors
         generate_plot(df, filename=out_svg, category_hsv_map=category_hsv_map)
 
         print(f"✅ Plot saved: {out_svg}")

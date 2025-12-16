@@ -9,7 +9,7 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --num_files 5000 --task run
 
 #separating the categories based on color
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_by_color
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_peak_downsample
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data
 

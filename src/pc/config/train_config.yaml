@@ -51,6 +51,12 @@ paths:
   m_color_train_json: "data/synthetic_plots/multi_cat/training/color/train.json"
   m_color_valid_json: "data/synthetic_plots/multi_cat/training/color/valid.json"
 
+
+  m_color_down_sep_plots: "data/synthetic_plots/multi_cat/training/color_down/images"
+  m_color_down_all_json: "data/synthetic_plots/multi_cat/training/color_down/images/all_data.json"
+  m_color_down_rescaled_all_json: "data/synthetic_plots/multi_cat/training/color_down/images/rescaled_all_data.json"
+
+
   # category separation - using hue filtering and dbscan filtering
   m_hdbscan_sep_plots: "data/synthetic_plots/multi_cat/training/hdbscan/images"
   m_hdbscan_all_json: "data/synthetic_plots/multi_cat/training/hdbscan/images/all_data.json"

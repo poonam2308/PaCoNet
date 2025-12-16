@@ -5,9 +5,10 @@ import numpy as np
 import torch
 
 
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
-
+from pc.plot_gen.category_separation_downsample import DownsampledHistogramBatchSeparator
 from src.pc.plot_gen.process_gt_images import run_rename, whiten_backgrounds_in_dir, group_crops_to_new_json
 from src.pc.plot_gen.color_space_evaluator import RGBKMeansEvaluator, LabKMeansEvaluator, HSVFullKMeansEvaluator, \
     HSVHueKMeansEvaluator, DinoKMeansEvaluator
@@ -100,14 +101,24 @@ class PlotsPipeline:
     def separate_by_color(self):
         print(f"🎨 Separating by color using {method} method...")
         sep = CategorySeparator()
-        # sep.process_batch(
-        #     input_dir=self.paths['m_crops'],
-        #     json_dir=self.paths['m_plots'],
-        #     output_dir=self.paths['m_color_sep_plots']
-        # )
+        sep.process_batch(
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_color_sep_plots']
+        )
         sep.save_cluster_vs_gt_only(
             input_dir=self.paths['m_color_sep_plots'],
             json_dir=self.paths['m_plots'],
+        )
+
+    def separate_peak_downsample(self):
+        print(f"🎨 Separating by color using {method} method...")
+        sep = DownsampledHistogramBatchSeparator()
+        sep.process_batch(
+            input_dir=self.paths['m_crops'],
+            json_dir=self.paths['m_plots'],
+            output_dir=self.paths['m_color_down_sep_plots'],
+            resize_factor_large=0.30
         )
 
     def rescale_lines(self):
