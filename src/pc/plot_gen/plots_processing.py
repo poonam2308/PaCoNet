@@ -8,7 +8,7 @@ import torch
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))  # 2 levels up from this file
 sys.path.insert(0, project_root)
-from pc.plot_gen.category_separation_downsample import DownsampledHistogramBatchSeparator
+from src.pc.plot_gen.category_separation_downsample import DownsampledHistogramBatchSeparator
 from src.pc.plot_gen.process_gt_images import run_rename, whiten_backgrounds_in_dir, group_crops_to_new_json
 from src.pc.plot_gen.color_space_evaluator import RGBKMeansEvaluator, LabKMeansEvaluator, HSVFullKMeansEvaluator, \
     HSVHueKMeansEvaluator, DinoKMeansEvaluator
