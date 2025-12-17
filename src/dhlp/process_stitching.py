@@ -130,6 +130,48 @@ def convert_json_to_csv1(json_dir):
         df.to_csv(csv_path, index=False)
         print(f"✅ JSON converted to CSV: {csv_path}")
 
+def stitch_parallel_coordinates_keep_all(file_paths, column_map, category_id=1,
+                                         threshold=5.0, carry_forward=True):
+    dfs = []
+    for fp, (y1, y2) in zip(file_paths, column_map):
+        df = pd.read_csv(fp)
+        if df.empty:
+            continue
+        dfs.append(df.rename(columns={y1: "y1", y2: "y2"}))
+
+    if not dfs:
+        return pd.DataFrame()
+
+    # init from crop1
+    paths = [{"crop1": r["y1"], "crop2": r["y2"]} for _, r in dfs[0].iterrows()]
+
+    for i in range(1, len(dfs)):
+        candidates = dfs[i]
+        new_paths = []
+
+        for path in paths:
+            last = path[f"crop{i+1}"]  # previous crop's y2
+
+            # nearest candidate in next crop
+            j = (candidates["y1"] - last).abs().argsort().iloc[0]
+            best = candidates.iloc[j]
+            dist = abs(best["y1"] - last)
+
+            extended = path.copy()
+            if dist <= threshold:
+                extended[f"crop{i+2}"] = best["y2"]
+            else:
+                # do NOT drop — keep path continuous
+                extended[f"crop{i+2}"] = last if carry_forward else np.nan
+
+            new_paths.append(extended)
+
+        paths = new_paths
+
+    out = pd.DataFrame(paths)
+    out["cat"] = category_id
+    return out
+
 
 def stitch_parallel_coordinates(file_paths, column_map, category_id=1, threshold=5.0):
     dfs = []
@@ -190,7 +232,7 @@ def process_all_categories(base_dir, image_id, threshold=10.0):
             print(f"⚠️ No files found for category {category}")
             continue
 
-        stitched_df = stitch_parallel_coordinates(file_paths, column_map, category_id=category, threshold=threshold)
+        stitched_df = stitch_parallel_coordinates_keep_all(file_paths, column_map, category_id=category, threshold=threshold)
         output_path = base_dir / f"stitched_category{category}.csv"
         stitched_df.to_csv(output_path, index=False)
         print(f"✅ Saved: {output_path}")
@@ -263,7 +305,7 @@ def process_all_categories_and_combine(base_dir, image_id, threshold=10.0):
             print(f"⚠️ No files found for label {label}")
             continue
 
-        stitched_df = stitch_parallel_coordinates(file_paths, column_map, category_id=label, threshold=threshold)
+        stitched_df = stitch_parallel_coordinates_keep_all(file_paths, column_map, category_id=label, threshold=threshold)
         stitched_path = base_dir / f"stitched_{label}.csv"
         stitched_df.to_csv(stitched_path, index=False)
         print(f"✅ Saved: {stitched_path}")

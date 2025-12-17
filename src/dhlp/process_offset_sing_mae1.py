@@ -213,7 +213,7 @@ def main():
     # Output setup
     output_dir = "output_point_mae"
     os.makedirs(output_dir, exist_ok=True)
-    output_file = "point_mae_results1.txt"
+    output_file = "point_mae1_results_c.txt"
     output_path = os.path.join(output_dir, output_file)
 
     # Visualization output directory
