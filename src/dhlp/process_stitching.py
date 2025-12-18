@@ -1,4 +1,5 @@
 import os
+import random
 import re
 import json
 from pathlib import Path
@@ -319,6 +320,7 @@ def process_all_categories_and_combine(base_dir, image_id, threshold=10.0):
     else:
         print("⚠️ No labels stitched. Nothing to combine.")
 
+
 #%--------------------generate plot from the combined csvs -------------------------%
 def generate_plot(df, filename=None, background_value=255,
                   grid_on=False, show_ticks_labels=False, category_hsv_map=None,
@@ -352,7 +354,7 @@ def generate_plot(df, filename=None, background_value=255,
         height=300
     )
 
-    lines = base.mark_line(opacity=1).encode(
+    lines = base.mark_line(opacity=0.4).encode(
         x=alt.X('key:N', axis=alt.Axis(
             title=None,
             domain=False,
@@ -372,6 +374,39 @@ def generate_plot(df, filename=None, background_value=255,
         detail="index:N",
         tooltip=column_names
     )
+
+    # palette10 = [
+    #     "#BD081C",  # red
+    #     "#0061FF",  # blue
+    #     "#25D366",  # green
+    #     "#FF5700",  # orange
+    #     "#f781bf",  # pink
+    #     "#8E44AD",  # magenta/purple
+    #
+    # ]
+    #
+    # # shuffle a copy so original palette stays intact
+    # shuffled_palette = palette10.copy()
+    # random.shuffle(shuffled_palette)
+    #
+    # # cycle if categories > 10
+    # range_ = [shuffled_palette[i % len(shuffled_palette)]
+    #           for i in range(len(unique_categories))]
+    #
+    # lines = base.mark_line(opacity=0.8).encode(
+    #     x=alt.X('key:N', axis=alt.Axis(title=None, domain=False, labels=show_ticks_labels, labelAngle=0, ticks=False)),
+    #     y=alt.Y('value:Q', axis=alt.Axis(title=None, domain=False, labels=False, ticks=False, grid=grid_on)),
+    #     color=alt.Color(
+    #         f"{color_column}:N",
+    #         scale=alt.Scale(
+    #             domain=unique_categories,
+    #             range=range_
+    #         ),
+    #         legend=None
+    #     ),
+    #     detail="index:N",
+    #     tooltip=column_names
+    # )
 
     rules = base.mark_rule(color="#ccc", tooltip=None).encode(
         x=alt.X('key:N', axis=alt.Axis(title=None, labels=False, ticks=False))
@@ -678,7 +713,9 @@ def redesign(combined_dir, output_dir, dominant_colors_json=None, category_color
         if category_hsv_map is None and dominant_colors is not None and image_id != "Unknown":
             category_hsv_map = build_category_hsv_map_from_dominant(df, image_id, dominant_colors)
 
+        bg_gray = (215, 215, 215)
         generate_plot(df, filename=out_svg, category_hsv_map=category_hsv_map)
+                    # background_value=bg_gray)
 
         print(f"✅ Plot saved: {out_svg}")
 
