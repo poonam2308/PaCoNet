@@ -68,7 +68,7 @@
 # category evaluation
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_color
 #
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_cluster
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_cluster
 
 # resize the images to 224 224 which are not denoised using unet
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task resize_noisy_images
@@ -100,4 +100,4 @@ python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data_wbg
 
 # crops  resize
-#python src/pc/plot_gen/plots_processing.py --cfg ./src/pc/config/test_config.yaml --seed 0  --task test_crops
+python src/pc/plot_gen/plots_processing.py --cfg ./src/pc/config/test_config.yaml --seed 0  --task test_crops
