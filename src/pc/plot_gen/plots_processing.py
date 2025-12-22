@@ -427,7 +427,7 @@ class PlotsPipeline:
 
 
     def test_crops(self):
-        # resize_images_to_224(self.paths['m_crops'], self.paths['m_crops_224'])
+        resize_images_to_224(self.paths['m_crops'], self.paths['m_crops_224'])
         whiten_backgrounds_in_dir(self.paths['m_crops_224'])
         group_crops_to_new_json(self.paths['m_crops_all_data'], self.paths['m_crops_combined_data'])
         if 'm_crops_combined_data' in self.paths:
