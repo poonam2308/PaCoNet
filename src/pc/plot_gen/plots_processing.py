@@ -331,16 +331,46 @@ class PlotsPipeline:
             summary_json=self.paths['m_color_cat_eval_json'],
             verbose=True
         )
+
     def cat_eval_cluster(self):
+        # evaluate_catsep_vs_gt(
+        #     pred_dir=self.paths['m_cluster_sep_plots'],
+        #     gt_dir=self.paths['m_gt_plots_cat_ntl_crops'],
+        #     white_thresh=750,
+        #     per_crop_csv=self.paths['m_cluster_cat_eval_crop_csv'],
+        #     per_base_csv=self.paths['m_cluster_cat_eval_base_csv'],
+        #     summary_json=self.paths['m_cluster_cat_eval_json'],
+        #     verbose=True
+        # )
         evaluate_catsep_vs_gt(
-            pred_dir=self.paths['m_cluster_sep_plots'],
+            pred_dir=self.paths['m_hdbscan_sep_plots'],
             gt_dir=self.paths['m_gt_plots_cat_ntl_crops'],
             white_thresh=750,
-            per_crop_csv=self.paths['m_cluster_cat_eval_crop_csv'],
-            per_base_csv=self.paths['m_cluster_cat_eval_base_csv'],
-            summary_json=self.paths['m_cluster_cat_eval_json'],
+            per_crop_csv=self.paths['m_hdbscan_cat_eval_crop_csv'],
+            per_base_csv=self.paths['m_hdbscan_cat_eval_base_csv'],
+            summary_json=self.paths['m_hdbscan_cat_eval_json'],
             verbose=True
         )
+        evaluate_catsep_vs_gt(
+            pred_dir=self.paths['m_elbo_sep_plots'],
+            gt_dir=self.paths['m_gt_plots_cat_ntl_crops'],
+            white_thresh=750,
+            per_crop_csv=self.paths['m_elbo_cat_eval_crop_csv'],
+            per_base_csv=self.paths['m_elbo_cat_eval_base_csv'],
+            summary_json=self.paths['m_elbo_cat_eval_json'],
+            verbose=True
+        )
+
+        evaluate_catsep_vs_gt(
+            pred_dir=self.paths['m_elbofres_sep_plots'],
+            gt_dir=self.paths['m_gt_plots_cat_ntl_crops'],
+            white_thresh=750,
+            per_crop_csv=self.paths['m_elbofres_cat_eval_crop_csv'],
+            per_base_csv=self.paths['m_elbofres_cat_eval_base_csv'],
+            summary_json=self.paths['m_elbofres_cat_eval_json'],
+            verbose=True
+        )
+
 
     def color_space_evaluation(self):
         rgb_eval = RGBKMeansEvaluator(sample_size=10000)

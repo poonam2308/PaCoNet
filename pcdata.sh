@@ -9,7 +9,7 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --num_files 5000 --task run
 
 #separating the categories based on color
-python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_peak_downsample
+#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task separate_peak_downsample
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task rescale_lines
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task split_data
 
@@ -68,7 +68,7 @@ python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml
 # category evaluation
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_color
 #
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_cluster
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_cluster
 
 # resize the images to 224 224 which are not denoised using unet
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task resize_noisy_images
