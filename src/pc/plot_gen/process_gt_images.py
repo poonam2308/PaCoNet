@@ -209,7 +209,7 @@ def group_crops_to_new_json(input_path: str, output_path: str) -> None:
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output_data, f, ensure_ascii=False, indent=2)
 
-
+    print("=== done ===")
 
 
 def run_rename(image_dir, json_dir, out_image_dir, all_data, all_data_cat , all_data_crop_group):

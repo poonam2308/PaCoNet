@@ -4,6 +4,37 @@ import cv2
 import torch
 
 
+
+import numpy as np
+
+def wasserstein_1d(u, v):
+    """Exact 1D Wasserstein-1 for uniform weights."""
+    u = np.sort(u)
+    v = np.sort(v)
+    n = len(u); m = len(v)
+    # resample to same length by interpolation
+    k = max(n, m)
+    uq = np.interp(np.linspace(0, 1, k), np.linspace(0, 1, n), u)
+    vq = np.interp(np.linspace(0, 1, k), np.linspace(0, 1, m), v)
+    return float(np.mean(np.abs(uq - vq)))
+
+def sliced_wasserstein_2d(pred_points, gt_points, n_proj=128, seed=0):
+    P = np.asarray(pred_points, np.float64)
+    G = np.asarray(gt_points, np.float64)
+    if len(P) == 0 or len(G) == 0:
+        return np.nan
+
+    rng = np.random.default_rng(seed)
+    dirs = rng.normal(size=(n_proj, 2))
+    dirs /= np.linalg.norm(dirs, axis=1, keepdims=True)
+
+    vals = []
+    for d in dirs:
+        p1 = P @ d
+        g1 = G @ d
+        vals.append(wasserstein_1d(p1, g1))
+    return float(np.mean(vals))
+
 def nearest_junction(point, junctions):
     distances = np.linalg.norm(junctions - point, axis=1)
     return junctions[np.argmin(distances)]  # Closest ground-truth junction

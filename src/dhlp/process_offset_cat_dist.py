@@ -153,6 +153,8 @@ def main():
                             stats = compute_distribution_mae(pred_points, gt_points)
                             stats_med = compute_distribution_mae_median(pred_points, gt_points)
                             wd = wasserstein_2d(pred_points, gt_points)
+                            # wd = sliced_wasserstein_2d(pred_points, gt_points, n_proj=128)
+                            # print(f"SlicedWasserstein={wd:.3f}px")
                             cd = chamfer_distance_2d(pred_points, gt_points, squared=False)
 
                             print(
