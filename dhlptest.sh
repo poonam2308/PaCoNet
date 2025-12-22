@@ -78,9 +78,9 @@
 ####-------------------------------------------------------------------------------
 # create the dataset as dhlp format for the crops
 #
-#./src/dhlp/dataset/wireframe_all_test.py data/synthetic_plots/multi_cat/testing/m_crops data/pcw_crops_test
+./src/dhlp/dataset/wireframe_all_test.py data/synthetic_plots/multi_cat/testing/m_crops data/pcw_crops_test
 
-#./src/dhlp//dataset/gen_mask.py data/pcw_crops_test/test data/pcw_crops_test/masks
+./src/dhlp//dataset/gen_mask.py data/pcw_crops_test/test data/pcw_crops_test/masks
 
 # -----------------------------------------------------------------------------
 #-----------------noisy inputs of test data (without unet)
