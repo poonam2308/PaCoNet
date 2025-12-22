@@ -32,7 +32,8 @@ from src.dhlp.lcnn.datasets import WireframeDataset, collate
 from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
-from process_utils import compute_nearest_junction_offset_stats
+from process_utils import compute_nearest_junction_offset_stats, compute_distribution_mae, \
+    compute_distribution_mae_median, wasserstein_2d, chamfer_distance_2d
 
 
 def main():
@@ -100,7 +101,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # Output file to save the offsets
-    output_file = "offset_results_dist_ncls.txt"
+    output_file = "offset_results_cat_dist_c.txt"
     output_dir = "output_offsets"
     os.makedirs(output_dir, exist_ok=True)  # Ensure directory exists
     output_path = os.path.join(output_dir, output_file)
@@ -112,6 +113,7 @@ def main():
     with open(output_path, "w") as f:
         f.write("Image_Index, Avg_Start_Offset, Avg_End_Offset\n")  # CSV-style header
         all_offset_errors = []  # Store errors for averaging
+        all_offset_errors_median=[]
 
         for batch_idx, (image, meta, target) in enumerate(loader):
             with torch.no_grad():
@@ -126,138 +128,82 @@ def main():
                 for i in range(len(image)):
                     index = batch_idx * M.batch_size + i
                     print(f'Processing Image Index: {index}')
-                    line_endpoints = H["lines"][i].cpu().numpy() * 4
+                    line_endpoints = H["lines"][i].cpu().numpy() * 1.75
 
                     if len(line_endpoints) == 0:
                         continue
 
-                    for idx in range(len(line_endpoints)):
-                        if random.random() > 0.5:
-                            line_endpoints[idx] = line_endpoints[idx][::-1]
 
                     pred_lines = [tuple(line.flatten()) for line in line_endpoints]
                     if pred_lines and len(meta[i]["junc"]) > 0:
-                        gt_junctions = meta[i]["junc"].cpu().numpy() * 4
-                        offset_stats = compute_nearest_junction_offset_stats(pred_lines, gt_junctions)
-                        all_offset_errors.append(offset_stats)
-                        # Log results
-                        print(f"Image {index}: Mean Offset = {offset_stats['mean_offset']:.3f}, "
-                              f"Std Dev = {offset_stats['std_offset']:.3f}, "
-                              f"Lower Bound = {offset_stats['lower_bound']:.3f}, "
-                              f"Upper Bound = {offset_stats['upper_bound']:.3f}")
+                        gt_junctions = meta[i]["junc"].cpu().numpy() * 1.75
+                        # Collect predicted endpoints
+                        pred_points = []
+                        for line in pred_lines:
+                            pred_points.append(line[:2])
+                            pred_points.append(line[2:])
+                        pred_points = np.array(pred_points)
 
-                        f.write(f"{index}, {offset_stats['mean_offset']:.2f}, {offset_stats['std_offset']:.2f}, "
-                                f"{offset_stats['lower_bound']:.2f}, {offset_stats['upper_bound']:.2f}\n")
+                        # GT junctions (already Nx2)
+                        gt_points = gt_junctions
+                        print("pred min/max:", pred_points.min(axis=0), pred_points.max(axis=0))
+                        print("gt   min/max:", gt_points.min(axis=0), gt_points.max(axis=0))
 
-        if all_offset_errors:
-                # Compute overall averages based on nearest junction-based errors
-                avg_mean_offset = np.mean([e["mean_offset"] for e in all_offset_errors])
-                avg_lower_offset = np.mean([e["lower_bound"] for e in all_offset_errors])
-                avg_upper_offset = np.mean([e["upper_bound"] for e in all_offset_errors])
-                # avg_overall_offset = np.mean([e["overall_offset"] for e in all_offset_errors])
+                        if len(pred_points) > 0 and len(gt_points) > 0:
+                            stats = compute_distribution_mae(pred_points, gt_points)
+                            stats_med = compute_distribution_mae_median(pred_points, gt_points)
+                            wd = wasserstein_2d(pred_points, gt_points)
+                            cd = chamfer_distance_2d(pred_points, gt_points, squared=False)
 
-                # Write final averages to the output file
-                f.write("\nOverall_Averages (Nearest Junction Based):\n")
-                f.write(f"Avg Mean Offset: {round(avg_mean_offset, 2)}\n")
-                f.write(f"Avg Lower Offset: {round(avg_lower_offset, 2)}\n")
-                f.write(f"Avg Upper Offset: {round(avg_upper_offset, 2)}\n")
-                # f.write(f"Avg Overall Offset: {round(avg_overall_offset, 2)}\n")
+                            print(
+                                f"Image {index}: "
+                                f"MAE(mean) = {stats['mae_mean']:.3f}, "
+                                f"MAE(std) = {stats['mae_std']:.3f}"
+                            )
 
-                # Print the final averages
-                print("\nFinal Average Offset Errors (Nearest Junction Based):")
-                print(f"Avg Mean Offset: {round(avg_mean_offset, 2)}")
-                print(f"Avg Lower Offset: {round(avg_lower_offset, 2)}")
-                print(f"Avg Upper Offset: {round(avg_upper_offset, 2)}")
-            # print(f"Avg Overall Offset: {round(avg_overall_offset, 2)}")
 
-    #
-    #                 # Compute offsets
-    #                 start_offsets = np.array([
-    #                     np.linalg.norm(start - nearest_junction(start, ground_truth_junctions))
-    #                     for start in start_points
-    #                 ])
-    #                 end_offsets = np.array([
-    #                     np.linalg.norm(end - nearest_junction(end, ground_truth_junctions))
-    #                     for end in end_points
-    #                 ])
-    #
-    #                 # Compute average offsets for this image
-    #                 average_start_offset = np.mean(start_offsets) if len(start_offsets) > 0 else 0
-    #                 average_end_offset = np.mean(end_offsets) if len(end_offsets) > 0 else 0
-    #
-    #                 # Store for overall computation
-    #                 all_start_offsets.extend(start_offsets)
-    #                 all_end_offsets.extend(end_offsets)
-    #
-    #                 # Write per-image results
-    #                 f.write(f"{index}, {average_start_offset:.3f}, {average_end_offset:.3f}\n")
-    #                 print(
-    #                     f"Image {index}: Avg Start Offset = {average_start_offset:.3f}, Avg End Offset = {average_end_offset:.3f}")
-    #
-    #     # Compute overall average offsets
-    #     overall_start_offset = np.mean(all_start_offsets) if len(all_start_offsets) > 0 else 0
-    #     overall_end_offset = np.mean(all_end_offsets) if len(all_end_offsets) > 0 else 0
-    #
-    #     # Write overall results to the file
-    #     f.write(f"\nOverall_Avg_Start_Offset: {overall_start_offset:.3f}\n")
-    #     f.write(f"Overall_Avg_End_Offset: {overall_end_offset:.3f}\n")
-    #
-    # # Print overall results
-    # print(f"\nFinal Results Saved to {output_path}")
-    # print(f"Overall Avg Start Offset: {overall_start_offset:.3f}")
-    # print(f"Overall Avg End Offset: {overall_end_offset:.3f}")
+                            print(
+                                f"Image {index}: "
+                                f"MedianErr = {stats_med['mae_center']:.3f}, "
+                                f"MADerr = {stats_med['mae_spread_err']:.3f}, "
+                                f"Wasserstein = {wd:.3f}",
+                                 f"Chamfer = {cd:.3f}px"
+                            )
 
-#     for batch_idx, (image, meta, target) in enumerate(loader):
-#         with torch.no_grad():
-#             input_dict = {
-#                 "image": recursive_to(image, device),
-#                 "meta": recursive_to(meta, device),
-#                 "target": recursive_to(target, device),
-#                 "mode": "validation",
-#             }
-#             H = model(input_dict)["preds"]
-#             for i in range(len(image)):
-#                 index = batch_idx * M.batch_size + i
-#                 print('index', index)
-#                 np.savez(
-#                     osp.join(output_dir, f"{index:06}.npz"),
-#                     **{k: v[i].cpu().numpy() for k, v in H.items()},
-#                 )
-#                 if not args["--plot"]:
-#                     continue
-#                 im = image[i].cpu().numpy().transpose(1, 2, 0)
-#                 im = im * M.image.stddev + M.image.mean
-#                 lines = H["lines"][i].cpu().numpy() * 4
-#                 scores = H["score"][i].cpu().numpy()
-#                 if len(lines) > 0 and not (lines[0] == 0).all():
-#                     for i, ((a, b), s) in enumerate(zip(lines, scores)):
-#                         if i > 0 and (lines[i] == lines[0]).all():
-#                             break
-#                         plt.plot([a[1], b[1]], [a[0], b[0]], c=c(s), linewidth=4)
-#                 plt.show()
-#
-#
-# cmap = plt.get_cmap("jet")
-# norm = mpl.colors.Normalize(vmin=0.4, vmax=1.0)
-# sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
-# sm.set_array([])
-#
-#
-# def c(x):
-#     return sm.to_rgba(x)
-#
-#
+                            stats_med["wasserstein"] = wd
+                            stats_med["chamfer"] = cd
+                            all_offset_errors_median.append(stats_med)
+
+                            all_offset_errors.append(stats)
+                            #all_offset_errors_median.append(stats_med)
+
+        # avg_mae_mean = np.mean([e["mae_mean"] for e in all_offset_errors])
+        # avg_mae_std = np.mean([e["mae_std"] for e in all_offset_errors])
+
+        # avg_mae_mad = np.mean([e["mae_center"] for e in all_offset_errors])
+        # avg_mae_mad = np.mean([e["mae_spread_err"] for e in all_offset_errors])
+
+        # print("\nFinal Distribution-Level Metrics:")
+        # print(f"Avg MAE of Mean: {avg_mae_mean:.3f}")
+        # print(f"Avg MAE of Std : {avg_mae_std:.3f}")
+
+        print("\nFinal Distribution-Level Metrics:")
+        # print(f"Avg MAE of Median: {avg_mae_mad:.3f}")
+        # print(f"Avg MAE of MAD : {avg_mae_mad:.3f}")
+
+        # avg_median_err = np.mean([e["mae_center"] for e in all_offset_errors_median])
+        # avg_mad_err = np.mean([e["mae_spread_err"] for e in all_offset_errors_median])
+        avg_wd = np.mean([e["wasserstein"] for e in all_offset_errors_median])
+        avg_chamfer    = np.mean([e["chamfer"] for e in all_offset_errors_median])
+
+        # print("\nFinal Distribution-Level Metrics:")
+        # print(f"Avg Median Center Error : {avg_median_err:.3f}")
+        # print(f"Avg MAD Spread Error   : {avg_mad_err:.3f}")
+        print(f"Avg Wasserstein (2D)   : {avg_wd:.3f}")
+        print(f"Avg Chamfer Distance    : {avg_chamfer:.3f}px")
+
+
 if __name__ == "__main__":
     main()
 
-
-#Final Average Offset Errors: caluclated on new test dataset
-# Avg Mean Offset: 12.83
-# Avg Lower Offset: -7.67
-# Avg Upper Offset: 33.32
-
-# Final Average Offset Errors (Nearest Junction Based):
-# Avg Mean Offset: 13.44
-# Avg Lower Offset: -5.52
-# Avg Upper Offset: 32.41
 

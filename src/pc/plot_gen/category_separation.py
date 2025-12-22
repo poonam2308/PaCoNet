@@ -18,6 +18,23 @@ class CategorySeparator:
       - Supports `top_k` to keep only the K strongest hue peaks (by histogram height).
     """
 
+    def _count_valid_pixels(self, hsv_img, sat_thresh=50):
+        sat = hsv_img[:, :, 1]
+        return int(np.count_nonzero(sat > sat_thresh))
+
+    def _detect_peaks_from_hsv(self, hsv, sat_thresh=50, peak_height_frac=0.05, peak_distance=5):
+        hue = hsv[:, :, 0].flatten()
+        sat = hsv[:, :, 1].flatten()
+        valid = sat > sat_thresh
+        hue_filtered = hue[valid]
+
+        hist, _ = np.histogram(hue_filtered, bins=180, range=(0, 180))
+        if np.max(hist) == 0:
+            return np.array([], dtype=int)
+
+        peaks, _ = find_peaks(hist, height=np.max(hist) * float(peak_height_frac), distance=int(peak_distance))
+        return peaks
+
     # ---------- Utilities ----------
     @staticmethod
     def _json_exists(json_path):
@@ -438,3 +455,84 @@ class CategorySeparator:
 
         print(f"[DONE] Wrote cluster_vs_gt.json + cluster_vs_gt_summary.json to: {output_dir}")
         return comparisons, summary
+
+    def process_crop_group_consistent_peaks(
+            self,
+            crop_paths,
+            json_path=None,
+            output_dir=".",
+            sat_thresh=50,
+            peak_height_frac=0.05,
+            peak_distance=5,
+            tolerance=10,
+            prefer_gt_lines=True,
+    ):
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Accept either a directory path OR a list of paths
+        if isinstance(crop_paths, (str, os.PathLike)) and os.path.isdir(crop_paths):
+            exts = (".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp")
+            crop_paths = sorted(
+                os.path.join(crop_paths, f)
+                for f in os.listdir(crop_paths)
+                if f.lower().endswith(exts)
+            )
+        else:
+            crop_paths = list(crop_paths)
+
+        # --- load all crops (bgr+hsv) ---
+        crops = []
+        for p in crop_paths:
+            pil = Image.open(p).convert("RGB")
+            rgb = np.array(pil)
+            bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+            hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
+            crops.append((p, bgr, hsv))
+
+        # --- choose cleanest crop as reference ---
+        counts = [self._count_valid_pixels(hsv, sat_thresh=sat_thresh) for _, _, hsv in crops]
+        ref_i = int(np.argmax(counts))
+        ref_hsv = crops[ref_i][2]
+
+        # --- detect peaks ONCE ---
+        ref_peaks = self._detect_peaks_from_hsv(
+            ref_hsv,
+            sat_thresh=sat_thresh,
+            peak_height_frac=peak_height_frac,
+            peak_distance=peak_distance,
+        )
+
+        # --- optional JSON inputs (same as your single-image method) ---
+        category_colors = None
+        gt_cat_dict = None
+        if self._json_exists(json_path):
+            with open(json_path, "r") as f:
+                data = json.load(f)
+            category_colors = data.get("category_colors", None)
+
+        all_out, all_colors = [], []
+
+        # --- apply same peaks to every crop ---
+        for image_path, img_bgr, hsv in crops:
+            masks = self._build_peak_masks_from_hist(hsv, ref_peaks, tol=int(tolerance))
+
+            lines = []
+            gt_cat_dict = None
+            if self._json_exists(json_path):
+                gt_cat_dict, merged = self._load_lines_structured(json_path, Path(image_path).name)
+                lines = merged
+
+            if category_colors:
+                out_data, color_data = self._process_masks_categories_white_bg(
+                    image_path, img_bgr, masks, lines, output_dir, category_colors,
+                    gt_cat_coords=(gt_cat_dict if prefer_gt_lines and isinstance(gt_cat_dict, dict) else None)
+                )
+            else:
+                out_data, color_data = self._process_masks_simple_white_bg(
+                    image_path, img_bgr, masks, lines, output_dir
+                )
+
+            all_out.extend(out_data)
+            all_colors.extend(color_data)
+
+        return all_out, all_colors

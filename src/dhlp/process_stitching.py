@@ -174,7 +174,40 @@ def stitch_parallel_coordinates_keep_all(file_paths, column_map, category_id=1,
     return out
 
 
-def stitch_parallel_coordinates(file_paths, column_map, category_id=1, threshold=5.0):
+def spread_duplicate_values(values, eps=0.01):
+    """
+    values: 1D array-like of floats
+    returns: new array where exact-duplicate values are slightly spread:
+      y, y+eps, y-eps, y+2eps, y-2eps, ...
+    """
+    v = np.asarray(values, dtype=float).copy()
+    out = v.copy()
+
+    # group by exact value
+    uniq = {}
+    for idx, val in enumerate(v):
+        if not np.isfinite(val):
+            continue
+        uniq.setdefault(val, []).append(idx)
+
+    for val, idxs in uniq.items():
+        if len(idxs) <= 1:
+            continue
+        # symmetric offsets centered at 0
+        # order: 0, +1, -1, +2, -2, ...
+        offsets = [0.0]
+        k = 1
+        while len(offsets) < len(idxs):
+            offsets.append(+k * eps)
+            if len(offsets) < len(idxs):
+                offsets.append(-k * eps)
+            k += 1
+        for i, idx in enumerate(idxs):
+            out[idx] = val + offsets[i]
+
+    return out
+
+def stitch_parallel_coordinates(file_paths, column_map, category_id=1, threshold=3.0):
     dfs = []
     for fp, (y1, y2) in zip(file_paths, column_map):
         try:
@@ -234,6 +267,12 @@ def process_all_categories(base_dir, image_id, threshold=10.0):
             continue
 
         stitched_df = stitch_parallel_coordinates_keep_all(file_paths, column_map, category_id=category, threshold=threshold)
+
+        # stitched_df = stitch_parallel_coordinates_keep_all(file_paths, column_map, category_id=category, threshold=threshold)
+        stitched_df = stitch_keep_segments(file_paths, column_map, category_id=category,
+                                           threshold=threshold)
+
+
         output_path = base_dir / f"stitched_category{category}.csv"
         stitched_df.to_csv(output_path, index=False)
         print(f"✅ Saved: {output_path}")
@@ -284,7 +323,293 @@ def get_crop_csvs_and_column_map(base_dir, image_id, category):
     column_map = [(f"crop_{num}_y1", f"crop_{num}_y2") for _, num in matched_files]
     return file_paths, column_map
 
+def stitch_keep_segments1(file_paths, column_map, category_id=1, threshold=5.0):
+    dfs = []
+    for fp, (y1_col, y2_col) in zip(file_paths, column_map):
+        try:
+            df = pd.read_csv(fp)
+        except pd.errors.EmptyDataError:
+            continue
+        if df.empty:
+            continue
 
+        df = df.rename(columns={y1_col: "y1", y2_col: "y2"})[["y1", "y2"]].copy()
+        df["y1"] = pd.to_numeric(df["y1"], errors="coerce")
+        df["y2"] = pd.to_numeric(df["y2"], errors="coerce")
+        df = df.dropna(subset=["y1", "y2"])
+        dfs.append(df)
+
+    if not dfs:
+        return pd.DataFrame()
+
+    # seed from crop1
+    paths = [{"crop1_y1": float(r["y1"]), "crop1_y2": float(r["y2"])}
+             for _, r in dfs[0].iterrows()]
+
+    # extend crops 2..N
+    for i in range(1, len(dfs)):
+        candidates = dfs[i]
+        prev_end_key = f"crop{i}_y2"      # keep this (dummy end)
+        next_y1_key  = f"crop{i+1}_y1"
+        next_y2_key  = f"crop{i+1}_y2"
+
+        new_paths = []
+        for path in paths:
+            prev_end = path[prev_end_key]
+            # if we don't have a valid previous endpoint, we can't match forward
+            if not np.isfinite(prev_end) or candidates.empty:
+                extended[next_y1_key] = np.nan
+                extended[next_y2_key] = np.nan
+                new_paths.append(extended)
+                continue
+
+            diffs = (candidates["y1"] - prev_end).abs()
+            diffs = diffs.dropna()  # <-- critical
+
+            # if all diffs were NA, no match possible
+            if diffs.empty:
+                extended[next_y1_key] = np.nan
+                extended[next_y2_key] = np.nan
+                new_paths.append(extended)
+                continue
+
+            j = diffs.idxmin()  # keep it as index type (don’t cast to int)
+            dist = float(diffs.loc[j])
+
+            extended = path.copy()
+            if dist <= threshold:
+                best = candidates.loc[j]
+                extended[next_y1_key] = float(best["y1"])
+                extended[next_y2_key] = float(best["y2"])
+            else:
+                extended[next_y1_key] = np.nan
+                extended[next_y2_key] = np.nan
+
+            new_paths.append(extended)
+
+        paths = new_paths
+
+    out = pd.DataFrame(paths)
+    out["cat"] = category_id
+    return out
+
+
+def _spread_duplicates_for_matching(values, eps=0.1):
+    """
+    Spread EXACT duplicates by tiny offsets, for matching only.
+    Example: y, y, y -> y, y+eps, y-eps
+
+    eps must be much smaller than threshold.
+    """
+    v = np.asarray(values, dtype=float)
+    out = v.copy()
+
+    buckets = {}
+    for i, val in enumerate(v):
+        if not np.isfinite(val):
+            continue
+        buckets.setdefault(val, []).append(i)
+
+    for val, idxs in buckets.items():
+        if len(idxs) <= 1:
+            continue
+
+        offsets = [0.0]
+        k = 1
+        while len(offsets) < len(idxs):
+            offsets.append(+k * eps)
+            if len(offsets) < len(idxs):
+                offsets.append(-k * eps)
+            k += 1
+
+        for j, i in enumerate(idxs):
+            out[i] = val + offsets[j]
+
+    return out
+
+def stitch_keep_segments(file_paths, column_map, category_id=1, threshold=5.0,
+                         eps=0.1, max_reuse=1):
+    """
+    Keeps BOTH y1 and y2 per crop:
+      crop1_y1,crop1_y2,crop2_y1,crop2_y2,...
+
+    Matching uses prev crop END to next crop START:
+      crop{i}_y2  ->  crop{i+1}_y1
+
+    eps: tiny offset applied ONLY to duplicate prev_end values for matching (not stored).
+    max_reuse: limit how many times the same candidate row can be matched in this step.
+              None = unlimited (your old behavior).
+              1 = close to one-to-one (reduces collapse a lot).
+              2/3 = allow some branching.
+    """
+    dfs = []
+    for fp, (y1_col, y2_col) in zip(file_paths, column_map):
+        try:
+            df = pd.read_csv(fp)
+        except pd.errors.EmptyDataError:
+            continue
+        if df.empty:
+            continue
+
+        df = df.rename(columns={y1_col: "y1", y2_col: "y2"})[["y1", "y2"]].copy()
+        df["y1"] = pd.to_numeric(df["y1"], errors="coerce")
+        df["y2"] = pd.to_numeric(df["y2"], errors="coerce")
+        df = df.dropna(subset=["y1", "y2"]).reset_index(drop=True)
+        dfs.append(df)
+
+    if not dfs:
+        return pd.DataFrame()
+
+    # seed from crop1
+    paths = [{"crop1_y1": float(r["y1"]), "crop1_y2": float(r["y2"])}
+             for _, r in dfs[0].iterrows()]
+
+    # extend crops 2..N
+    for i in range(1, len(dfs)):
+        candidates = dfs[i]
+        prev_end_key = f"crop{i}_y2"
+        next_y1_key  = f"crop{i+1}_y1"
+        next_y2_key  = f"crop{i+1}_y2"
+
+        # candidate arrays for speed & stability
+        cand_y1 = candidates["y1"].to_numpy(dtype=float)
+        cand_y2 = candidates["y2"].to_numpy(dtype=float)
+
+        used_count = np.zeros(len(cand_y1), dtype=int) if max_reuse is not None else None
+
+        # precompute prev ends and their matching-adjusted version (tie-breaker)
+        prev_ends_true = np.array([p.get(prev_end_key, np.nan) for p in paths], dtype=float)
+        prev_ends_match = _spread_duplicates_for_matching(prev_ends_true, eps=eps)
+
+        new_paths = []
+        for p_idx, path in enumerate(paths):
+            extended = path.copy()  # <-- FIX: define before any early-continue
+
+            prev_end = prev_ends_match[p_idx]
+
+            # cannot match forward
+            if (not np.isfinite(prev_end)) or (len(cand_y1) == 0):
+                extended[next_y1_key] = np.nan
+                extended[next_y2_key] = np.nan
+                new_paths.append(extended)
+                continue
+
+            # distances to all candidate starts
+            d = np.abs(cand_y1 - prev_end)
+
+            # optionally avoid reusing the same next segment too many times
+            if used_count is not None:
+                d = d + (used_count >= max_reuse) * 1e9
+
+            j = int(np.argmin(d))
+            dist = float(d[j])
+
+            # if np.isfinite(dist) and dist <= threshold:
+            #     extended[next_y1_key] = float(cand_y1[j])
+            #     extended[next_y2_key] = float(cand_y2[j])
+            #     if used_count is not None:
+            #         used_count[j] += 1
+            # else:
+            #     extended[next_y1_key] = np.nan
+            #     extended[next_y2_key] = np.nan    # keep the line connected (carry forward previous endpoint)
+            #
+
+            # always take the nearest REAL candidate if it exists
+            if np.isfinite(dist):
+                extended[next_y1_key] = float(cand_y1[j])
+                extended[next_y2_key] = float(cand_y2[j])
+
+                # flag whether it was a "good" match
+                extended[f"match_ok_{i + 1}"] = (dist <= threshold)
+                extended[f"match_dist_{i + 1}"] = dist
+
+                if used_count is not None:
+                    used_count[j] += 1
+            else:
+                # only here we truly have nothing to connect to
+                extended[next_y1_key] = np.nan
+                extended[next_y2_key] = np.nan
+                extended[f"match_ok_{i + 1}"] = False
+                extended[f"match_dist_{i + 1}"] = np.nan
+
+            new_paths.append(extended)
+
+        paths = new_paths
+
+    out = pd.DataFrame(paths)
+    out["cat"] = category_id
+    return out
+
+def to_plot_chain_df(stitched_segments_df):
+    """
+    Plot columns for your generate_plot():
+      crop1 = crop1_y1
+      crop2 = crop1_y2
+      crop3 = crop2_y2
+      crop4 = crop3_y2
+      ...
+      cat  = cat
+    """
+    df = stitched_segments_df.copy()
+
+    # detect number of crops from available crop*_y2 columns
+    crop_nums = []
+    for c in df.columns:
+        m = re.match(r"crop(\d+)_y2$", c)
+        if m:
+            crop_nums.append(int(m.group(1)))
+    if not crop_nums:
+        return pd.DataFrame()
+
+    n = max(crop_nums)
+
+    out = pd.DataFrame()
+    out["crop1"] = df["crop1_y1"]
+    out["crop2"] = df["crop1_y2"]
+
+    for k in range(2, n + 1):
+        out[f"crop{k+1}"] = df.get(f"crop{k}_y2", np.nan)
+
+    out["cat"] = df["cat"]
+    return out
+
+
+
+
+def spread_overlaps_for_plot(df, cat_col="cat", eps_ratio=0.002):
+    """
+    For each axis column (crop1..cropN), if multiple rows share the same value,
+    add a tiny vertical offset so they become visible.
+
+    eps_ratio is relative to that axis' data range (so it scales with your data).
+    """
+    out = df.copy()
+    axis_cols = [c for c in out.columns if c != cat_col]
+
+    for col in axis_cols:
+        s = pd.to_numeric(out[col], errors="coerce")
+        mask = s.notna()
+        if mask.sum() < 2:
+            continue
+
+        # scale epsilon to the axis range
+        vmin, vmax = float(s[mask].min()), float(s[mask].max())
+        span = max(vmax - vmin, 1e-9)
+        eps = span * eps_ratio
+
+        # identify duplicates (within category so different cats don't push each other)
+        grp = out.loc[mask, [cat_col, col]].copy()
+        # count position within identical (cat, value) groups: 0,1,2,...
+        k = grp.groupby([cat_col, col]).cumcount()
+
+        # center offsets around 0: 0,1,2 ->  -1,0,+1 (approximately)
+        # offset = (k - (n-1)/2) * eps ; we need n per group
+        n = grp.groupby([cat_col, col])[col].transform("size")
+        offset = (k - (n - 1) / 2.0) * eps
+
+        out.loc[mask, col] = s[mask].values + offset.values
+
+    return out
 
 def process_all_categories_and_combine(base_dir, image_id, threshold=10.0):
     base_dir = Path(base_dir)
@@ -306,10 +631,19 @@ def process_all_categories_and_combine(base_dir, image_id, threshold=10.0):
             print(f"⚠️ No files found for label {label}")
             continue
 
-        stitched_df = stitch_parallel_coordinates_keep_all(file_paths, column_map, category_id=label, threshold=threshold)
-        stitched_path = base_dir / f"stitched_{label}.csv"
-        stitched_df.to_csv(stitched_path, index=False)
-        print(f"✅ Saved: {stitched_path}")
+        #stitched_df = stitch_parallel_coordinates_keep_all(file_paths, column_map, category_id=label, threshold=threshold)
+        stitched_segments = stitch_keep_segments(
+            file_paths, column_map, category_id=label, threshold=threshold
+        )
+
+        # optional: save debug stitched segments (keeps y1/y2 per crop)
+        stitched_segments.to_csv(base_dir / f"stitched_{label}_segments.csv", index=False)
+
+        # this is what you will combine + plot
+        stitched_df = to_plot_chain_df(stitched_segments)
+        # stitched_path = base_dir / f"stitched_{label}.csv"
+        # stitched_df.to_csv(stitched_path, index=False)
+        # print(f"✅ Saved: {stitched_path}")
         combined_rows.append(stitched_df)
 
     if combined_rows:
@@ -375,38 +709,38 @@ def generate_plot(df, filename=None, background_value=255,
         tooltip=column_names
     )
 
-    # palette10 = [
-    #     "#BD081C",  # red
-    #     "#0061FF",  # blue
-    #     "#25D366",  # green
-    #     "#FF5700",  # orange
-    #     "#f781bf",  # pink
-    #     "#8E44AD",  # magenta/purple
-    #
-    # ]
-    #
-    # # shuffle a copy so original palette stays intact
-    # shuffled_palette = palette10.copy()
-    # random.shuffle(shuffled_palette)
-    #
-    # # cycle if categories > 10
-    # range_ = [shuffled_palette[i % len(shuffled_palette)]
-    #           for i in range(len(unique_categories))]
-    #
-    # lines = base.mark_line(opacity=0.8).encode(
-    #     x=alt.X('key:N', axis=alt.Axis(title=None, domain=False, labels=show_ticks_labels, labelAngle=0, ticks=False)),
-    #     y=alt.Y('value:Q', axis=alt.Axis(title=None, domain=False, labels=False, ticks=False, grid=grid_on)),
-    #     color=alt.Color(
-    #         f"{color_column}:N",
-    #         scale=alt.Scale(
-    #             domain=unique_categories,
-    #             range=range_
-    #         ),
-    #         legend=None
-    #     ),
-    #     detail="index:N",
-    #     tooltip=column_names
-    # )
+    palette10 = [
+        "#BD081C",  # red
+        "#0061FF",  # blue
+        "#25D366",  # green
+        "#FF5700",  # orange
+        "#f781bf",  # pink
+        "#8E44AD",  # magenta/purple
+
+    ]
+
+    # shuffle a copy so original palette stays intact
+    shuffled_palette = palette10.copy()
+    random.shuffle(shuffled_palette)
+
+    # cycle if categories > 10
+    range_ = [shuffled_palette[i % len(shuffled_palette)]
+              for i in range(len(unique_categories))]
+
+    lines = base.mark_line(opacity=0.8).encode(
+        x=alt.X('key:N', axis=alt.Axis(title=None, domain=False, labels=show_ticks_labels, labelAngle=0, ticks=False)),
+        y=alt.Y('value:Q', axis=alt.Axis(title=None, domain=False, labels=False, ticks=False, grid=grid_on)),
+        color=alt.Color(
+            f"{color_column}:N",
+            scale=alt.Scale(
+                domain=unique_categories,
+                range=range_
+            ),
+            legend=None
+        ),
+        detail="index:N",
+        tooltip=column_names
+    )
 
     rules = base.mark_rule(color="#ccc", tooltip=None).encode(
         x=alt.X('key:N', axis=alt.Axis(title=None, labels=False, ticks=False))
@@ -659,12 +993,464 @@ def build_category_hsv_map_from_category_colors_json(df, category_colors_config)
     return category_hsv_map if category_hsv_map else None
 
 
+
+def generate_plot_new(
+    df,
+    filename=None,
+    background_value=255,
+    grid_on=False,
+    show_ticks_labels=False,
+    category_hsv_map=None,
+    save_png=False,
+    svg_dir=None,
+    do_extraction=False,   # kept for compatibility; not used
+    # NEW:
+    width=600,
+    height=300,
+    y_pad_ratio=0.25,      # add extra space above & below (fraction of data span)
+    y_domain=None,         # override: [ymin, ymax]
+    png_scale_factor=2     # sharper PNG if save_png=True
+):
+    """
+    Parallel-coordinates style plot.
+
+    - Set width/height to match your input image size.
+    - Use y_pad_ratio to add similar vertical headroom/footroom as the original image.
+    - Or pass y_domain=[lo,hi] to fully control y-scale.
+    """
+
+    # --- columns ---
+    column_names = sorted(list(df.columns)[:-1])
+    color_column = df.columns[-1]
+
+    # ensure numeric
+    for col in column_names:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # normalize columns (your existing helper)
+    # normalized_columns = [normalize_column_reverse(df, col) for col in column_names]
+    # global min/max across all axes (so none gets stretched)
+    all_vals = pd.concat([pd.to_numeric(df[c], errors="coerce") for c in column_names], axis=0)
+    gmin = float(all_vals.min())
+    gmax = float(all_vals.max())
+    span = max(gmax - gmin, 1e-9)
+
+    # create global-normalized columns
+    normalized_columns = []
+    for col in column_names:
+        ncol = f"{col}__gnorm"
+        df[ncol] = (pd.to_numeric(df[col], errors="coerce") - gmin) / span
+        df[ncol] = 1.0 - df[ncol]
+
+        normalized_columns.append(ncol)
+
+    # --- colors ---
+    unique_categories = sorted(df[color_column].dropna().unique())
+
+    if category_hsv_map is None:
+        hsv_pool = generate_hsv_pool(30)
+        selected_indices = np.random.choice(len(hsv_pool), len(unique_categories), replace=False)
+        selected_hsvs = [hsv_pool[i] for i in selected_indices]
+        category_hsv_map = dict(zip(unique_categories, selected_hsvs))
+
+    category_colors = {
+        category: hsv_to_rgb(hsv['h'], hsv['s'], hsv['v'])
+        for category, hsv in category_hsv_map.items()
+    }
+
+    # If y_domain passed, use it as-is.
+    if y_domain is None:
+        vals = []
+        for nc in normalized_columns:
+            if nc in df.columns:
+                s = pd.to_numeric(df[nc], errors="coerce")
+                vals.append(s)
+        if vals:
+            allv = pd.concat(vals, ignore_index=True)
+            vmin = float(allv.min())
+            vmax = float(allv.max())
+            span = max(vmax - vmin, 1e-9)
+            y_lo = vmin - span * float(y_pad_ratio)
+            y_hi = vmax + span * float(y_pad_ratio)
+            y_domain = [y_lo, y_hi]
+        else:
+            y_domain = [0, 1]
+
+    # --- base chart ---
+    base = (
+        alt.Chart(df)
+        .transform_window(index="count()")
+        .transform_fold(normalized_columns)
+        .transform_calculate(mid="(datum.value + datum.value) / 2")
+        .properties(width=width, height=height)
+    )
+
+    # --- lines ---
+    lines = base.mark_line(opacity=0.6).encode(
+        x=alt.X(
+            "key:N",
+            axis=alt.Axis(
+                title=None,
+                domain=False,
+                labels=show_ticks_labels,
+                labelAngle=0,
+                ticks=False
+            )
+        ),
+        y=alt.Y(
+            "value:Q",
+            scale=alt.Scale(domain=[y_domain[1], y_domain[0]]),
+            axis=alt.Axis(
+                title=None,
+                domain=False,
+                labels=False,
+                ticks=False,
+                grid=grid_on
+            )
+        ),
+        color=alt.Color(
+            f"{color_column}:N",
+            scale=alt.Scale(
+                domain=list(category_colors.keys()),
+                range=["rgb({},{},{})".format(*rgb) for rgb in category_colors.values()]
+            ),
+            legend=None
+        ),
+        detail="index:N",
+        tooltip=column_names
+    )
+
+    # --- vertical rules at each axis ---
+    rules = base.mark_rule(color="#ccc", tooltip=None).encode(
+        x=alt.X("key:N", axis=alt.Axis(title=None, labels=False, ticks=False))
+    )
+
+    # --- ticks/labels ---
+    tick_dfs = [
+        create_ticks_labels(df, norm_col, orig_col)
+        for norm_col, orig_col in zip(normalized_columns, column_names)
+    ]
+    ticks_labels_df = pd.concat(tick_dfs, ignore_index=True)
+
+    if show_ticks_labels:
+        ticks = alt.Chart(ticks_labels_df).mark_tick(
+            size=8, color="#ccc", orient="horizontal"
+        ).encode(x="variable:N", y=alt.Y("value:Q", scale=alt.Scale(domain=y_domain)))
+
+        labels = alt.Chart(ticks_labels_df).mark_text(
+            align="center", baseline="middle", dx=-10
+        ).encode(x="variable:N", y=alt.Y("value:Q", scale=alt.Scale(domain=y_domain)), text="label:N")
+    else:
+        ticks = alt.Chart(ticks_labels_df).mark_tick(
+            size=8, opacity=0, orient="horizontal"
+        ).encode(x="variable:N", y=alt.Y("value:Q", scale=alt.Scale(domain=y_domain)))
+
+        labels = alt.Chart(ticks_labels_df).mark_text(
+            align="center", baseline="middle", dx=-10, opacity=0
+        ).encode(x="variable:N", y=alt.Y("value:Q", scale=alt.Scale(domain=y_domain)), text="label:N")
+
+    # --- axis config ---
+    axis_config_x = {
+        "domain": False,
+        "labelAngle": 0,
+        "title": None,
+        "tickColor": "#ccc" if show_ticks_labels else "transparent",
+        "labelColor": "#000" if show_ticks_labels else "transparent",
+        "grid": grid_on,
+        "gridColor": "#ccc" if grid_on else "transparent",
+    }
+    axis_config_y = axis_config_x.copy()
+
+    chart = (
+        alt.layer(lines, rules, ticks, labels)
+        .configure_axisX(**axis_config_x)
+        .configure_axisY(**axis_config_y)
+        .configure_view(stroke=None)
+    )
+
+    # --- background ---
+    if background_value is not None:
+        if isinstance(background_value, (tuple, list)) and len(background_value) == 3:
+            r, g, b = background_value
+            background_rgb = f"rgb({r},{g},{b})"
+        else:
+            v = int(background_value)
+            background_rgb = f"rgb({v},{v},{v})"
+        chart = chart.configure(background=background_rgb)
+
+    # --- save ---
+    if filename is not None:
+        base_path, _ = os.path.splitext(filename)
+        basename = os.path.basename(base_path)
+        output_dir = os.path.dirname(filename)
+
+        if svg_dir:
+            os.makedirs(svg_dir, exist_ok=True)
+            svg_filename = os.path.join(svg_dir, basename + ".svg")
+        else:
+            svg_filename = base_path + ".svg"
+
+        png_filename = os.path.join(output_dir, basename + ".png")
+
+        chart.save(svg_filename)
+        if save_png:
+            chart.save(png_filename, format="png", scale_factor=png_scale_factor)
+
+    return chart
+
+def generate_plot_newColor(
+    df,
+    filename=None,
+    background_value=255,
+    grid_on=False,
+    show_ticks_labels=False,
+    category_hsv_map=None,
+    save_png=False,
+    svg_dir=None,
+    do_extraction=False,   # kept for compatibility; not used
+    # NEW:
+    width=600,
+    height=300,
+    y_pad_ratio=0.25,      # add extra space above & below (fraction of data span)
+    y_domain=None,         # override: [ymin, ymax]
+    png_scale_factor=2     # sharper PNG if save_png=True
+):
+    """
+    Parallel-coordinates style plot.
+
+    - Set width/height to match your input image size.
+    - Use y_pad_ratio to add similar vertical headroom/footroom as the original image.
+    - Or pass y_domain=[lo,hi] to fully control y-scale.
+    """
+
+    # --- columns ---
+    column_names = sorted(list(df.columns)[:-1])
+    color_column = df.columns[-1]
+
+    # ensure numeric
+    for col in column_names:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # normalize columns (your existing helper)
+    # normalized_columns = [normalize_column_reverse(df, col) for col in column_names]
+    # global min/max across all axes (so none gets stretched)
+    all_vals = pd.concat([pd.to_numeric(df[c], errors="coerce") for c in column_names], axis=0)
+    gmin = float(all_vals.min())
+    gmax = float(all_vals.max())
+    span = max(gmax - gmin, 1e-9)
+
+    # create global-normalized columns
+    normalized_columns = []
+    for col in column_names:
+        ncol = f"{col}__gnorm"
+        df[ncol] = (pd.to_numeric(df[col], errors="coerce") - gmin) / span
+        df[ncol] = 1.0 - df[ncol]
+
+        normalized_columns.append(ncol)
+
+    # --- colors ---
+    unique_categories = sorted(df[color_column].dropna().unique())
+    #
+    # if category_hsv_map is None:
+    #     hsv_pool = generate_hsv_pool(30)
+    #     selected_indices = np.random.choice(len(hsv_pool), len(unique_categories), replace=False)
+    #     selected_hsvs = [hsv_pool[i] for i in selected_indices]
+    #     category_hsv_map = dict(zip(unique_categories, selected_hsvs))
+    #
+    # category_colors = {
+    #     category: hsv_to_rgb(hsv['h'], hsv['s'], hsv['v'])
+    #     for category, hsv in category_hsv_map.items()
+    # }
+
+    palette10 = [
+        "#BD081C",  # red
+        "#0061FF",  # blue
+        "#25D366",  # green
+        "#FF5700",  # orange
+        "#f781bf",  # pink
+        "#8E44AD",  # magenta/purple
+        "#27AE60",
+
+    ]
+
+    # shuffle a copy so original palette stays intact
+    shuffled_palette = palette10.copy()
+    random.shuffle(shuffled_palette)
+
+    # cycle if categories > 10
+    range_ = [shuffled_palette[i % len(shuffled_palette)]
+              for i in range(len(unique_categories))]
+
+    # lines = base.mark_line(opacity=0.8).encode(
+    #     x=alt.X('key:N', axis=alt.Axis(title=None, domain=False, labels=show_ticks_labels, labelAngle=0, ticks=False)),
+    #     y=alt.Y('value:Q', axis=alt.Axis(title=None, domain=False, labels=False, ticks=False, grid=grid_on)),
+    #     color=alt.Color(
+    #         f"{color_column}:N",
+    #         scale=alt.Scale(
+    #             domain=unique_categories,
+    #             range=range_
+    #         ),
+    #         legend=None
+    #     ),
+    #     detail="index:N",
+    #     tooltip=column_names
+    # )
+
+    # --- compute Y domain for similar up/down spacing ---
+    # Work in the "value" space (normalized columns) because that's what we plot.
+    # We compute min/max across ALL normalized columns.
+    # If y_domain passed, use it as-is.
+    if y_domain is None:
+        vals = []
+        for nc in normalized_columns:
+            if nc in df.columns:
+                s = pd.to_numeric(df[nc], errors="coerce")
+                vals.append(s)
+        if vals:
+            allv = pd.concat(vals, ignore_index=True)
+            vmin = float(allv.min())
+            vmax = float(allv.max())
+            span = max(vmax - vmin, 1e-9)
+            y_lo = vmin - span * float(y_pad_ratio)
+            y_hi = vmax + span * float(y_pad_ratio)
+            y_domain = [y_lo, y_hi]
+        else:
+            y_domain = [0, 1]
+
+    # --- base chart ---
+    base = (
+        alt.Chart(df)
+        .transform_window(index="count()")
+        .transform_fold(normalized_columns)
+        .transform_calculate(mid="(datum.value + datum.value) / 2")
+        .properties(width=width, height=height)
+    )
+
+    # --- lines ---
+    lines = base.mark_line(opacity=0.6).encode(
+        x=alt.X(
+            "key:N",
+            axis=alt.Axis(
+                title=None,
+                domain=False,
+                labels=show_ticks_labels,
+                labelAngle=0,
+                ticks=False
+            )
+        ),
+        y=alt.Y(
+            "value:Q",
+            scale=alt.Scale(domain=[y_domain[1], y_domain[0]]),
+            axis=alt.Axis(
+                title=None,
+                domain=False,
+                labels=False,
+                ticks=False,
+                grid=grid_on
+            )
+        ),
+        # color=alt.Color(
+        #     f"{color_column}:N",
+        #     scale=alt.Scale(
+        #         domain=list(category_colors.keys()),
+        #         range=["rgb({},{},{})".format(*rgb) for rgb in category_colors.values()]
+        #     ),
+        #     legend=None
+        # ),
+        color=alt.Color(
+            f"{color_column}:N",
+            scale=alt.Scale(
+                domain=unique_categories,
+                range=range_
+            ),
+            legend=None
+        ),
+        detail="index:N",
+        tooltip=column_names
+    )
+
+    # --- vertical rules at each axis ---
+    rules = base.mark_rule(color="#ccc", tooltip=None).encode(
+        x=alt.X("key:N", axis=alt.Axis(title=None, labels=False, ticks=False))
+    )
+
+    # --- ticks/labels ---
+    tick_dfs = [
+        create_ticks_labels(df, norm_col, orig_col)
+        for norm_col, orig_col in zip(normalized_columns, column_names)
+    ]
+    ticks_labels_df = pd.concat(tick_dfs, ignore_index=True)
+
+    if show_ticks_labels:
+        ticks = alt.Chart(ticks_labels_df).mark_tick(
+            size=8, color="#ccc", orient="horizontal"
+        ).encode(x="variable:N", y=alt.Y("value:Q", scale=alt.Scale(domain=y_domain)))
+
+        labels = alt.Chart(ticks_labels_df).mark_text(
+            align="center", baseline="middle", dx=-10
+        ).encode(x="variable:N", y=alt.Y("value:Q", scale=alt.Scale(domain=y_domain)), text="label:N")
+    else:
+        ticks = alt.Chart(ticks_labels_df).mark_tick(
+            size=8, opacity=0, orient="horizontal"
+        ).encode(x="variable:N", y=alt.Y("value:Q", scale=alt.Scale(domain=y_domain)))
+
+        labels = alt.Chart(ticks_labels_df).mark_text(
+            align="center", baseline="middle", dx=-10, opacity=0
+        ).encode(x="variable:N", y=alt.Y("value:Q", scale=alt.Scale(domain=y_domain)), text="label:N")
+
+    # --- axis config ---
+    axis_config_x = {
+        "domain": False,
+        "labelAngle": 0,
+        "title": None,
+        "tickColor": "#ccc" if show_ticks_labels else "transparent",
+        "labelColor": "#000" if show_ticks_labels else "transparent",
+        "grid": grid_on,
+        "gridColor": "#ccc" if grid_on else "transparent",
+    }
+    axis_config_y = axis_config_x.copy()
+
+    chart = (
+        alt.layer(lines, rules, ticks, labels)
+        .configure_axisX(**axis_config_x)
+        .configure_axisY(**axis_config_y)
+        .configure_view(stroke=None)
+    )
+
+    # --- background ---
+    if background_value is not None:
+        if isinstance(background_value, (tuple, list)) and len(background_value) == 3:
+            r, g, b = background_value
+            background_rgb = f"rgb({r},{g},{b})"
+        else:
+            v = int(background_value)
+            background_rgb = f"rgb({v},{v},{v})"
+        chart = chart.configure(background=background_rgb)
+
+    # --- save ---
+    if filename is not None:
+        base_path, _ = os.path.splitext(filename)
+        basename = os.path.basename(base_path)
+        output_dir = os.path.dirname(filename)
+
+        if svg_dir:
+            os.makedirs(svg_dir, exist_ok=True)
+            svg_filename = os.path.join(svg_dir, basename + ".svg")
+        else:
+            svg_filename = base_path + ".svg"
+
+        png_filename = os.path.join(output_dir, basename + ".png")
+
+        chart.save(svg_filename)
+        if save_png:
+            chart.save(png_filename, format="png", scale_factor=png_scale_factor)
+
+    return chart
+
 def redesign(combined_dir, output_dir, dominant_colors_json=None, category_colors_dir=None):
     combined_dir = os.fspath(combined_dir)
     output_dir = os.fspath(output_dir)
     os.makedirs(output_dir, exist_ok=True)
-
-    # Load dominant colors once (if provided)
     dominant_colors = None
     if dominant_colors_json is not None:
         try:
@@ -691,18 +1477,12 @@ def redesign(combined_dir, output_dir, dominant_colors_json=None, category_color
             print(f"❌ Error reading {csv_path}: {e}")
             continue
 
-        # image id from the filename (not the full path)
         base = os.path.basename(csv_path)
         m = re.match(r"(.+)_combined\.csv$", base)
         image_id = m.group(1) if m else "Unknown"
-
         out_svg = os.path.join(output_dir, f"{image_id}_combined.svg")
-
-        # Build category_hsv_map from dominant_colors.json (if available)
-        # Option A: prefer explicit category_colors JSON (like image_2.json)
         category_hsv_map = None
 
-        # Prefer per-image jsons from folder: image_<id>.json
         if category_colors_dir is not None and image_id != "Unknown":
             json_path = find_image_json(image_id, category_colors_dir, recursive=True)
             if json_path is not None:
@@ -717,8 +1497,10 @@ def redesign(combined_dir, output_dir, dominant_colors_json=None, category_color
         generate_plot(df, filename=out_svg, category_hsv_map=category_hsv_map)
                     # background_value=bg_gray)
 
-        print(f"✅ Plot saved: {out_svg}")
+        # generate_plot_new(df, filename=out_svg, category_hsv_map=category_hsv_map, grid_on=True,
+        #                   width=470, height=470, background_value=bg_gray)
 
+        print(f"✅ Plot saved: {out_svg}")
 
 def redesign_old(combined_dir, output_dir):
     combined_dir = os.fspath(combined_dir)
@@ -791,6 +1573,7 @@ def redesign_old(combined_dir, output_dir):
 
 
 # -----------------------------
+
 # Run
 # -----------------------------
 
@@ -801,3 +1584,7 @@ def redesign_old(combined_dir, output_dir):
     #redesign("/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1", "/home/poonam/myworkspace/PaCoNet/outputs/syns/redesigned/1_plots")
     #redesign("/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output",
              #"/home/poonam/myworkspace/PaCoNet/data/real_plots/2025-11-18_16-17-52/dhlp_output/redesigned/s15")
+
+
+# stitch keep all was used for synth
+# stitch segment was used for real

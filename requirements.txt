@@ -23,3 +23,5 @@ tensorboardx
 docopt
 pyyaml
 hdbscan
+openai
+protobuf

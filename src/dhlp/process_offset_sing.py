@@ -164,7 +164,7 @@ def main():
     output_dir = C.io.outdir
     os.makedirs(output_dir, exist_ok=True)
 
-    output_file = "offset_results_ncls.txt"
+    output_file = "offset_results_cls.txt"
     output_dir = "output_offsets"
     os.makedirs(output_dir, exist_ok=True)  # Ensure directory exists
     output_path = os.path.join(output_dir, output_file)
@@ -197,6 +197,7 @@ def main():
 
                     # Extract predicted line endpoints
                     line_endpoints = H["lines"][i].cpu().numpy() * 4  # Scale back
+                    # print("h " , H["lines"][0])
                     if len(line_endpoints) == 0:
                         continue  # Skip empty detections
 
@@ -216,6 +217,18 @@ def main():
                             corrected_start_points.append(pt2)  # Swap to maintain left-to-right order
                             corrected_end_points.append(pt1)
 
+                    # for line in line_endpoints:
+                    #     pt1, pt2 = line
+                    #
+                    #     # points are (y, x) so compare x -> index 1
+                    #     if pt1[1] <= pt2[1]:
+                    #         start, end = pt1, pt2
+                    #     else:
+                    #         start, end = pt2, pt1
+                    #
+                    #     corrected_start_points.append(start)
+                    #     corrected_end_points.append(end)
+
                     start_points = np.array(corrected_start_points)
                     end_points = np.array(corrected_end_points)
 
@@ -231,6 +244,11 @@ def main():
                         np.linalg.norm(end - nearest_junction(end, ground_truth_junctions))
                         for end in end_points
                     ])
+
+                    MAX_DIST = 30.0  # pixels (choose based on image size)
+
+                    start_offsets = np.clip(start_offsets, 0, MAX_DIST)
+                    end_offsets = np.clip(end_offsets, 0, MAX_DIST)
 
                     # Compute average offsets for this image
                     average_start_offset = np.mean(start_offsets) if len(start_offsets) > 0 else 0

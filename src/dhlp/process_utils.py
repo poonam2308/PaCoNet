@@ -39,6 +39,106 @@ def compute_line_stats(lines):
         "lower_end": tuple(lower_end),
         "upper_end": tuple(upper_end),
     }
+
+
+def compute_distribution_stats(points):
+    """
+    points: (N, 2) array of [x, y]
+    """
+    points = np.asarray(points)
+    mean = np.mean(points, axis=0)
+    std = np.std(points, axis=0)
+    return mean, std
+
+def compute_distribution_mae(pred_points, gt_points):
+    """
+    Compare distribution of predictions vs GT
+    """
+    mu_pred, std_pred = compute_distribution_stats(pred_points)
+    mu_gt, std_gt = compute_distribution_stats(gt_points)
+
+    mae_mean = np.mean(np.abs(mu_pred - mu_gt))
+    mae_std = np.mean(np.abs(std_pred - std_gt))
+
+    return {
+        "pred_mean": mu_pred,
+        "gt_mean": mu_gt,
+        "pred_std": std_pred,
+        "gt_std": std_gt,
+        "mae_mean": mae_mean,
+        "mae_std": mae_std,
+    }
+def compute_median_mad(points):
+    median = np.median(points, axis=0)
+    mad = np.median(np.abs(points - median), axis=0)
+    return median, mad
+
+def compute_distribution_mae_median(pred_points, gt_points):
+    """
+    Compare distribution of predictions vs GT
+    """
+    med_pred, mad_pred = compute_median_mad(pred_points)
+    med_gt, mad_gt = compute_median_mad(gt_points)
+
+    center_err = np.mean(np.abs(med_pred - med_gt))
+    spread_err = np.mean(np.abs(mad_pred - mad_gt))
+
+    return {
+        "med_pred": med_pred,
+        "med_gt": med_gt,
+        "mad_pred": mad_pred,
+        "mad_gt": mad_gt,
+        "mae_center": center_err,
+        "mae_spread_err": spread_err,
+    }
+
+import ot
+
+def wasserstein_2d(pred_points, gt_points):
+    P = np.asarray(pred_points, np.float64)
+    G = np.asarray(gt_points, np.float64)
+    if len(P) == 0 or len(G) == 0:
+        return np.nan
+
+    a = np.ones(len(P), dtype=np.float64) / len(P)
+    b = np.ones(len(G), dtype=np.float64) / len(G)
+
+    C = ot.dist(P, G, metric="euclidean")  # (N,M), in pixels
+    return float(ot.emd2(a, b, C))
+
+import numpy as np
+
+def chamfer_distance_2d(pred_points, gt_points, squared=False):
+    """
+    Symmetric Chamfer distance between two 2D point sets.
+
+    pred_points: (N,2)
+    gt_points:   (M,2)
+
+    Returns a single scalar in pixels (or pixels^2 if squared=True).
+    """
+    pred_points = np.asarray(pred_points, dtype=np.float32)
+    gt_points   = np.asarray(gt_points, dtype=np.float32)
+
+    if len(pred_points) == 0 or len(gt_points) == 0:
+        return np.nan  # or return a large number / 0 depending on your preference
+
+    # pairwise squared distances: (N,M)
+    diff = pred_points[:, None, :] - gt_points[None, :, :]
+    d2 = np.sum(diff * diff, axis=2)
+
+    if squared:
+        d_pred_to_gt = np.min(d2, axis=1)  # (N,)
+        d_gt_to_pred = np.min(d2, axis=0)  # (M,)
+    else:
+        d_pred_to_gt = np.sqrt(np.min(d2, axis=1))
+        d_gt_to_pred = np.sqrt(np.min(d2, axis=0))
+
+    # symmetric chamfer: mean both directions
+    return float(np.mean(d_pred_to_gt) + np.mean(d_gt_to_pred))
+
+
+
 def compute_average_offset_errors(offset_errors_list):
     mean_offsets = [e['mean_offset_error'] for e in offset_errors_list]
     lower_offsets = [e['lower_offset_error'] for e in offset_errors_list]
@@ -101,6 +201,8 @@ def compute_nearest_junction_offset_stats(pred_lines, gt_junctions):
         end_offsets.append(np.linalg.norm(np.array(end) - np.array(nearest_end)))
 
     all_offsets = np.array(start_offsets + end_offsets)
+    cap = 30.0  # pixels
+    all_offsets = np.minimum(all_offsets, cap)
     mean_offset = np.mean(all_offsets) if len(all_offsets) > 0 else 0
     std_offset = np.std(all_offsets) if len(all_offsets) > 0 else 0
     lower_bound = mean_offset - std_offset
