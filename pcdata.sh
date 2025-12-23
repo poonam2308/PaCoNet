@@ -66,7 +66,7 @@
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/test_config.yaml --task dino_features_evaluation
 
 # category evaluation
-#python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_color
+python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_color
 #
 #python src/pc/plot_gen/plots_processing.py --cfg src/pc/config/train_config.yaml --task cat_eval_cluster
 

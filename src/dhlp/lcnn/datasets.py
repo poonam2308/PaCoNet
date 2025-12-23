@@ -19,7 +19,7 @@ class WireframeDataset(Dataset):
         # print("Loaded label files:", filelist[:10])  # Print first 10 label files
 
         ### experiments on subsets
-        filelist = filelist[0:int(len(filelist) * 0.01)]
+        filelist = filelist[0:int(len(filelist) * 0.02)]
 
         # #poonam added for two augmented version original and combined flip
         # self.filelist = [f for f in filelist if f.endswith("_0_label.npz") or f.endswith("_1_label.npz")]

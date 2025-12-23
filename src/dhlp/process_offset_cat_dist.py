@@ -39,17 +39,17 @@ from process_utils import compute_nearest_junction_offset_stats, compute_distrib
 
 
 # # masks path for the color + unet 1
-MASK_ROOT = "data/pcw_test/masks"
+# MASK_ROOT = "data/pcw_test/masks"
 
 # masks path for the cluster  + unet  2
 # MASK_ROOT = "data/pcw_test_cls/masks"
 
-# MASK_ROOT = "data/pcw_crops_test/masks"
+MASK_ROOT = "data/pcw_crops_test/masks"
 
 
 
 # ---- soft toggles ----
-USE_MASK = True   # set to False to ignore masks
+USE_MASK = False   # set to False to ignore masks
 USE_NMS  = True   # set to False to skip line_nms
 # ----------------------
 

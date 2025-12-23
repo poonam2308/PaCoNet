@@ -70,27 +70,31 @@ MAX_MATCH_COST = 60.0  # max allowed cost for a match (lower = stricter)
 VIZ_DIR.mkdir(parents=True, exist_ok=True)
 
 # Prompts
-USER_PROMPT_BASE = """You are given a chart image with multiple colored straight line segments. 
-Your task: detect all distinct straight line segments present in the image and output their endpoints in image pixel coordinates.
 
-Return strictly valid JSON with this schema:
+USER_PROMPT_BASE = """You are given a chart image with multiple colored straight line segments.
 
+Task:
+1) Detect all distinct straight line segments in the image.
+2) Determine the color of each line segment and group the segments by color.
+
+Color categories:
+- Use one of these basic color names when possible: red, blue, green, yellow, orange, purple, pink, brown, black, gray, white, cyan, magenta.
+- If a line is a shade (e.g., light blue), still output the closest basic name (e.g., blue).
+
+Output endpoints in image pixel coordinates: [x0, y0, x1, y1].
+Return ONLY valid JSON in exactly this format:
 {
-  "lines": {
-    "crop_all": {
-      "unknown": [
-        [x0, y0, x1, y1],
-        ...
-      ]
-    }
-  }
+  "lines": [
+    [x0, y0, x1, y1],
+    ...
+  ]
 }
 
 Rules:
-- Coordinates must be float or int, in image pixel coordinates where (0,0) is top-left.
-- Each segment is represented as [x0,y0,x1,y1].
-- Output as many segments as you can see.
-- Do not include any extra keys or commentary outside JSON.
+- No markdown, no extra text.
+- Coordinates are in image pixel coordinates.
+- Use numbers (ints or floats).
+- Include every visible straight segment.
 """
 
 
@@ -177,32 +181,74 @@ def safe_json_extract(text: str) -> Dict[str, Any]:
         raise ValueError("No JSON object found in model output.")
     return json.loads(m.group(0))
 
+def extract_lines_by_color(model_json: Dict[str, Any]) -> Dict[str, List[Line]]:
+    out: Dict[str, List[Line]] = {}
 
-def extract_lines_from_model_json(pred: Dict[str, Any]) -> List[Line]:
-    """
-    Accepts the model schema:
-    { "lines": { "crop_all": { "unknown": [[x0,y0,x1,y1], ...] } } }
+    lines_root = (model_json or {}).get("lines", {})
+    crop_all = (lines_root or {}).get("crop_all", {})
 
-    Returns a flat list of lines from crop_all/unknown if present.
-    """
-    out: List[Line] = []
-    lines = pred.get("lines")
-    if not isinstance(lines, dict):
-        return out
-    crop_all = lines.get("crop_all")
-    if not isinstance(crop_all, dict):
-        return out
-    unknown = crop_all.get("unknown")
-    if not isinstance(unknown, list):
-        return out
-    for item in unknown:
-        if (
-            isinstance(item, list)
-            and len(item) == 4
-            and all(isinstance(v, (int, float)) for v in item)
-        ):
-            out.append((float(item[0]), float(item[1]), float(item[2]), float(item[3])))
+    # crop_all should be { "red": [[...]], "blue": [[...]], ... }
+    if isinstance(crop_all, dict):
+        for color, arr in crop_all.items():
+            if not isinstance(arr, list):
+                continue
+            parsed: List[Line] = []
+            for item in arr:
+                if (
+                    isinstance(item, (list, tuple)) and len(item) == 4
+                    and all(isinstance(v, (int, float)) for v in item)
+                ):
+                    x0, y0, x1, y1 = map(float, item)
+                    parsed.append((x0, y0, x1, y1))
+            if parsed:
+                out[str(color).lower().strip()] = parsed
+
     return out
+def extract_lines_from_model_json(pred: Any) -> List[Line]:
+    """
+    Accepts any of:
+      A) [[x0,y0,x1,y1], ...]
+      B) {"lines": [[x0,y0,x1,y1], ...]}
+      C) {"lines": {"crop_all": {"unknown": [[...]]}}}
+      D) {"lines": {"crop_all": {"red":[...], "blue":[...], ...}}}
+    Returns a flat list[Line].
+    """
+    def parse_arr(arr: Any) -> List[Line]:
+        out: List[Line] = []
+        if not isinstance(arr, list):
+            return out
+        for item in arr:
+            if isinstance(item, (list, tuple)) and len(item) == 4:
+                try:
+                    x0, y0, x1, y1 = map(float, item)
+                    out.append((x0, y0, x1, y1))
+                except Exception:
+                    pass
+        return out
+
+    # A) top-level list
+    if isinstance(pred, list):
+        return parse_arr(pred)
+
+    if not isinstance(pred, dict):
+        return []
+
+    lines = pred.get("lines")
+
+    # B) {"lines": [...]}
+    if isinstance(lines, list):
+        return parse_arr(lines)
+
+    # C/D) {"lines": {"crop_all": {...}}}
+    if isinstance(lines, dict):
+        crop_all = lines.get("crop_all")
+        if isinstance(crop_all, dict):
+            out: List[Line] = []
+            for _, arr in crop_all.items():
+                out.extend(parse_arr(arr))
+            return out
+
+    return []
 
 
 def parse_gt_index(gt_payload: Any) -> Dict[str, List[Line]]:
@@ -392,20 +438,36 @@ def call_openai_image_json(img_b64: str, user_prompt: str) -> Dict[str, Any]:
 
 def call_gemini_image_json(img_b64: str, user_prompt: str) -> Dict[str, Any]:
     """
-    Requires env var GEMINI_API_KEY.
+    Uses Google GenAI SDK (pip install google-genai)
+    Requires GEMINI_API_KEY or GOOGLE_API_KEY.
     """
-    import google.generativeai as genai  # type: ignore
+    from google import genai
+    from google.genai import types
 
-    api_key = os.environ.get("GEMINI_API_KEY", "")
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
-        raise RuntimeError("GEMINI_API_KEY not set in environment.")
-    genai.configure(api_key=api_key)
+        raise RuntimeError("Set GEMINI_API_KEY (or GOOGLE_API_KEY) in environment.")
 
-    model = genai.GenerativeModel(GEMINI_MODEL)
+    client = genai.Client(api_key=api_key)
+
     image_bytes = base64.b64decode(img_b64.encode("utf-8"))
-    resp = model.generate_content([user_prompt, {"mime_type": "image/png", "data": image_bytes}])
+
+    resp = client.models.generate_content(
+        model=GEMINI_MODEL,
+        # Pass prompt as a string (no Part.from_text)
+        contents=[
+            user_prompt,
+            types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
+        ],
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+        ),
+    )
+
     text = getattr(resp, "text", "") or ""
     return safe_json_extract(text)
+
+
 
 
 # -----------------------------
@@ -456,6 +518,7 @@ def main() -> None:
         if USE_OPENAI:
             try:
                 pred = call_openai_image_json(img_b64, USER_PROMPT_BASE)
+                oai_by_color = extract_lines_by_color(pred)
                 oai_lines = extract_lines_from_model_json(pred)
                 oai_stats = compute_mae_stats(gt_lines, oai_lines)
             except Exception as e:

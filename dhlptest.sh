@@ -14,37 +14,32 @@
 # -------------------------------------demo test---------------------------------
 #./src/dhlp/demo.py -d 0 ./src/dhlp/config/test.yaml ./outputs/chkpt/dhlp/checkpoint_best.pth ./outputs/syns/p_test/
 
+
+
+
+
+
 #-------------------- to get the line extraction and cat_distribution--------------------------------------------
 # color unet 1
 #./src/dhlp/process_offset_sing.py ./src/dhlp/config/test.yaml ./outputs/chkpt/dhlp/checkpoint_best_c.pth
 #./src/dhlp//process_offset_cat_dist.py ./src/dhlp/config/test.yaml ./outputs/chkpt/dhlp/checkpoint_best_c.pth
 
+## cluster unet
+#./src/dhlp/process_offset_sing.py ./src/dhlp/config/testCluster.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
+./src/dhlp/process_offset_cat_dist.py ./src/dhlp/config/testCluster.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
+
 # color no unet
 #./src/dhlp/process_offset_sing.py ./src/dhlp/config/noisedTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_nc.pth
 #./src/dhlp/process_offset_cat_dist.py ./src/dhlp/config/noisedTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_nc.pth
-
-# cluster unet
-#./src/dhlp/process_offset_sing.py ./src/dhlp/config/testCluster.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
-#./src/dhlp/process_offset_cat_dist.py ./src/dhlp/config/testCluster.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
 
 # cluster no unet
 #./src/dhlp/process_offset_dist.py ./src/dhlp/config/noisedClusterTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_ncls.pth
 #./src/dhlp/process_offset_sing.py ./src/dhlp/config/noisedClusterTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_ncls.pth
 
-#--------------------------------------------SAP for ablation with masking------------------------------------------------
-# color unet 1
-#./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/test.yaml ./outputs/chkpt/dhlp/checkpoint_best_c.pth
 
-# color no unet  2
-#./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/noisedTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_nc.pth
 
-# cluster  unet 3
-#./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/testCluster.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
 
-# cluster no unet 4
-#./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/noisedClusterTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_ncls.pth
 
-#-----------------------------------------------------------------------------------------------------------------------------------
 
 
 

@@ -322,13 +322,23 @@ class PlotsPipeline:
         self.crop_plots()
 
     def cat_eval_color(self):
+        # evaluate_catsep_vs_gt(
+        #     pred_dir=self.paths['m_color_sep_plots'],
+        #     gt_dir=self.paths['m_gt_plots_cat_ntl_crops'],
+        #     white_thresh=750,
+        #     per_crop_csv=self.paths['m_color_cat_eval_crop_csv'],
+        #     per_base_csv=self.paths['m_color_cat_eval_base_csv'],
+        #     summary_json=self.paths['m_color_cat_eval_json'],
+        #     verbose=True
+        # )
+
         evaluate_catsep_vs_gt(
-            pred_dir=self.paths['m_color_sep_plots'],
+            pred_dir=self.paths['m_color_down_sep_plots'],
             gt_dir=self.paths['m_gt_plots_cat_ntl_crops'],
             white_thresh=750,
-            per_crop_csv=self.paths['m_color_cat_eval_crop_csv'],
-            per_base_csv=self.paths['m_color_cat_eval_base_csv'],
-            summary_json=self.paths['m_color_cat_eval_json'],
+            per_crop_csv=self.paths['m_color_down_cat_eval_crop_csv'],
+            per_base_csv=self.paths['m_color_down_cat_eval_base_csv'],
+            summary_json=self.paths['m_color_down_cat_eval_json'],
             verbose=True
         )
 

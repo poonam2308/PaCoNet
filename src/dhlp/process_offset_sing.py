@@ -46,8 +46,8 @@ from process_utils import (nearest_junction, visualize_points, set_seed,
 MASK_ROOT = "data/pcw_crops_test/masks"
 
 # ---- soft toggles ----
-USE_MASK = False
-USE_NMS  = False
+USE_MASK = True
+USE_NMS  = True
 # ----------------------
 
 HEATMAP_H, HEATMAP_W = 128, 128
@@ -114,12 +114,12 @@ def main():
     output_dir = C.io.outdir
     os.makedirs(output_dir, exist_ok=True)
 
-    output_file = "offset_results_cls.txt"
+    output_file = "offset_results_c.txt"
     output_dir = "output_offsets"
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, output_file)
 
-    vis_dir = "output_point_mae_vis_sing1"
+    vis_dir = "output_point_mae_vis_sing_c"
     os.makedirs(vis_dir, exist_ok=True)
     plots_done = 0
 
@@ -161,7 +161,7 @@ def main():
                             lines_i, scores_i,
                             dist_thresh=2.0,
                         )
-                    line_endpoints = lines_i.numpy() * 4
+                    line_endpoints = lines_i.numpy() * 1.75
 
                     if len(line_endpoints) == 0:
                         continue
@@ -193,7 +193,7 @@ def main():
                     end_points = np.array(corrected_end_points)
 
                     # Get ground truth junctions
-                    ground_truth_junctions = meta[i]["junc"].cpu().numpy() *4  # Scale back
+                    ground_truth_junctions = meta[i]["junc"].cpu().numpy() *1.75  # Scale back
 
                     # Compute offsets
                     start_offsets = np.array([

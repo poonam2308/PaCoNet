@@ -129,6 +129,11 @@ paths:
   m_color_cat_eval_crop_csv: "data/synthetic_plots/multi_cat/training/color/per_crop_results.csv"
   m_color_cat_eval_base_csv: "data/synthetic_plots/multi_cat/training/color/per_base_results.csv"
 
+  # evaluation scripts color downsampled
+  m_color_down_cat_eval_json: "data/synthetic_plots/multi_cat/training/color_down/cat_eval_summary.json"
+  m_color_down_cat_eval_crop_csv: "data/synthetic_plots/multi_cat/training/color_down/per_crop_results.csv"
+  m_color_down_cat_eval_base_csv: "data/synthetic_plots/multi_cat/training/color_down/per_base_results.csv"
+
   # evaluation scripts cluster
   m_cluster_cat_eval_json: "data/synthetic_plots/multi_cat/training/cluster/cat_eval_summary.json"
   m_cluster_cat_eval_crop_csv: "data/synthetic_plots/multi_cat/training/cluster/per_crop_results.csv"
