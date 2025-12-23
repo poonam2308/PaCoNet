@@ -1,12 +1,22 @@
 io:
   vote_index: data/vote_index_128_128_3_crop.mat
   logdir: outputs/logs/crops
-  datadir: data/dhlp/pcw_crops_test
+  datadir: data/pcw_crops_test
   outdir: outputs/results/crops
   resume_from:
   num_workers: 4
   tensorboard_port: 0
   validation_interval: 20000
+
+#io:
+#  vote_index: data/vote_index_128_128_3_crop.mat
+#  logdir: outputs/logs/crops
+#  datadir: data/dhlp/pcw_crops_test
+#  outdir: outputs/results/crops
+#  resume_from:
+#  num_workers: 4
+#  tensorboard_port: 0
+#  validation_interval: 20000
 
 
 model:

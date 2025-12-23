@@ -16,8 +16,9 @@
 
 #-----------------------------------------crops---------------------------------------------------------------------------
 
-#./src/dhlp/process_offset_dist.py ./src/dhlp/config/cropsTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_crop.pth
-#./src/dhlp/process_offset_sing.py ./src/dhlp/config/cropsTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_crop.pth
-./src/dhlp/process_offset_cat_dist.py ./src/dhlp/config/cropsTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_crop.pth
+./src/dhlp/process_offset_sing.py ./src/dhlp/config/cropsTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_crop.pth
+
+#./src/dhlp/process_offset_cat_dist.py ./src/dhlp/config/cropsTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_crop.pth
+
 #------------------------------------------------------------------------------------------------------------------------
 

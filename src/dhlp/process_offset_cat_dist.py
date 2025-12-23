@@ -33,8 +33,27 @@ from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
 from process_utils import compute_nearest_junction_offset_stats, compute_distribution_mae, \
-    compute_distribution_mae_median, wasserstein_2d, chamfer_distance_2d
+    compute_distribution_mae_median, wasserstein_2d, chamfer_distance_2d, get_mask_for_index, \
+    filter_lines_with_mask_heatmap, line_nms
 
+
+
+# # masks path for the color + unet 1
+MASK_ROOT = "data/pcw_test/masks"
+
+# masks path for the cluster  + unet  2
+# MASK_ROOT = "data/pcw_test_cls/masks"
+
+# MASK_ROOT = "data/pcw_crops_test/masks"
+
+
+
+# ---- soft toggles ----
+USE_MASK = True   # set to False to ignore masks
+USE_NMS  = True   # set to False to skip line_nms
+# ----------------------
+
+HEATMAP_H, HEATMAP_W = 128, 128
 
 def main():
     args = docopt(__doc__)
@@ -128,8 +147,27 @@ def main():
                 for i in range(len(image)):
                     index = batch_idx * M.batch_size + i
                     print(f'Processing Image Index: {index}')
-                    line_endpoints = H["lines"][i].cpu().numpy() * 1.75
+                    # line_endpoints = H["lines"][i].cpu().numpy() * 1.75
 
+                    # 1) raw predictions in heatmap coords
+                    lines_i = H["lines"][i].detach().cpu()
+                    scores_i = H["score"][i].detach().cpu()
+
+                    if USE_MASK:
+                        mask_i = get_mask_for_index(loader.dataset, index, MASK_ROOT)
+
+                        lines_i, scores_i, _ = filter_lines_with_mask_heatmap(
+                            lines_i, scores_i, mask_i,
+                            min_frac_inside=0.5,
+                            n_samples=16,
+                        )
+
+                    if USE_NMS:
+                        lines_i, scores_i, _ = line_nms(
+                            lines_i, scores_i,
+                            dist_thresh=2.0,
+                        )
+                    line_endpoints = lines_i.numpy() * 1.75
                     if len(line_endpoints) == 0:
                         continue
 
@@ -146,8 +184,8 @@ def main():
 
                         # GT junctions (already Nx2)
                         gt_points = gt_junctions
-                        print("pred min/max:", pred_points.min(axis=0), pred_points.max(axis=0))
-                        print("gt   min/max:", gt_points.min(axis=0), gt_points.max(axis=0))
+                        # print("pred min/max:", pred_points.min(axis=0), pred_points.max(axis=0))
+                        # print("gt   min/max:", gt_points.min(axis=0), gt_points.max(axis=0))
 
                         if len(pred_points) > 0 and len(gt_points) > 0:
                             stats = compute_distribution_mae(pred_points, gt_points)
@@ -179,17 +217,13 @@ def main():
                             all_offset_errors.append(stats)
                             #all_offset_errors_median.append(stats_med)
 
-        # avg_mae_mean = np.mean([e["mae_mean"] for e in all_offset_errors])
-        # avg_mae_std = np.mean([e["mae_std"] for e in all_offset_errors])
+        avg_mae_mean = np.mean([e["mae_mean"] for e in all_offset_errors])
+        avg_mae_std = np.mean([e["mae_std"] for e in all_offset_errors])
 
         # avg_mae_mad = np.mean([e["mae_center"] for e in all_offset_errors])
         # avg_mae_mad = np.mean([e["mae_spread_err"] for e in all_offset_errors])
 
         # print("\nFinal Distribution-Level Metrics:")
-        # print(f"Avg MAE of Mean: {avg_mae_mean:.3f}")
-        # print(f"Avg MAE of Std : {avg_mae_std:.3f}")
-
-        print("\nFinal Distribution-Level Metrics:")
         # print(f"Avg MAE of Median: {avg_mae_mad:.3f}")
         # print(f"Avg MAE of MAD : {avg_mae_mad:.3f}")
 
@@ -198,7 +232,9 @@ def main():
         avg_wd = np.mean([e["wasserstein"] for e in all_offset_errors_median])
         avg_chamfer    = np.mean([e["chamfer"] for e in all_offset_errors_median])
 
-        # print("\nFinal Distribution-Level Metrics:")
+        print("\nFinal Distribution-Level Metrics:")
+        print(f"Avg MAE of Mean: {avg_mae_mean:.3f}")
+        print(f"Avg MAE of Std : {avg_mae_std:.3f}")
         # print(f"Avg Median Center Error : {avg_median_err:.3f}")
         # print(f"Avg MAD Spread Error   : {avg_mad_err:.3f}")
         print(f"Avg Wasserstein (2D)   : {avg_wd:.3f}")

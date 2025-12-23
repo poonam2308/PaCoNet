@@ -217,3 +217,4 @@ notebooks*
 visualizations*
 output*
 output_offsets*
+src/llms/viz*
