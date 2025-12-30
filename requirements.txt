@@ -1,4 +1,6 @@
-#jupyterlab
+jupyterlab
+notebook
+jupyter
 numpy<2
 openpyxl
 matplotlib >=3.5.1
