@@ -1,20 +1,3 @@
-#!/usr/bin/env python3
-"""
-
-
-Gemini() only evaluation:
-- MAE(start/end/all) after Hungarian matching (NO endpoint swapping; canonicalize endpoints)
-- sAP (line segment average precision) using your sap_metric.py (dataset-level sAP5/sAP10/sAP15)
-
-GT JSON expected (list):
-[
-  {"filename": "...png", "lines": [[x0,y0,x1,y1], ...]},
-  ...
-]
-
-Gemini output enforced via responses.parse (Pydantic schema):
-{"lines": [[x0,y0,x1,y1], ...]}
-"""
 
 import base64
 import csv
@@ -464,10 +447,10 @@ def main() -> None:
                 )
                 gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
 
-                if gem_lines:
-                    xs = [v for l in gem_lines for v in (l[0], l[2])]
-                    ys = [v for l in gem_lines for v in (l[1], l[3])]
-                    print(f"[DBG] {fn} pred x:[{min(xs):.2f},{max(xs):.2f}] y:[{min(ys):.2f},{max(ys):.2f}]")
+                # if gem_lines:
+                #     xs = [v for l in gem_lines for v in (l[0], l[2])]
+                #     ys = [v for l in gem_lines for v in (l[1], l[3])]
+                #     print(f"[DBG] {fn} pred x:[{min(xs):.2f},{max(xs):.2f}] y:[{min(ys):.2f},{max(ys):.2f}]")
 
                 gem_stats = compute_mae_stats(gt_lines, gem_lines)
 
