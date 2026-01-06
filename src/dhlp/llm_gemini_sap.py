@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-chatgpt_all_with_sap.py
 
-OpenAI(ChatGPT) only evaluation:
+
+Gemini() only evaluation:
 - MAE(start/end/all) after Hungarian matching (NO endpoint swapping; canonicalize endpoints)
 - sAP (line segment average precision) using your sap_metric.py (dataset-level sAP5/sAP10/sAP15)
 
@@ -12,7 +12,7 @@ GT JSON expected (list):
   ...
 ]
 
-OpenAI output enforced via responses.parse (Pydantic schema):
+Gemini output enforced via responses.parse (Pydantic schema):
 {"lines": [[x0,y0,x1,y1], ...]}
 """
 
@@ -33,9 +33,11 @@ from PIL import Image
 # Hungarian assignment
 from scipy.optimize import linear_sum_assignment
 
-# OpenAI + structured parsing
-from openai import OpenAI
 from pydantic import BaseModel, Field
+# Gemini + structured parsing
+from google import genai
+from google.genai import types
+
 
 # Your sAP metric (must be importable; keep sap_metric.py in same folder or PYTHONPATH)
 from sap_metric import LineSegmentSAPMetric
@@ -48,28 +50,26 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, project_root)
 project_root = Path(project_root)
 
-# IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
-# GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
-# OUT_CSV = "results_openai_only_with_sap1.csv"
+IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
+GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
+# OUT_CSV = "results_Gemini_only_with_sap1.csv"
 
-IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
-GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+# IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
+# GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
-OUT_CSV = project_root /" outputs/llms/results_openai_only_with_sap_test.csv"
+OUT_CSV = project_root /" outputs/llms/results_Gemini_only_with_sap_test.csv"
 
-OPENAI_MODEL = "gpt-4.1-mini"  # change if you want
+# Gemini_MODEL = "gpt-4.1-mini"  # change if you want
 
-USE_OPENAI = True
+USE_Gemini = True
 MAX_IMAGES = 0        # 0 = no limit
 MAX_SIDE = 0          # 0 = do NOT resize (recommended to match GT pixel scale)
 MAX_MATCH_COST = 400.0  # threshold on cost for match acceptance
 
 # Your API key is "mentioned at the top" — keep it here if you want, but env var is safer:
-OPENAI_API_KEY="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"
-#
-# OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-if OPENAI_API_KEY:
-    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+GEMINI_API_KEY="AIzaSyDnmum8L8pHicm-8OqNOFzuTeG7fxI1yCM"
+if GEMINI_API_KEY:
+    os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 
 
 USER_PROMPT_BASE = """Extract all visible straight line segments (plotted data lines) in the image.
@@ -296,42 +296,92 @@ def scores_from_length(lines_xyxy: List[Line]) -> np.ndarray:
 
 
 # =========================
-# OpenAI structured output
+# Gemini structured output
 # =========================
 class LinesOut(BaseModel):
     lines: List[List[float]] = Field(default_factory=list)
 
+class GeminiLinePredictor:
+    def __init__(
+        self,
+        model: str = "gemini-2.5-flash",
+        api_key: str | None = None,
+        api_version: str = "v1",
+        temperature: float = 0.0,
+    ):
+        self.model = model
+        self.temperature = temperature
 
-def call_openai_image_lines(img_b64: str, user_prompt: str) -> List[Line]:
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY not set (env or top of script).")
+        http_options = types.HttpOptions(api_version=api_version)
+        if api_key:
+            self.client = genai.Client(api_key=api_key, http_options=http_options)
+        else:
+            # will pick up GEMINI_API_KEY / GOOGLE_API_KEY from env automatically :contentReference[oaicite:4]{index=4}
+            self.client = genai.Client(http_options=http_options)
 
-    client = OpenAI(api_key=api_key)
+    @staticmethod
+    def _decode_b64_png(img_b64: str) -> bytes:
+        return base64.b64decode(img_b64)
 
-    resp = client.responses.parse(
-        model=OPENAI_MODEL,
-        input=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": user_prompt},
-                    {"type": "input_image", "image_url": f"data:image/png;base64,{img_b64}"},
-                ],
-            }
-        ],
-        text_format=LinesOut,
-    )
+    @staticmethod
+    def _normalize_lines(lines: List[List[float]]) -> List[Line]:
+        out: List[Line] = []
+        for l in lines or []:
+            if isinstance(l, list) and len(l) == 4:
+                try:
+                    x0, y0, x1, y1 = map(float, l)
+                    out.append((x0, y0, x1, y1))
+                except Exception:
+                    pass
+        return out
 
-    parsed: LinesOut = resp.output_parsed
-    out: List[Line] = []
-    for l in (parsed.lines or []):
-        if isinstance(l, list) and len(l) == 4:
-            try:
-                out.append((float(l[0]), float(l[1]), float(l[2]), float(l[3])))
-            except Exception:
-                pass
-    return out
+    def predict_lines_from_b64png(self, img_b64: str, prompt: str) -> List[Line]:
+        img_bytes = self._decode_b64_png(img_b64)
+
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=[
+                prompt,
+                types.Part.from_bytes(data=img_bytes, mime_type="image/png"),
+            ],
+            config=types.GenerateContentConfig(
+                temperature=self.temperature,
+                response_mime_type="application/json",
+                response_schema=LinesOut,   # Pydantic schema :contentReference[oaicite:5]{index=5}
+            ),
+        )
+
+        # When response_schema is set, SDK exposes parsed object
+        parsed = response.parsed
+        # parsed might be a dict or a Pydantic object depending on SDK version;
+        # handle both safely.
+        if hasattr(parsed, "lines"):
+            return self._normalize_lines(parsed.lines)
+
+        if isinstance(parsed, dict) and "lines" in parsed:
+            return self._normalize_lines(parsed["lines"])
+
+        # fallback: try text JSON (should be rare when schema is set)
+        try:
+            import json
+            j = json.loads(response.text or "{}")
+            return self._normalize_lines(j.get("lines", []))
+        except Exception:
+            return []
+
+    def list_models(self, limit: int = 50) -> List[str]:
+        """
+        Optional helper to debug model-name 404s:
+        prints available models from the SDK.
+        """
+        names = []
+        # client.models.list() exists in the SDK reference (“List Base Models”). :contentReference[oaicite:6]{index=6}
+        for i, m in enumerate(self.client.models.list()):
+            if i >= limit:
+                break
+            if getattr(m, "name", None):
+                names.append(m.name)
+        return names
 
 
 # =========================
@@ -359,7 +409,7 @@ def main() -> None:
     sap_metric = LineSegmentSAPMetric(thresholds=(5.0, 10.0, 15.0))
 
     # Totals for MAE
-    tot_oai = MAEStats()
+    tot_gem = MAEStats()
 
     # CSV rows
     rows: List[Dict[str, Any]] = []
@@ -373,69 +423,74 @@ def main() -> None:
 
         img_b64 = image_to_base64_png(img_path, max_side=MAX_SIDE)
 
-        # ---- OpenAI preds ----
-        oai_lines: List[Line] = []
-        oai_stats = MAEStats(unmatched_gt=len(gt_lines), unmatched_pred=0)
+        # ---- Gemini preds ----
+        gem_lines: List[Line] = []
+        gem_stats = MAEStats(unmatched_gt=len(gt_lines), unmatched_pred=0)
 
-        if USE_OPENAI:
+        if USE_Gemini:
             try:
-                oai_lines = call_openai_image_lines(img_b64, USER_PROMPT_BASE)
-                if oai_lines:
-                    xs = [v for l in oai_lines for v in (l[0], l[2])]
-                    ys = [v for l in oai_lines for v in (l[1], l[3])]
+                gem = GeminiLinePredictor(
+                    model="gemini-2.5-flash",  # example model from Google docs :contentReference[gemcite:7]{index=7}
+                    # api_key="...",           # optional; else use env GEMINI_API_KEY
+                )
+                gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
+
+                if gem_lines:
+                    xs = [v for l in gem_lines for v in (l[0], l[2])]
+                    ys = [v for l in gem_lines for v in (l[1], l[3])]
                     print(f"[DBG] {fn} pred x:[{min(xs):.2f},{max(xs):.2f}] y:[{min(ys):.2f},{max(ys):.2f}]")
 
-                oai_stats = compute_mae_stats(gt_lines, oai_lines)
+                gem_stats = compute_mae_stats(gt_lines, gem_lines)
 
                 # ---- sAP add_image ----
-                pred_lines_yx = xyxy_list_to_yx_tensor(oai_lines)
+                pred_lines_yx = xyxy_list_to_yx_tensor(gem_lines)
                 gt_lines_yx = xyxy_list_to_yx_tensor(gt_lines)
-                pred_scores = scores_from_length(oai_lines)
+                pred_scores = scores_from_length(gem_lines)
                 sap_metric.add_image(pred_lines_yx, pred_scores, gt_lines_yx)
 
             except Exception as e:
-                print(f"[WARN] OpenAI failed on {fn}: {e}", file=sys.stderr)
+                print(f"[WARN] Gemini failed on {fn}: {e}", file=sys.stderr)
 
         # accumulate totals (MAE)
-        tot_oai.matched += oai_stats.matched
-        tot_oai.unmatched_gt += oai_stats.unmatched_gt
-        tot_oai.unmatched_pred += oai_stats.unmatched_pred
-        tot_oai._sum_abs_start += oai_stats._sum_abs_start
-        tot_oai._sum_abs_end += oai_stats._sum_abs_end
-        tot_oai._sum_abs_all += oai_stats._sum_abs_all
+        tot_gem.matched += gem_stats.matched
+        tot_gem.unmatched_gt += gem_stats.unmatched_gt
+        tot_gem.unmatched_pred += gem_stats.unmatched_pred
+        tot_gem._sum_abs_start += gem_stats._sum_abs_start
+        tot_gem._sum_abs_end += gem_stats._sum_abs_end
+        tot_gem._sum_abs_all += gem_stats._sum_abs_all
 
         rows.append(
             {
                 "image": fn,
                 "gt_lines": len(gt_lines),
-                "oai_pred_lines": len(oai_lines),
-                "oai_matched": oai_stats.matched,
-                "oai_unmatched_gt": oai_stats.unmatched_gt,
-                "oai_unmatched_pred": oai_stats.unmatched_pred,
-                "oai_mae_start": oai_stats.mae_start,
-                "oai_mae_end": oai_stats.mae_end,
-                "oai_mae_all": oai_stats.mae_all,
+                "gem_pred_lines": len(gem_lines),
+                "gem_matched": gem_stats.matched,
+                "gem_unmatched_gt": gem_stats.unmatched_gt,
+                "gem_unmatched_pred": gem_stats.unmatched_pred,
+                "gem_mae_start": gem_stats.mae_start,
+                "gem_mae_end": gem_stats.mae_end,
+                "gem_mae_all": gem_stats.mae_all,
             }
         )
 
         print(
             f"[{k}/{len(img_paths)}] {fn} | GT={len(gt_lines)} | "
-            f"OAI: pred={len(oai_lines)} matched={oai_stats.matched} "
-            f"MAE(start/end/all)={oai_stats.mae_start:.3f}/{oai_stats.mae_end:.3f}/{oai_stats.mae_all:.3f}"
+            f"gem: pred={len(gem_lines)} matched={gem_stats.matched} "
+            f"MAE(start/end/all)={gem_stats.mae_start:.3f}/{gem_stats.mae_end:.3f}/{gem_stats.mae_all:.3f}"
         )
 
         time.sleep(0.15)
 
     # finalize MAE totals
-    tot_oai.finalize()
+    tot_gem.finalize()
 
     # compute sAP totals
     sap = sap_metric.compute_sap()  # dict keyed by thresholds
 
     print("\n=============== TOTAL (MAE) ===============")
     print(
-        f"matched={tot_oai.matched} | "
-        f"MAE(start/end/all)={tot_oai.mae_start:.3f}/{tot_oai.mae_end:.3f}/{tot_oai.mae_all:.3f}"
+        f"matched={tot_gem.matched} | "
+        f"MAE(start/end/all)={tot_gem.mae_start:.3f}/{tot_gem.mae_end:.3f}/{tot_gem.mae_all:.3f}"
     )
 
     print("\n=============== sAP (dataset) ===============")
@@ -450,13 +505,13 @@ def main() -> None:
     fieldnames = [
         "image",
         "gt_lines",
-        "oai_pred_lines",
-        "oai_matched",
-        "oai_unmatched_gt",
-        "oai_unmatched_pred",
-        "oai_mae_start",
-        "oai_mae_end",
-        "oai_mae_all",
+        "gem_pred_lines",
+        "gem_matched",
+        "gem_unmatched_gt",
+        "gem_unmatched_pred",
+        "gem_mae_start",
+        "gem_mae_end",
+        "gem_mae_all",
         # sAP written in TOTAL row only:
         "sap5",
         "sap10",
@@ -478,13 +533,13 @@ def main() -> None:
             {
                 "image": "TOTAL",
                 "gt_lines": "",
-                "oai_pred_lines": "",
-                "oai_matched": tot_oai.matched,
-                "oai_unmatched_gt": tot_oai.unmatched_gt,
-                "oai_unmatched_pred": tot_oai.unmatched_pred,
-                "oai_mae_start": tot_oai.mae_start,
-                "oai_mae_end": tot_oai.mae_end,
-                "oai_mae_all": tot_oai.mae_all,
+                "gem_pred_lines": "",
+                "gem_matched": tot_gem.matched,
+                "gem_unmatched_gt": tot_gem.unmatched_gt,
+                "gem_unmatched_pred": tot_gem.unmatched_pred,
+                "gem_mae_start": tot_gem.mae_start,
+                "gem_mae_end": tot_gem.mae_end,
+                "gem_mae_all": tot_gem.mae_all,
                 "sap5": sap.get(5.0, 0.0),
                 "sap10": sap.get(10.0, 0.0),
                 "sap15": sap.get(15.0, 0.0),
