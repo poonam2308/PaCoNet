@@ -53,7 +53,7 @@ OUT_CSV = "results.csv"  # where to save results
 VIZ_DIR = Path("./viz")
 
 OPENAI_MODEL = "gpt-4.1-mini"
-GEMINI_MODEL = "gemini-1.5-pro"
+GEMINI_MODEL = "gemini-1.5-pro-latest"
 
 # If you want to disable a provider, set USE_OPENAI / USE_GEMINI = False
 USE_OPENAI = True
@@ -170,17 +170,6 @@ def image_to_base64_png(path: Path, max_side: int) -> str:
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
 
-def safe_json_extract(text: str) -> Dict[str, Any]:
-    text = (text or "").strip()
-    try:
-        return json.loads(text)
-    except Exception:
-        pass
-    m = re.search(r"\{[\s\S]*\}", text)
-    if not m:
-        raise ValueError("No JSON object found in model output.")
-    return json.loads(m.group(0))
-
 def extract_lines_by_color(model_json: Dict[str, Any]) -> Dict[str, List[Line]]:
     out: Dict[str, List[Line]] = {}
 
@@ -291,6 +280,97 @@ def parse_gt_index(gt_payload: Any) -> Dict[str, List[Line]]:
 # -----------------------------
 # Matching + MAE
 # -----------------------------
+def safe_json_extract(text: str) -> Any:   # <- was Dict[str, Any]
+    text = (text or "").strip()
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    m = re.search(r"\{[\s\S]*\}", text)
+    if not m:
+        # ALSO try list fallback
+        m2 = re.search(r"\[[\s\S]*\]", text)
+        if not m2:
+            raise ValueError("No JSON found in model output.")
+        return json.loads(m2.group(0))
+    return json.loads(m.group(0))
+
+
+def canonicalize_line(l: Line) -> Line:
+    """Ensure (x0,y0) is the 'start' (leftmost; tie -> upper)."""
+    x0, y0, x1, y1 = l
+    if (x1 < x0) or (x1 == x0 and y1 < y0):
+        return (x1, y1, x0, y0)
+    return (x0, y0, x1, y1)
+
+
+def endpoint_cost_l2_noswap(a: Line, b: Line) -> float:
+    """Cost after canonicalization: L2(start-start) + L2(end-end)."""
+    ax0, ay0, ax1, ay1 = a
+    bx0, by0, bx1, by1 = b
+    return float(np.hypot(ax0 - bx0, ay0 - by0) + np.hypot(ax1 - bx1, ay1 - by1))
+
+
+def abs_errors_noswap(gt: Line, pr: Line) -> Tuple[float, float, float]:
+    """Return sums of abs errors for start/end/all (no swapping)."""
+    gx0, gy0, gx1, gy1 = gt
+    px0, py0, px1, py1 = pr
+
+    start = abs(gx0 - px0) + abs(gy0 - py0)
+    end   = abs(gx1 - px1) + abs(gy1 - py1)
+    return start, end, start + end
+
+
+def compute_mae_stats(gt_lines: List[Line], pr_lines: List[Line]) -> MAEStats:
+    stats = MAEStats()
+
+    # canonicalize first
+    gt_lines = [canonicalize_line(l) for l in gt_lines]
+    pr_lines = [canonicalize_line(l) for l in pr_lines]
+
+    n_gt, n_pr = len(gt_lines), len(pr_lines)
+
+    if n_gt == 0 and n_pr == 0:
+        stats.finalize()
+        return stats
+    if n_gt == 0:
+        stats.unmatched_pred = n_pr
+        stats.finalize()
+        return stats
+    if n_pr == 0:
+        stats.unmatched_gt = n_gt
+        stats.finalize()
+        return stats
+
+    cost = np.zeros((n_gt, n_pr), dtype=float)
+    for i in range(n_gt):
+        for j in range(n_pr):
+            cost[i, j] = endpoint_cost_l2_noswap(gt_lines[i], pr_lines[j])
+
+    pairs = hungarian_pairs(cost)
+
+    matched_gt = set()
+    matched_pr = set()
+
+    for i, j in pairs:
+        c = float(cost[i, j])
+        if c > MAX_MATCH_COST:
+            continue
+
+        matched_gt.add(i)
+        matched_pr.add(j)
+
+        s_abs, e_abs, all_abs = abs_errors_noswap(gt_lines[i], pr_lines[j])
+        stats._sum_abs_start += s_abs
+        stats._sum_abs_end += e_abs
+        stats._sum_abs_all += all_abs
+        stats.matched += 1
+
+    stats.unmatched_gt = n_gt - len(matched_gt)
+    stats.unmatched_pred = n_pr - len(matched_pr)
+    stats.finalize()
+    return stats
+
 def endpoint_cost_l2(a: Line, b: Line) -> float:
     """
     Matching cost used for Hungarian assignment:
@@ -357,54 +437,6 @@ def hungarian_pairs(cost: np.ndarray) -> List[Tuple[int, int]]:
                 used_j.add(best_j)
                 pairs.append((i, best_j))
         return pairs
-
-
-def compute_mae_stats(gt_lines: List[Line], pr_lines: List[Line]) -> MAEStats:
-    stats = MAEStats()
-
-    n_gt = len(gt_lines)
-    n_pr = len(pr_lines)
-
-    if n_gt == 0 and n_pr == 0:
-        stats.finalize()
-        return stats
-    if n_gt == 0:
-        stats.unmatched_pred = n_pr
-        stats.finalize()
-        return stats
-    if n_pr == 0:
-        stats.unmatched_gt = n_gt
-        stats.finalize()
-        return stats
-
-    cost = np.zeros((n_gt, n_pr), dtype=float)
-    for i in range(n_gt):
-        for j in range(n_pr):
-            cost[i, j] = endpoint_cost_l2(gt_lines[i], pr_lines[j])
-
-    pairs = hungarian_pairs(cost)
-
-    matched_gt = set()
-    matched_pr = set()
-
-    for i, j in pairs:
-        c = float(cost[i, j])
-        if c > MAX_MATCH_COST:
-            continue  # treat as unmatched
-        matched_gt.add(i)
-        matched_pr.add(j)
-
-        s_abs, e_abs, all_abs = best_orientation_abs_errors(gt_lines[i], pr_lines[j])
-        stats._sum_abs_start += s_abs
-        stats._sum_abs_end += e_abs
-        stats._sum_abs_all += all_abs
-        stats.matched += 1
-
-    stats.unmatched_gt = n_gt - len(matched_gt)
-    stats.unmatched_pred = n_pr - len(matched_pr)
-
-    stats.finalize()
-    return stats
 
 
 # -----------------------------
@@ -518,8 +550,10 @@ def main() -> None:
         if USE_OPENAI:
             try:
                 pred = call_openai_image_json(img_b64, USER_PROMPT_BASE)
-                oai_by_color = extract_lines_by_color(pred)
                 oai_lines = extract_lines_from_model_json(pred)
+                oai_by_color = {}
+                if isinstance(pred, dict):
+                    oai_by_color = extract_lines_by_color(pred)
                 oai_stats = compute_mae_stats(gt_lines, oai_lines)
             except Exception as e:
                 print(f"[WARN] OpenAI failed on {fn}: {e}", file=sys.stderr)
