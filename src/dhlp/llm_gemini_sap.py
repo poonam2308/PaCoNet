@@ -40,7 +40,7 @@ GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/te
 # IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
 # GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
-OUT_CSV = project_root /" outputs/llms/results_Gemini_only_with_sap_test.csv"
+OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test.csv"
 
 # Gemini_MODEL = "gpt-4.1-mini"  # change if you want
 

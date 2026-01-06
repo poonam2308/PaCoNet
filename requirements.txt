@@ -27,3 +27,4 @@ pyyaml
 hdbscan
 openai
 protobuf
+google-genai==0.3.0
