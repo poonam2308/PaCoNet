@@ -50,9 +50,9 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, project_root)
 project_root = Path(project_root)
 
-IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
-GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
-# OUT_CSV = "results_Gemini_only_with_sap1.csv"
+IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
+GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+
 
 # IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
 # GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
@@ -87,6 +87,7 @@ Rules:
 - Coordinates are IMAGE PIXELS with origin at top-left.
 - Ignore axes, tick marks, grid lines, legend boxes, and text.
 - Use numbers (ints or floats).
+- Return ONLY JSON. No extra text.
 """
 
 
@@ -124,6 +125,48 @@ class MAEStats:
 # =========================
 # Helpers
 # =========================
+
+def safe_json_extract(text: str) -> Any:
+    text = (text or "").strip()
+    if not text:
+        raise ValueError("Empty model output")
+
+    # direct
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+
+    # dict block
+    m = re.search(r"\{[\s\S]*\}", text)
+    if m:
+        return json.loads(m.group(0))
+
+    # list block
+    m2 = re.search(r"\[[\s\S]*\]", text)
+    if m2:
+        return json.loads(m2.group(0))
+
+    raise ValueError("No JSON found in model output")
+
+
+def extract_lines_from_any_json(pred: Any) -> List[Line]:
+    if isinstance(pred, list):
+        raw = pred
+    elif isinstance(pred, dict):
+        raw = pred.get("lines", [])
+    else:
+        return []
+
+    out: List[Line] = []
+    for l in raw:
+        if isinstance(l, (list, tuple)) and len(l) == 4:
+            try:
+                out.append((float(l[0]), float(l[1]), float(l[2]), float(l[3])))
+            except Exception:
+                pass
+    return out
+
 def is_image_file(p: Path) -> bool:
     return p.suffix.lower() in {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff"}
 
@@ -304,7 +347,7 @@ class LinesOut(BaseModel):
 class GeminiLinePredictor:
     def __init__(
         self,
-        model: str = "gemini-2.5-flash",
+        model: str = "gemini-1.5-pro",
         api_key: str | None = None,
         api_version: str = "v1",
         temperature: float = 0.0,
@@ -346,28 +389,14 @@ class GeminiLinePredictor:
             ],
             config=types.GenerateContentConfig(
                 temperature=self.temperature,
-                response_mime_type="application/json",
-                response_schema=LinesOut,   # Pydantic schema :contentReference[oaicite:5]{index=5}
             ),
         )
 
-        # When response_schema is set, SDK exposes parsed object
-        parsed = response.parsed
-        # parsed might be a dict or a Pydantic object depending on SDK version;
-        # handle both safely.
-        if hasattr(parsed, "lines"):
-            return self._normalize_lines(parsed.lines)
+        text = getattr(response, "text", "") or ""
+        pred = safe_json_extract(text)
+        return extract_lines_from_any_json(pred)
 
-        if isinstance(parsed, dict) and "lines" in parsed:
-            return self._normalize_lines(parsed["lines"])
 
-        # fallback: try text JSON (should be rare when schema is set)
-        try:
-            import json
-            j = json.loads(response.text or "{}")
-            return self._normalize_lines(j.get("lines", []))
-        except Exception:
-            return []
 
     def list_models(self, limit: int = 50) -> List[str]:
         """
