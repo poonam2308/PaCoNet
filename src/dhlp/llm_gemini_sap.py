@@ -487,13 +487,13 @@ def main() -> None:
         if USE_Gemini:
             try:
                 gem = GeminiLinePredictor(
-                    model="gemini-2.5-flash-lite",  # example model from Google docs :contentReference[gemcite:7]{index=7}
+                    model="gemini-2.5-flash",  # example model from Google docs :contentReference[gemcite:7]{index=7}
                     api_key=GEMINI_API_KEY        # optional; else use env GEMINI_API_KEY
                 )
-                # gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
-                gem_lines = call_with_retries(
-                    lambda: gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
-                )
+                gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
+                # gem_lines = call_with_retries(
+                #     lambda: gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
+                # )
 
                 # if gem_lines:
                 #     xs = [v for l in gem_lines for v in (l[0], l[2])]
@@ -539,7 +539,7 @@ def main() -> None:
             f"MAE(start/end/all)={gem_stats.mae_start:.3f}/{gem_stats.mae_end:.3f}/{gem_stats.mae_all:.3f}"
         )
 
-        time.sleep(0.25)
+        time.sleep(0.15)
 
     # finalize MAE totals
     tot_gem.finalize()
