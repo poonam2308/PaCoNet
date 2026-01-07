@@ -407,6 +407,9 @@ def main() -> None:
 
     # Totals for MAE
     tot_oai = MAEStats()
+    # Global simple MAE accumulators (across all images)
+    global_simple_abs = 0.0
+    global_simple_count = 0  # counts lines (max(G,P)) across images
 
     # CSV rows
     rows: List[Dict[str, Any]] = []
@@ -434,6 +437,14 @@ def main() -> None:
 
                 oai_stats = compute_mae_stats(gt_lines, oai_lines)
                 simple_mae = simple_line_mae(gt_lines, oai_lines)
+                # ---- accumulate global simple MAE ----
+                G = len(gt_lines)
+                P = len(oai_lines)
+                N = max(G, P)
+
+                if N > 0:
+                    global_simple_count += N
+                    global_simple_abs += simple_mae * (N * 4.0)
 
                 # ---- sAP add_image ----
                 pred_lines_yx = xyxy_list_to_yx_tensor(oai_lines)
@@ -478,6 +489,10 @@ def main() -> None:
 
     # finalize MAE totals
     tot_oai.finalize()
+    if global_simple_count > 0:
+        global_simple_mae = global_simple_abs / (global_simple_count * 4.0)
+    else:
+        global_simple_mae = 0.0
 
     # compute sAP totals
     sap = sap_metric.compute_sap()  # dict keyed by thresholds
@@ -487,6 +502,8 @@ def main() -> None:
         f"matched={tot_oai.matched} | "
         f"MAE(start/end/all)={tot_oai.mae_start:.3f}/{tot_oai.mae_end:.3f}/{tot_oai.mae_all:.3f}"
     )
+    print("\n=============== GLOBAL SIMPLE MAE ===============")
+    print(f"Global Simple MAE (all images): {global_simple_mae:.6f}")
 
     print("\n=============== sAP (dataset) ===============")
     print(f"sAP5  = {sap.get(5.0, 0.0):.6f}")
@@ -536,6 +553,7 @@ def main() -> None:
                 "oai_mae_start": tot_oai.mae_start,
                 "oai_mae_end": tot_oai.mae_end,
                 "oai_mae_all": tot_oai.mae_all,
+                "oai_simple_mae": global_simple_mae,
                 "sap5": sap.get(5.0, 0.0),
                 "sap10": sap.get(10.0, 0.0),
                 "sap15": sap.get(15.0, 0.0),

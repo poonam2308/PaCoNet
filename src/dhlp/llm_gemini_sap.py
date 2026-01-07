@@ -41,7 +41,7 @@ GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/te
 # IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
 # GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
 
-OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test.csv"
+OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test_mae.csv"
 
 # Gemini_MODEL = "gpt-4.1-mini"  # change if you want
 
@@ -106,6 +106,42 @@ class MAEStats:
             self.mae_start = 0.0
             self.mae_end = 0.0
             self.mae_all = 0.0
+def simple_line_mae(gt_lines: List[Line], pr_lines: List[Line]) -> float:
+    """
+    Simple MAE between GT and Pred lines (coordinate-wise).
+    - Pairs by index (no matching).
+    - Missing lines contribute full coordinate error (compared to 0).
+    - Normalized by max(len(gt), len(pred)) and 4 coords per line.
+    """
+    G = len(gt_lines)
+    P = len(pr_lines)
+    N = max(G, P)
+    if N == 0:
+        return 0.0
+
+    total_abs = 0.0
+    M = min(G, P)
+
+    # Paired lines
+    for i in range(M):
+        gx0, gy0, gx1, gy1 = gt_lines[i]
+        px0, py0, px1, py1 = pr_lines[i]
+        total_abs += (
+            abs(gx0 - px0) + abs(gy0 - py0) +
+            abs(gx1 - px1) + abs(gy1 - py1)
+        )
+
+    # Missing GT lines (pred assumed 0)
+    for i in range(M, G):
+        gx0, gy0, gx1, gy1 = gt_lines[i]
+        total_abs += abs(gx0) + abs(gy0) + abs(gx1) + abs(gy1)
+
+    # Missing Pred lines (gt assumed 0)
+    for i in range(M, P):
+        px0, py0, px1, py1 = pr_lines[i]
+        total_abs += abs(px0) + abs(py0) + abs(px1) + abs(py1)
+
+    return total_abs / (N * 4.0)
 
 
 # =========================
@@ -468,6 +504,9 @@ def main() -> None:
 
     # Totals for MAE
     tot_gem = MAEStats()
+    # Global simple MAE accumulators
+    global_simple_abs = 0.0
+    global_simple_count = 0  # counts lines (not images)
 
     # CSV rows
     rows: List[Dict[str, Any]] = []
@@ -492,6 +531,16 @@ def main() -> None:
                     api_key=GEMINI_API_KEY        # optional; else use env GEMINI_API_KEY
                 )
                 gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
+                gem_simple_mae = simple_line_mae(gt_lines, gem_lines)
+                # ---- accumulate global simple MAE ----
+                G = len(gt_lines)
+                P = len(gem_lines)
+                N = max(G, P)
+
+                if N > 0:
+                    global_simple_count += N
+                    global_simple_abs += gem_simple_mae * (N * 4.0)
+
                 # gem_lines = call_with_retries(
                 #     lambda: gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
                 # )
@@ -531,19 +580,25 @@ def main() -> None:
                 "gem_mae_start": gem_stats.mae_start,
                 "gem_mae_end": gem_stats.mae_end,
                 "gem_mae_all": gem_stats.mae_all,
+                "gem_simple_mae": gem_simple_mae,
             }
         )
 
         print(
             f"[{k}/{len(img_paths)}] {fn} | GT={len(gt_lines)} | "
             f"gem: pred={len(gem_lines)} matched={gem_stats.matched} "
-            f"MAE(start/end/all)={gem_stats.mae_start:.3f}/{gem_stats.mae_end:.3f}/{gem_stats.mae_all:.3f}"
+            f"MAE(start/end/all)={gem_stats.mae_start:.3f}/{gem_stats.mae_end:.3f}/{gem_stats.mae_all:.3f} | "
+            f"SimpleMAE={gem_simple_mae:.3f}"
         )
 
         time.sleep(0.15)
 
     # finalize MAE totals
     tot_gem.finalize()
+    if global_simple_count > 0:
+        global_simple_mae = global_simple_abs / (global_simple_count * 4.0)
+    else:
+        global_simple_mae = 0.0
 
     # compute sAP totals
     sap = sap_metric.compute_sap()  # dict keyed by thresholds
@@ -553,6 +608,8 @@ def main() -> None:
         f"matched={tot_gem.matched} | "
         f"MAE(start/end/all)={tot_gem.mae_start:.3f}/{tot_gem.mae_end:.3f}/{tot_gem.mae_all:.3f}"
     )
+    print("\n=============== GLOBAL SIMPLE MAE ===============")
+    print(f"Global Simple MAE (all images): {global_simple_mae:.6f}")
 
     print("\n=============== sAP (dataset) ===============")
     print(f"sAP5  = {sap.get(5.0, 0.0):.6f}")
@@ -573,6 +630,7 @@ def main() -> None:
         "gem_mae_start",
         "gem_mae_end",
         "gem_mae_all",
+        "gem_simple_mae",
         # sAP written in TOTAL row only:
         "sap5",
         "sap10",
@@ -601,6 +659,7 @@ def main() -> None:
                 "gem_mae_start": tot_gem.mae_start,
                 "gem_mae_end": tot_gem.mae_end,
                 "gem_mae_all": tot_gem.mae_all,
+                "gem_simple_mae": global_simple_mae,
                 "sap5": sap.get(5.0, 0.0),
                 "sap10": sap.get(10.0, 0.0),
                 "sap15": sap.get(15.0, 0.0),
