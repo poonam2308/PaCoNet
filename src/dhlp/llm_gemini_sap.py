@@ -33,13 +33,13 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, project_root)
 project_root = Path(project_root)
 
-# IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
-# GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
+GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
 
 
-IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
-GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
+# IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
+# GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
 
 OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test.csv"
 
