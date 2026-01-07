@@ -51,7 +51,8 @@ MAX_SIDE = 0          # 0 = do NOT resize (recommended to match GT pixel scale)
 MAX_MATCH_COST = 400.0  # threshold on cost for match acceptance
 
 # Your API key is "mentioned at the top" — keep it here if you want, but env var is safer:
-GEMINI_API_KEY="AIzaSyDnmum8L8pHicm-8OqNOFzuTeG7fxI1yCM"
+# GEMINI_API_KEY="AIzaSyDnmum8L8pHicm-8OqNOFzuTeG7fxI1yCM"
+GEMINI_API_KEY="AIzaSyDtvnAFCcW3t9gaoHivlVkoVYCh9v20Y58"
 if GEMINI_API_KEY:
     os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 
