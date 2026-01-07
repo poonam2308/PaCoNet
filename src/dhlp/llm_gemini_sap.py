@@ -33,12 +33,13 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, project_root)
 project_root = Path(project_root)
 
-IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
-GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
-
-
 # IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
 # GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+
+
+
+IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
+GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
 
 OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test.csv"
 
@@ -176,15 +177,7 @@ def load_json(path: Path) -> Any:
 
 
 def parse_gt_index(gt_payload: Any) -> Dict[str, List[Line]]:
-    """
-    GT payload expected:
-      [
-        {"filename": "...png", "lines": [[x0,y0,x1,y1], ...]},
-        ...
-      ]
-    Optionally wrapped:
-      {"images":[...]}
-    """
+
     if isinstance(gt_payload, list):
         records = gt_payload
     elif isinstance(gt_payload, dict) and isinstance(gt_payload.get("images"), list):
@@ -324,13 +317,50 @@ def scores_from_length(lines_xyxy: List[Line]) -> np.ndarray:
 # =========================
 # Gemini structured output
 # =========================
+import random
+import time
+
+def call_with_retries(fn_call, *, max_retries=6, base_sleep=2.0):
+    """
+    Retries on transient Gemini errors:
+      - 503 UNAVAILABLE (model overloaded)
+      - 429 RESOURCE_EXHAUSTED / rate limits
+    Exponential backoff + jitter.
+    """
+    for attempt in range(max_retries + 1):
+        try:
+            return fn_call()
+        except Exception as e:
+            msg = str(e)
+
+            transient = ("503" in msg or "UNAVAILABLE" in msg or
+                         "429" in msg or "RESOURCE_EXHAUSTED" in msg)
+
+            if not transient or attempt == max_retries:
+                raise
+
+            # If API suggests a retry delay, honor it (e.g., "retry in 41s")
+            m = re.search(r"retry in ([0-9]+(\.[0-9]+)?)s", msg, re.IGNORECASE)
+            if m:
+                sleep_s = float(m.group(1))
+            else:
+                # exponential backoff with jitter
+                sleep_s = base_sleep * (2 ** attempt)
+                sleep_s = sleep_s * (0.7 + 0.6 * random.random())  # jitter 0.7–1.3
+
+            print(f"[WARN] Gemini transient error, retrying in {sleep_s:.1f}s (attempt {attempt+1}/{max_retries})")
+            time.sleep(sleep_s)
+
+    # unreachable
+    raise RuntimeError("Retries exhausted")
+
 class LinesOut(BaseModel):
     lines: List[List[float]] = Field(default_factory=list)
 
 class GeminiLinePredictor:
     def __init__(
         self,
-        model: str = "gemini-2.5-flash",
+        model: str = "gemini-1.5-pro",
         api_key: str | None = None,
         api_version: str = "v1",
         temperature: float = 0.0,
@@ -338,19 +368,11 @@ class GeminiLinePredictor:
         self.model = model
         self.temperature = temperature
 
-        client_kwargs = {}
-        # Some versions of google-genai don't have types.HttpOptions
-        try:
-            http_options = types.HttpOptions(api_version=api_version)
-            client_kwargs["http_options"] = http_options
-        except Exception:
-            # Older SDK: just skip api_version override
-            pass
-
+        http_options = types.HttpOptions(api_version=api_version)
         if api_key:
-            self.client = genai.Client(api_key=api_key, **client_kwargs)
+            self.client = genai.Client(api_key=api_key, http_options=http_options)
         else:
-            self.client = genai.Client(**client_kwargs)
+            self.client = genai.Client(http_options=http_options)
 
     @staticmethod
     def _decode_b64_png(img_b64: str) -> bytes:
@@ -432,12 +454,6 @@ def main() -> None:
 
     # CSV rows
     rows: List[Dict[str, Any]] = []
-    gem = None
-    if USE_Gemini:
-        gem = GeminiLinePredictor(
-            model="gemini-2.5-flash-lite",
-            api_key=GEMINI_API_KEY,
-            )
 
     for k, img_path in enumerate(img_paths, start=1):
         fn = img_path.name
@@ -454,7 +470,14 @@ def main() -> None:
 
         if USE_Gemini:
             try:
-                gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
+                gem = GeminiLinePredictor(
+                    model="gemini-2.5-flash",  # example model from Google docs :contentReference[gemcite:7]{index=7}
+                    api_key=GEMINI_API_KEY        # optional; else use env GEMINI_API_KEY
+                )
+                # gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
+                gem_lines = call_with_retries(
+                    lambda: gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
+                )
 
                 # if gem_lines:
                 #     xs = [v for l in gem_lines for v in (l[0], l[2])]
@@ -471,9 +494,6 @@ def main() -> None:
 
             except Exception as e:
                 print(f"[WARN] Gemini failed on {fn}: {e}", file=sys.stderr)
-                msg = str(e)
-                if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
-                    time.sleep(45)
 
         # accumulate totals (MAE)
         tot_gem.matched += gem_stats.matched
@@ -503,7 +523,7 @@ def main() -> None:
             f"MAE(start/end/all)={gem_stats.mae_start:.3f}/{gem_stats.mae_end:.3f}/{gem_stats.mae_all:.3f}"
         )
 
-        time.sleep(3.5)
+        time.sleep(0.15)
 
     # finalize MAE totals
     tot_gem.finalize()
