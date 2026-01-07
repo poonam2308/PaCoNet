@@ -435,8 +435,8 @@ def main() -> None:
     gem = None
     if USE_Gemini:
         gem = GeminiLinePredictor(
-            model="gemini-3-flash",
-            # api_key=GEMINI_API_KEY,
+            model="gemini-2.5-flash-lite",
+            api_key=GEMINI_API_KEY,
             )
 
     for k, img_path in enumerate(img_paths, start=1):
