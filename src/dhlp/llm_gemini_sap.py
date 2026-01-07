@@ -330,7 +330,7 @@ class LinesOut(BaseModel):
 class GeminiLinePredictor:
     def __init__(
         self,
-        model: str = "gemini-1.5-pro",
+        model: str = "gemini-2.5-flash",
         api_key: str | None = None,
         api_version: str = "v1",
         temperature: float = 0.0,
@@ -338,12 +338,19 @@ class GeminiLinePredictor:
         self.model = model
         self.temperature = temperature
 
-        http_options = types.HttpOptions(api_version=api_version)
+        client_kwargs = {}
+        # Some versions of google-genai don't have types.HttpOptions
+        try:
+            http_options = types.HttpOptions(api_version=api_version)
+            client_kwargs["http_options"] = http_options
+        except Exception:
+            # Older SDK: just skip api_version override
+            pass
+
         if api_key:
-            self.client = genai.Client(api_key=api_key, http_options=http_options)
+            self.client = genai.Client(api_key=api_key, **client_kwargs)
         else:
-            # will pick up GEMINI_API_KEY / GOOGLE_API_KEY from env automatically :contentReference[oaicite:4]{index=4}
-            self.client = genai.Client(http_options=http_options)
+            self.client = genai.Client(**client_kwargs)
 
     @staticmethod
     def _decode_b64_png(img_b64: str) -> bytes:
@@ -425,6 +432,12 @@ def main() -> None:
 
     # CSV rows
     rows: List[Dict[str, Any]] = []
+    gem = None
+    if USE_Gemini:
+        gem = GeminiLinePredictor(
+            model="gemini-3-flash",
+            # api_key=GEMINI_API_KEY,
+            )
 
     for k, img_path in enumerate(img_paths, start=1):
         fn = img_path.name
@@ -441,10 +454,6 @@ def main() -> None:
 
         if USE_Gemini:
             try:
-                gem = GeminiLinePredictor(
-                    model="gemini-2.5-flash",  # example model from Google docs :contentReference[gemcite:7]{index=7}
-                    # api_key="...",           # optional; else use env GEMINI_API_KEY
-                )
                 gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
 
                 # if gem_lines:
@@ -462,6 +471,9 @@ def main() -> None:
 
             except Exception as e:
                 print(f"[WARN] Gemini failed on {fn}: {e}", file=sys.stderr)
+                msg = str(e)
+                if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
+                    time.sleep(45)
 
         # accumulate totals (MAE)
         tot_gem.matched += gem_stats.matched
@@ -491,7 +503,7 @@ def main() -> None:
             f"MAE(start/end/all)={gem_stats.mae_start:.3f}/{gem_stats.mae_end:.3f}/{gem_stats.mae_all:.3f}"
         )
 
-        time.sleep(0.15)
+        time.sleep(3.5)
 
     # finalize MAE totals
     tot_gem.finalize()
