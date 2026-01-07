@@ -46,13 +46,14 @@ OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test.csv"
 # Gemini_MODEL = "gpt-4.1-mini"  # change if you want
 
 USE_Gemini = True
-MAX_IMAGES = 0        # 0 = no limit
-MAX_SIDE = 0          # 0 = do NOT resize (recommended to match GT pixel scale)
-MAX_MATCH_COST = 400.0  # threshold on cost for match acceptance
+MAX_IMAGES = 0
+MAX_SIDE = 0
+MAX_MATCH_COST = 400.0
 
-# Your API key is "mentioned at the top" — keep it here if you want, but env var is safer:
+
 # GEMINI_API_KEY="AIzaSyDnmum8L8pHicm-8OqNOFzuTeG7fxI1yCM"
-GEMINI_API_KEY="AIzaSyDtvnAFCcW3t9gaoHivlVkoVYCh9v20Y58"
+# GEMINI_API_KEY="AIzaSyDtvnAFCcW3t9gaoHivlVkoVYCh9v20Y58"
+GEMINI_API_KEY="AIzaSyBYu99uo9JfS0z_p-akz4XwJCN3qk8J-gc" # daniel's key
 if GEMINI_API_KEY:
     os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 

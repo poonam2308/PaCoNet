@@ -55,7 +55,7 @@ project_root = Path(project_root)
 IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
 GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
-OUT_CSV = project_root /" outputs/llms/results_openai_only_with_sap_test.csv"
+OUT_CSV = project_root /" outputs/llms/results_openai_only_with_sap_test_mae.csv"
 
 OPENAI_MODEL = "gpt-4.1-mini"  # change if you want
 
@@ -120,6 +120,53 @@ class MAEStats:
             self.mae_end = 0.0
             self.mae_all = 0.0
 
+from typing import List
+
+def simple_line_mae(
+    gt_lines: List[Line],
+    pr_lines: List[Line],
+) -> float:
+    """
+    Simple MAE between GT and Pred lines.
+
+    - Pairs lines by index (no matching).
+    - Missing lines contribute full coordinate error.
+    - Normalized by total number of lines and 4 coordinates per line.
+    """
+
+    G = len(gt_lines)
+    P = len(pr_lines)
+    N = max(G, P)
+
+    if N == 0:
+        return 0.0
+
+    total_abs = 0.0
+
+    # Paired lines
+    M = min(G, P)
+    for i in range(M):
+        gx0, gy0, gx1, gy1 = gt_lines[i]
+        px0, py0, px1, py1 = pr_lines[i]
+
+        total_abs += (
+            abs(gx0 - px0) +
+            abs(gy0 - py0) +
+            abs(gx1 - px1) +
+            abs(gy1 - py1)
+        )
+
+    # Missing GT lines
+    for i in range(M, G):
+        gx0, gy0, gx1, gy1 = gt_lines[i]
+        total_abs += abs(gx0) + abs(gy0) + abs(gx1) + abs(gy1)
+
+    # Missing Pred lines
+    for i in range(M, P):
+        px0, py0, px1, py1 = pr_lines[i]
+        total_abs += abs(px0) + abs(py0) + abs(px1) + abs(py1)
+
+    return total_abs / (N * 4.0)
 
 # =========================
 # Helpers
@@ -386,6 +433,7 @@ def main() -> None:
                     print(f"[DBG] {fn} pred x:[{min(xs):.2f},{max(xs):.2f}] y:[{min(ys):.2f},{max(ys):.2f}]")
 
                 oai_stats = compute_mae_stats(gt_lines, oai_lines)
+                simple_mae = simple_line_mae(gt_lines, oai_lines)
 
                 # ---- sAP add_image ----
                 pred_lines_yx = xyxy_list_to_yx_tensor(oai_lines)
@@ -415,13 +463,15 @@ def main() -> None:
                 "oai_mae_start": oai_stats.mae_start,
                 "oai_mae_end": oai_stats.mae_end,
                 "oai_mae_all": oai_stats.mae_all,
+                "oai_simple_mae": simple_mae,
             }
         )
 
         print(
             f"[{k}/{len(img_paths)}] {fn} | GT={len(gt_lines)} | "
             f"OAI: pred={len(oai_lines)} matched={oai_stats.matched} "
-            f"MAE(start/end/all)={oai_stats.mae_start:.3f}/{oai_stats.mae_end:.3f}/{oai_stats.mae_all:.3f}"
+            f"MAE(start/end/all)={oai_stats.mae_start:.3f}/{oai_stats.mae_end:.3f}/{oai_stats.mae_all:.3f} |"
+            f"SimpleMAE={simple_mae:.3f}"
         )
 
         time.sleep(0.15)
@@ -457,6 +507,7 @@ def main() -> None:
         "oai_mae_start",
         "oai_mae_end",
         "oai_mae_all",
+        "oai_simple_mae",
         # sAP written in TOTAL row only:
         "sap5",
         "sap10",
