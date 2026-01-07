@@ -37,7 +37,7 @@ IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/image
 GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
 
-
+#
 # IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
 # GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
 
@@ -486,7 +486,7 @@ def main() -> None:
         if USE_Gemini:
             try:
                 gem = GeminiLinePredictor(
-                    model="gemini-2.5-flash",  # example model from Google docs :contentReference[gemcite:7]{index=7}
+                    model="gemini-2.5-flash-lite",  # example model from Google docs :contentReference[gemcite:7]{index=7}
                     api_key=GEMINI_API_KEY        # optional; else use env GEMINI_API_KEY
                 )
                 # gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
@@ -538,7 +538,7 @@ def main() -> None:
             f"MAE(start/end/all)={gem_stats.mae_start:.3f}/{gem_stats.mae_end:.3f}/{gem_stats.mae_all:.3f}"
         )
 
-        time.sleep(0.15)
+        time.sleep(0.25)
 
     # finalize MAE totals
     tot_gem.finalize()
