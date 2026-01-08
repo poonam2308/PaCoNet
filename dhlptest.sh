@@ -26,7 +26,7 @@
 
 ## cluster unet
 #./src/dhlp/process_offset_sing.py ./src/dhlp/config/testCluster.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
-./src/dhlp/process_offset_cat_dist.py ./src/dhlp/config/testCluster.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
+#./src/dhlp/process_offset_cat_dist.py ./src/dhlp/config/testCluster.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
 
 # color no unet
 #./src/dhlp/process_offset_sing.py ./src/dhlp/config/noisedTest.yaml ./outputs/chkpt/dhlp/checkpoint_best_nc.pth

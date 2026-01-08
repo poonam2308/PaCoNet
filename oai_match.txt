@@ -1,0 +1,614 @@
+-
+  ```
+  /home/poonam/myworkspace/PaCoNet/.venv/bin/python /home/poonam/myworkspace/PaCoNet/src/dhlp/llm_sap.py
+  [1/594] image_100_crop_1.png | GT=62 | OAI: pred=224 matched=60 MAE(start/end/all)=93.748/65.634/79.691
+  [2/594] image_100_crop_2.png | GT=75 | OAI: pred=79 matched=75 MAE(start/end/all)=74.288/80.150/77.219
+  [3/594] image_100_crop_3.png | GT=73 | OAI: pred=37 matched=37 MAE(start/end/all)=16.909/102.663/59.786
+  [4/594] image_10_crop_1.png | GT=125 | OAI: pred=15 matched=15 MAE(start/end/all)=25.876/8.029/16.952
+  [5/594] image_10_crop_2.png | GT=107 | OAI: pred=46 matched=46 MAE(start/end/all)=20.446/44.259/32.352
+  [WARN] No GT found for image_11_crop_1.png, skipping.
+  [WARN] No GT found for image_11_crop_10.png, skipping.
+  [8/594] image_11_crop_2.png | GT=58 | OAI: pred=20 matched=20 MAE(start/end/all)=20.966/113.501/67.234
+  [WARN] No GT found for image_11_crop_3.png, skipping.
+  [10/594] image_11_crop_4.png | GT=63 | OAI: pred=27 matched=25 MAE(start/end/all)=55.773/28.826/42.299
+  [WARN] No GT found for image_11_crop_5.png, skipping.
+  [WARN] No GT found for image_11_crop_6.png, skipping.
+  [13/594] image_11_crop_7.png | GT=64 | OAI: pred=20 matched=20 MAE(start/end/all)=28.776/70.529/49.652
+  [WARN] No GT found for image_11_crop_8.png, skipping.
+  [15/594] image_11_crop_9.png | GT=67 | OAI: pred=74 matched=67 MAE(start/end/all)=68.096/122.695/95.395
+  [16/594] image_12_crop_1.png | GT=377 | OAI: pred=40 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [17/594] image_12_crop_2.png | GT=395 | OAI: pred=43 matched=43 MAE(start/end/all)=20.052/69.901/44.976
+  [18/594] image_13_crop_1.png | GT=181 | OAI: pred=13 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [WARN] No GT found for image_13_crop_2.png, skipping.
+  [20/594] image_13_crop_3.png | GT=205 | OAI: pred=20 matched=20 MAE(start/end/all)=12.919/132.640/72.780
+  [21/594] image_13_crop_4.png | GT=193 | OAI: pred=9 matched=9 MAE(start/end/all)=11.307/93.233/52.270
+  [WARN] No GT found for image_13_crop_5.png, skipping.
+  [WARN] No GT found for image_13_crop_6.png, skipping.
+  [24/594] image_14_crop_1.png | GT=275 | OAI: pred=10 matched=10 MAE(start/end/all)=12.559/99.004/55.782
+  [25/594] image_14_crop_2.png | GT=275 | OAI: pred=28 matched=28 MAE(start/end/all)=68.206/72.976/70.591
+  [WARN] No GT found for image_14_crop_3.png, skipping.
+  [27/594] image_14_crop_4.png | GT=275 | OAI: pred=0 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [WARN] No GT found for image_14_crop_5.png, skipping.
+  [29/594] image_14_crop_6.png | GT=242 | OAI: pred=48 matched=48 MAE(start/end/all)=21.074/95.759/58.417
+  [WARN] No GT found for image_14_crop_7.png, skipping.
+  [WARN] No GT found for image_14_crop_8.png, skipping.
+  [32/594] image_15_crop_1.png | GT=58 | OAI: pred=32 matched=32 MAE(start/end/all)=39.355/36.703/38.029
+  [33/594] image_15_crop_2.png | GT=75 | OAI: pred=20 matched=20 MAE(start/end/all)=1.266/47.893/24.579
+  [34/594] image_15_crop_3.png | GT=62 | OAI: pred=177 matched=14 MAE(start/end/all)=100.263/36.714/68.488
+  [35/594] image_15_crop_4.png | GT=59 | OAI: pred=125 matched=51 MAE(start/end/all)=84.755/92.220/88.488
+  [36/594] image_16_crop_1.png | GT=345 | OAI: pred=29 matched=29 MAE(start/end/all)=34.676/84.715/59.696
+  [37/594] image_16_crop_2.png | GT=263 | OAI: pred=13 matched=13 MAE(start/end/all)=21.562/82.418/51.990
+  [38/594] image_16_crop_3.png | GT=288 | OAI: pred=29 matched=29 MAE(start/end/all)=37.363/110.041/73.702
+  [39/594] image_16_crop_4.png | GT=349 | OAI: pred=37 matched=37 MAE(start/end/all)=3.367/118.142/60.754
+  [40/594] image_16_crop_5.png | GT=273 | OAI: pred=41 matched=41 MAE(start/end/all)=4.715/85.585/45.150
+  [41/594] image_16_crop_6.png | GT=238 | OAI: pred=35 matched=35 MAE(start/end/all)=31.903/45.873/38.888
+  [42/594] image_16_crop_7.png | GT=342 | OAI: pred=24 matched=24 MAE(start/end/all)=44.788/31.413/38.101
+  [43/594] image_17_crop_1.png | GT=175 | OAI: pred=10 matched=10 MAE(start/end/all)=10.039/121.053/65.546
+  [44/594] image_17_crop_2.png | GT=175 | OAI: pred=85 matched=66 MAE(start/end/all)=34.011/105.818/69.914
+  [45/594] image_17_crop_3.png | GT=175 | OAI: pred=73 matched=68 MAE(start/end/all)=91.685/32.043/61.864
+  [46/594] image_18_crop_1.png | GT=285 | OAI: pred=24 matched=24 MAE(start/end/all)=45.019/103.111/74.065
+  [47/594] image_18_crop_10.png | GT=215 | OAI: pred=38 matched=31 MAE(start/end/all)=107.462/54.425/80.943
+  [48/594] image_18_crop_11.png | GT=216 | OAI: pred=24 matched=24 MAE(start/end/all)=19.108/87.114/53.111
+  [49/594] image_18_crop_12.png | GT=167 | OAI: pred=54 matched=54 MAE(start/end/all)=85.023/37.590/61.306
+  [50/594] image_18_crop_13.png | GT=204 | OAI: pred=64 matched=35 MAE(start/end/all)=81.907/45.497/63.702
+  [51/594] image_18_crop_14.png | GT=219 | OAI: pred=45 matched=45 MAE(start/end/all)=45.763/124.496/85.130
+  [52/594] image_18_crop_15.png | GT=206 | OAI: pred=31 matched=31 MAE(start/end/all)=18.276/86.680/52.478
+  [53/594] image_18_crop_16.png | GT=202 | OAI: pred=17 matched=17 MAE(start/end/all)=10.666/14.591/12.628
+  [54/594] image_18_crop_17.png | GT=230 | OAI: pred=20 matched=20 MAE(start/end/all)=19.476/82.828/51.152
+  [55/594] image_18_crop_18.png | GT=215 | OAI: pred=68 matched=68 MAE(start/end/all)=90.859/63.160/77.010
+  [56/594] image_18_crop_19.png | GT=209 | OAI: pred=12 matched=6 MAE(start/end/all)=93.078/32.174/62.626
+  [57/594] image_18_crop_2.png | GT=187 | OAI: pred=5 matched=5 MAE(start/end/all)=15.856/123.297/69.577
+  [58/594] image_18_crop_3.png | GT=137 | OAI: pred=29 matched=29 MAE(start/end/all)=40.181/22.408/31.295
+  [59/594] image_18_crop_4.png | GT=197 | OAI: pred=86 matched=58 MAE(start/end/all)=103.050/67.746/85.398
+  [60/594] image_18_crop_5.png | GT=264 | OAI: pred=24 matched=24 MAE(start/end/all)=95.503/51.311/73.407
+  [61/594] image_18_crop_6.png | GT=169 | OAI: pred=70 matched=38 MAE(start/end/all)=116.459/56.388/86.423
+  [62/594] image_18_crop_7.png | GT=249 | OAI: pred=58 matched=9 MAE(start/end/all)=49.641/62.859/56.250
+  [63/594] image_18_crop_8.png | GT=135 | OAI: pred=46 matched=46 MAE(start/end/all)=34.980/101.626/68.303
+  [64/594] image_18_crop_9.png | GT=233 | OAI: pred=6 matched=6 MAE(start/end/all)=0.447/14.967/7.707
+  [65/594] image_19_crop_1.png | GT=272 | OAI: pred=40 matched=40 MAE(start/end/all)=79.978/30.717/55.347
+  [66/594] image_19_crop_2.png | GT=183 | OAI: pred=48 matched=22 MAE(start/end/all)=72.572/83.805/78.189
+  [67/594] image_19_crop_3.png | GT=207 | OAI: pred=34 matched=13 MAE(start/end/all)=49.324/48.537/48.930
+  [68/594] image_19_crop_4.png | GT=218 | OAI: pred=91 matched=58 MAE(start/end/all)=84.229/56.443/70.336
+  [69/594] image_19_crop_5.png | GT=284 | OAI: pred=146 matched=146 MAE(start/end/all)=71.759/73.204/72.482
+  [70/594] image_19_crop_6.png | GT=230 | OAI: pred=157 matched=17 MAE(start/end/all)=148.071/55.731/101.901
+  [71/594] image_19_crop_7.png | GT=193 | OAI: pred=25 matched=25 MAE(start/end/all)=48.033/131.336/89.685
+  [72/594] image_1_crop_1.png | GT=118 | OAI: pred=30 matched=18 MAE(start/end/all)=93.028/142.833/117.930
+  [73/594] image_1_crop_2.png | GT=124 | OAI: pred=40 matched=40 MAE(start/end/all)=35.514/124.660/80.087
+  [74/594] image_1_crop_3.png | GT=151 | OAI: pred=3 matched=3 MAE(start/end/all)=13.060/130.167/71.613
+  [75/594] image_1_crop_4.png | GT=162 | OAI: pred=35 matched=35 MAE(start/end/all)=20.189/133.326/76.758
+  [76/594] image_1_crop_5.png | GT=157 | OAI: pred=24 matched=24 MAE(start/end/all)=87.443/55.100/71.271
+  [77/594] image_20_crop_1.png | GT=98 | OAI: pred=112 matched=98 MAE(start/end/all)=42.390/83.329/62.859
+  [78/594] image_20_crop_2.png | GT=121 | OAI: pred=110 matched=110 MAE(start/end/all)=86.685/15.764/51.224
+  [79/594] image_21_crop_1.png | GT=265 | OAI: pred=120 matched=120 MAE(start/end/all)=8.101/80.043/44.072
+  [80/594] image_21_crop_2.png | GT=218 | OAI: pred=40 matched=40 MAE(start/end/all)=75.055/58.306/66.680
+  [81/594] image_21_crop_3.png | GT=275 | OAI: pred=37 matched=14 MAE(start/end/all)=92.365/55.938/74.151
+  [WARN] No GT found for image_22_crop_1.png, skipping.
+  [83/594] image_22_crop_10.png | GT=53 | OAI: pred=42 matched=42 MAE(start/end/all)=57.049/48.262/52.655
+  [84/594] image_22_crop_11.png | GT=45 | OAI: pred=76 matched=45 MAE(start/end/all)=10.913/89.526/50.219
+  [WARN] No GT found for image_22_crop_12.png, skipping.
+  [86/594] image_22_crop_2.png | GT=62 | OAI: pred=50 matched=50 MAE(start/end/all)=60.740/92.389/76.565
+  [WARN] No GT found for image_22_crop_3.png, skipping.
+  [WARN] No GT found for image_22_crop_4.png, skipping.
+  [89/594] image_22_crop_5.png | GT=62 | OAI: pred=16 matched=16 MAE(start/end/all)=29.057/113.638/71.347
+  [WARN] No GT found for image_22_crop_6.png, skipping.
+  [91/594] image_22_crop_7.png | GT=62 | OAI: pred=6 matched=6 MAE(start/end/all)=63.020/49.619/56.320
+  [WARN] No GT found for image_22_crop_8.png, skipping.
+  [WARN] No GT found for image_22_crop_9.png, skipping.
+  [94/594] image_23_crop_1.png | GT=66 | OAI: pred=131 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [95/594] image_23_crop_2.png | GT=47 | OAI: pred=83 matched=34 MAE(start/end/all)=113.804/50.554/82.179
+  [96/594] image_24_crop_1.png | GT=59 | OAI: pred=30 matched=17 MAE(start/end/all)=66.693/75.201/70.947
+  [97/594] image_24_crop_2.png | GT=52 | OAI: pred=36 matched=25 MAE(start/end/all)=102.327/40.026/71.177
+  [98/594] image_24_crop_3.png | GT=69 | OAI: pred=77 matched=61 MAE(start/end/all)=59.931/85.478/72.705
+  [99/594] image_25_crop_1.png | GT=105 | OAI: pred=160 matched=24 MAE(start/end/all)=53.539/62.661/58.100
+  [100/594] image_25_crop_2.png | GT=93 | OAI: pred=56 matched=44 MAE(start/end/all)=103.020/46.193/74.606
+  [101/594] image_26_crop_1.png | GT=55 | OAI: pred=31 matched=31 MAE(start/end/all)=67.950/40.020/53.985
+  [102/594] image_26_crop_2.png | GT=73 | OAI: pred=30 matched=30 MAE(start/end/all)=47.414/62.996/55.205
+  [103/594] image_26_crop_3.png | GT=64 | OAI: pred=74 matched=35 MAE(start/end/all)=100.874/47.132/74.003
+  [104/594] image_27_crop_1.png | GT=259 | OAI: pred=80 matched=80 MAE(start/end/all)=41.728/115.227/78.477
+  [105/594] image_27_crop_2.png | GT=280 | OAI: pred=204 matched=112 MAE(start/end/all)=116.369/64.442/90.406
+  [106/594] image_27_crop_3.png | GT=271 | OAI: pred=29 matched=27 MAE(start/end/all)=71.182/56.632/63.907
+  [107/594] image_27_crop_4.png | GT=325 | OAI: pred=123 matched=123 MAE(start/end/all)=24.019/101.066/62.542
+  [WARN] No GT found for image_28_crop_1.png, skipping.
+  [109/594] image_28_crop_10.png | GT=213 | OAI: pred=87 matched=35 MAE(start/end/all)=75.154/45.587/60.371
+  [110/594] image_28_crop_11.png | GT=275 | OAI: pred=50 matched=50 MAE(start/end/all)=35.728/50.886/43.307
+  [WARN] No GT found for image_28_crop_12.png, skipping.
+  [WARN] No GT found for image_28_crop_13.png, skipping.
+  [WARN] No GT found for image_28_crop_2.png, skipping.
+  [114/594] image_28_crop_3.png | GT=388 | OAI: pred=12 matched=12 MAE(start/end/all)=11.312/125.630/68.471
+  [115/594] image_28_crop_4.png | GT=394 | OAI: pred=48 matched=36 MAE(start/end/all)=67.804/42.523/55.164
+  [WARN] No GT found for image_28_crop_5.png, skipping.
+  [WARN] No GT found for image_28_crop_6.png, skipping.
+  [118/594] image_28_crop_7.png | GT=363 | OAI: pred=23 matched=23 MAE(start/end/all)=8.895/20.828/14.861
+  [WARN] No GT found for image_28_crop_8.png, skipping.
+  [WARN] No GT found for image_28_crop_9.png, skipping.
+  [121/594] image_29_crop_1.png | GT=325 | OAI: pred=131 matched=10 MAE(start/end/all)=74.240/45.441/59.840
+  [122/594] image_29_crop_2.png | GT=111 | OAI: pred=30 matched=1 MAE(start/end/all)=188.985/57.955/123.470
+  [123/594] image_29_crop_3.png | GT=323 | OAI: pred=63 matched=6 MAE(start/end/all)=105.504/80.759/93.132
+  [WARN] No GT found for image_2_crop_1.png, skipping.
+  [WARN] No GT found for image_2_crop_10.png, skipping.
+  [WARN] No GT found for image_2_crop_11.png, skipping.
+  [127/594] image_2_crop_12.png | GT=400 | OAI: pred=6 matched=6 MAE(start/end/all)=26.600/78.099/52.350
+  [WARN] No GT found for image_2_crop_2.png, skipping.
+  [129/594] image_2_crop_3.png | GT=400 | OAI: pred=79 matched=25 MAE(start/end/all)=108.489/62.655/85.572
+  [WARN] No GT found for image_2_crop_4.png, skipping.
+  [WARN] No GT found for image_2_crop_5.png, skipping.
+  [132/594] image_2_crop_6.png | GT=400 | OAI: pred=21 matched=21 MAE(start/end/all)=58.615/66.099/62.357
+  [133/594] image_2_crop_7.png | GT=400 | OAI: pred=10 matched=10 MAE(start/end/all)=2.996/75.984/39.490
+  [WARN] No GT found for image_2_crop_8.png, skipping.
+  [WARN] No GT found for image_2_crop_9.png, skipping.
+  [136/594] image_30_crop_1.png | GT=400 | OAI: pred=18 matched=12 MAE(start/end/all)=85.678/33.855/59.766
+  [137/594] image_30_crop_2.png | GT=400 | OAI: pred=28 matched=28 MAE(start/end/all)=14.613/57.441/36.027
+  [138/594] image_31_crop_1.png | GT=111 | OAI: pred=56 matched=56 MAE(start/end/all)=58.282/69.306/63.794
+  [139/594] image_31_crop_10.png | GT=125 | OAI: pred=28 matched=28 MAE(start/end/all)=18.426/14.645/16.536
+  [140/594] image_31_crop_11.png | GT=104 | OAI: pred=20 matched=20 MAE(start/end/all)=34.931/74.206/54.568
+  [141/594] image_31_crop_2.png | GT=89 | OAI: pred=12 matched=12 MAE(start/end/all)=33.205/128.990/81.097
+  [142/594] image_31_crop_3.png | GT=109 | OAI: pred=25 matched=25 MAE(start/end/all)=24.126/91.375/57.750
+  [143/594] image_31_crop_4.png | GT=93 | OAI: pred=91 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [144/594] image_31_crop_5.png | GT=109 | OAI: pred=38 matched=38 MAE(start/end/all)=14.517/79.959/47.238
+  [145/594] image_31_crop_6.png | GT=114 | OAI: pred=16 matched=16 MAE(start/end/all)=32.756/69.117/50.936
+  [146/594] image_31_crop_7.png | GT=110 | OAI: pred=12 matched=12 MAE(start/end/all)=1.662/97.705/49.683
+  [147/594] image_31_crop_8.png | GT=100 | OAI: pred=56 matched=32 MAE(start/end/all)=111.843/79.749/95.796
+  [148/594] image_31_crop_9.png | GT=125 | OAI: pred=36 matched=18 MAE(start/end/all)=86.433/38.635/62.534
+  [149/594] image_32_crop_1.png | GT=49 | OAI: pred=33 matched=33 MAE(start/end/all)=69.818/73.097/71.457
+  [150/594] image_32_crop_2.png | GT=61 | OAI: pred=43 matched=15 MAE(start/end/all)=156.100/59.578/107.839
+  [151/594] image_32_crop_3.png | GT=74 | OAI: pred=17 matched=17 MAE(start/end/all)=22.659/65.948/44.304
+  [152/594] image_32_crop_4.png | GT=73 | OAI: pred=29 matched=12 MAE(start/end/all)=87.384/31.417/59.400
+  [153/594] image_32_crop_5.png | GT=69 | OAI: pred=63 matched=27 MAE(start/end/all)=82.121/58.135/70.128
+  [154/594] image_33_crop_1.png | GT=99 | OAI: pred=50 matched=40 MAE(start/end/all)=120.563/58.472/89.518
+  [155/594] image_33_crop_2.png | GT=108 | OAI: pred=82 matched=82 MAE(start/end/all)=63.486/72.464/67.975
+  [156/594] image_33_crop_3.png | GT=125 | OAI: pred=78 matched=78 MAE(start/end/all)=39.333/119.143/79.238
+  [157/594] image_33_crop_4.png | GT=109 | OAI: pred=87 matched=87 MAE(start/end/all)=30.470/116.864/73.667
+  [158/594] image_34_crop_1.png | GT=221 | OAI: pred=86 matched=86 MAE(start/end/all)=9.896/98.532/54.214
+  [159/594] image_34_crop_2.png | GT=218 | OAI: pred=38 matched=38 MAE(start/end/all)=25.687/76.585/51.136
+  [160/594] image_34_crop_3.png | GT=196 | OAI: pred=14 matched=14 MAE(start/end/all)=63.826/164.364/114.095
+  [161/594] image_35_crop_1.png | GT=110 | OAI: pred=29 matched=5 MAE(start/end/all)=172.900/48.950/110.925
+  [162/594] image_35_crop_2.png | GT=121 | OAI: pred=24 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [163/594] image_35_crop_3.png | GT=105 | OAI: pred=16 matched=16 MAE(start/end/all)=58.501/60.388/59.445
+  [164/594] image_35_crop_4.png | GT=107 | OAI: pred=7 matched=7 MAE(start/end/all)=18.652/50.209/34.430
+  [165/594] image_35_crop_5.png | GT=96 | OAI: pred=11 matched=11 MAE(start/end/all)=44.503/73.702/59.102
+  [166/594] image_35_crop_6.png | GT=86 | OAI: pred=12 matched=12 MAE(start/end/all)=17.897/77.463/47.680
+  [167/594] image_35_crop_7.png | GT=90 | OAI: pred=17 matched=10 MAE(start/end/all)=73.203/99.062/86.133
+  [168/594] image_36_crop_1.png | GT=64 | OAI: pred=27 matched=27 MAE(start/end/all)=17.756/93.366/55.561
+  [169/594] image_36_crop_2.png | GT=71 | OAI: pred=10 matched=10 MAE(start/end/all)=64.686/49.171/56.928
+  [170/594] image_36_crop_3.png | GT=73 | OAI: pred=70 matched=70 MAE(start/end/all)=45.792/102.597/74.194
+  [WARN] No GT found for image_37_crop_1.png, skipping.
+  [172/594] image_37_crop_10.png | GT=125 | OAI: pred=17 matched=17 MAE(start/end/all)=33.989/88.343/61.166
+  [WARN] No GT found for image_37_crop_11.png, skipping.
+  [WARN] No GT found for image_37_crop_12.png, skipping.
+  [WARN] No GT found for image_37_crop_2.png, skipping.
+  [176/594] image_37_crop_3.png | GT=125 | OAI: pred=39 matched=38 MAE(start/end/all)=77.132/50.034/63.583
+  [WARN] No GT found for image_37_crop_4.png, skipping.
+  [WARN] No GT found for image_37_crop_5.png, skipping.
+  [179/594] image_37_crop_6.png | GT=125 | OAI: pred=28 matched=16 MAE(start/end/all)=75.217/46.844/61.031
+  [WARN] No GT found for image_37_crop_7.png, skipping.
+  [181/594] image_37_crop_8.png | GT=125 | OAI: pred=28 matched=28 MAE(start/end/all)=25.685/101.384/63.534
+  [WARN] No GT found for image_37_crop_9.png, skipping.
+  [183/594] image_38_crop_1.png | GT=67 | OAI: pred=68 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [184/594] image_38_crop_2.png | GT=125 | OAI: pred=92 matched=56 MAE(start/end/all)=23.028/125.316/74.172
+  [185/594] image_38_crop_3.png | GT=83 | OAI: pred=89 matched=82 MAE(start/end/all)=122.983/58.240/90.612
+  [186/594] image_39_crop_1.png | GT=105 | OAI: pred=59 matched=59 MAE(start/end/all)=25.617/122.733/74.175
+  [187/594] image_39_crop_10.png | GT=111 | OAI: pred=43 matched=43 MAE(start/end/all)=3.848/32.598/18.223
+  [188/594] image_39_crop_11.png | GT=96 | OAI: pred=6 matched=6 MAE(start/end/all)=5.676/84.698/45.187
+  [189/594] image_39_crop_2.png | GT=106 | OAI: pred=11 matched=11 MAE(start/end/all)=14.857/86.595/50.726
+  [190/594] image_39_crop_3.png | GT=116 | OAI: pred=31 matched=31 MAE(start/end/all)=52.404/12.552/32.478
+  [191/594] image_39_crop_4.png | GT=125 | OAI: pred=31 matched=31 MAE(start/end/all)=39.017/57.680/48.348
+  [192/594] image_39_crop_5.png | GT=106 | OAI: pred=32 matched=32 MAE(start/end/all)=36.315/52.780/44.548
+  [193/594] image_39_crop_6.png | GT=99 | OAI: pred=14 matched=14 MAE(start/end/all)=28.032/62.602/45.317
+  [194/594] image_39_crop_7.png | GT=110 | OAI: pred=80 matched=66 MAE(start/end/all)=38.934/109.769/74.352
+  [195/594] image_39_crop_8.png | GT=119 | OAI: pred=26 matched=26 MAE(start/end/all)=36.421/95.140/65.781
+  [196/594] image_39_crop_9.png | GT=82 | OAI: pred=151 matched=82 MAE(start/end/all)=37.186/104.414/70.800
+  [197/594] image_3_crop_1.png | GT=225 | OAI: pred=21 matched=21 MAE(start/end/all)=0.387/51.723/26.055
+  [198/594] image_3_crop_10.png | GT=225 | OAI: pred=17 matched=17 MAE(start/end/all)=3.601/61.144/32.372
+  [199/594] image_3_crop_11.png | GT=225 | OAI: pred=43 matched=43 MAE(start/end/all)=36.416/86.394/61.405
+  [200/594] image_3_crop_12.png | GT=225 | OAI: pred=38 matched=17 MAE(start/end/all)=68.881/52.339/60.610
+  [201/594] image_3_crop_13.png | GT=225 | OAI: pred=4 matched=4 MAE(start/end/all)=13.079/79.297/46.188
+  [202/594] image_3_crop_14.png | GT=225 | OAI: pred=29 matched=29 MAE(start/end/all)=9.527/112.129/60.828
+  [203/594] image_3_crop_15.png | GT=225 | OAI: pred=40 matched=40 MAE(start/end/all)=32.442/112.679/72.560
+  [204/594] image_3_crop_16.png | GT=225 | OAI: pred=18 matched=18 MAE(start/end/all)=26.119/132.870/79.495
+  [205/594] image_3_crop_17.png | GT=225 | OAI: pred=154 matched=154 MAE(start/end/all)=37.060/102.830/69.945
+  [206/594] image_3_crop_18.png | GT=225 | OAI: pred=24 matched=24 MAE(start/end/all)=17.197/138.022/77.609
+  [207/594] image_3_crop_19.png | GT=167 | OAI: pred=35 matched=35 MAE(start/end/all)=37.201/51.895/44.548
+  [208/594] image_3_crop_2.png | GT=225 | OAI: pred=15 matched=11 MAE(start/end/all)=35.905/53.857/44.881
+  [209/594] image_3_crop_3.png | GT=223 | OAI: pred=20 matched=20 MAE(start/end/all)=4.635/18.971/11.803
+  [210/594] image_3_crop_4.png | GT=225 | OAI: pred=198 matched=117 MAE(start/end/all)=95.913/45.561/70.737
+  [211/594] image_3_crop_5.png | GT=225 | OAI: pred=13 matched=13 MAE(start/end/all)=14.970/120.656/67.813
+  [212/594] image_3_crop_6.png | GT=225 | OAI: pred=34 matched=34 MAE(start/end/all)=9.220/47.937/28.578
+  [213/594] image_3_crop_7.png | GT=225 | OAI: pred=24 matched=24 MAE(start/end/all)=38.706/90.032/64.369
+  [214/594] image_3_crop_8.png | GT=225 | OAI: pred=52 matched=44 MAE(start/end/all)=93.344/39.087/66.216
+  [215/594] image_3_crop_9.png | GT=225 | OAI: pred=73 matched=70 MAE(start/end/all)=64.138/65.567/64.852
+  [WARN] No GT found for image_40_crop_1.png, skipping.
+  [WARN] No GT found for image_40_crop_10.png, skipping.
+  [WARN] No GT found for image_40_crop_11.png, skipping.
+  [219/594] image_40_crop_12.png | GT=398 | OAI: pred=15 matched=15 MAE(start/end/all)=0.655/85.756/43.205
+  [WARN] No GT found for image_40_crop_2.png, skipping.
+  [221/594] image_40_crop_3.png | GT=400 | OAI: pred=110 matched=51 MAE(start/end/all)=111.410/42.408/76.909
+  [WARN] No GT found for image_40_crop_4.png, skipping.
+  [WARN] No GT found for image_40_crop_5.png, skipping.
+  [224/594] image_40_crop_6.png | GT=400 | OAI: pred=48 matched=2 MAE(start/end/all)=19.815/90.530/55.172
+  [225/594] image_40_crop_7.png | GT=381 | OAI: pred=16 matched=13 MAE(start/end/all)=83.477/40.321/61.899
+  [WARN] No GT found for image_40_crop_8.png, skipping.
+  [WARN] No GT found for image_40_crop_9.png, skipping.
+  [228/594] image_41_crop_1.png | GT=59 | OAI: pred=30 matched=22 MAE(start/end/all)=112.326/117.410/114.868
+  [229/594] image_41_crop_2.png | GT=59 | OAI: pred=31 matched=31 MAE(start/end/all)=8.885/11.338/10.111
+  [230/594] image_41_crop_3.png | GT=54 | OAI: pred=46 matched=46 MAE(start/end/all)=41.174/59.764/50.469
+  [231/594] image_42_crop_1.png | GT=107 | OAI: pred=23 matched=13 MAE(start/end/all)=91.362/41.986/66.674
+  [232/594] image_42_crop_2.png | GT=125 | OAI: pred=255 matched=35 MAE(start/end/all)=85.674/85.594/85.634
+  [233/594] image_42_crop_3.png | GT=125 | OAI: pred=48 matched=41 MAE(start/end/all)=82.514/39.295/60.905
+  [234/594] image_43_crop_1.png | GT=70 | OAI: pred=40 matched=23 MAE(start/end/all)=88.630/65.829/77.230
+  [235/594] image_43_crop_2.png | GT=62 | OAI: pred=35 matched=35 MAE(start/end/all)=47.161/59.589/53.375
+  [236/594] image_43_crop_3.png | GT=62 | OAI: pred=35 matched=34 MAE(start/end/all)=18.963/117.527/68.245
+  [237/594] image_43_crop_4.png | GT=56 | OAI: pred=55 matched=37 MAE(start/end/all)=71.309/73.526/72.418
+  [238/594] image_43_crop_5.png | GT=63 | OAI: pred=16 matched=16 MAE(start/end/all)=44.419/61.304/52.862
+  [239/594] image_44_crop_1.png | GT=125 | OAI: pred=10 matched=10 MAE(start/end/all)=32.951/41.981/37.466
+  [240/594] image_44_crop_2.png | GT=100 | OAI: pred=31 matched=31 MAE(start/end/all)=6.727/61.881/34.304
+  [241/594] image_44_crop_3.png | GT=93 | OAI: pred=84 matched=84 MAE(start/end/all)=45.275/89.932/67.603
+  [242/594] image_44_crop_4.png | GT=105 | OAI: pred=50 matched=50 MAE(start/end/all)=67.933/18.060/42.997
+  [243/594] image_44_crop_5.png | GT=115 | OAI: pred=63 matched=63 MAE(start/end/all)=43.714/22.685/33.200
+  [244/594] image_44_crop_6.png | GT=125 | OAI: pred=27 matched=27 MAE(start/end/all)=36.261/84.486/60.373
+  [245/594] image_44_crop_7.png | GT=125 | OAI: pred=46 matched=25 MAE(start/end/all)=41.640/100.757/71.199
+  [246/594] image_45_crop_1.png | GT=220 | OAI: pred=55 matched=42 MAE(start/end/all)=83.465/67.237/75.351
+  [247/594] image_45_crop_2.png | GT=233 | OAI: pred=35 matched=35 MAE(start/end/all)=46.091/42.593/44.342
+  [248/594] image_45_crop_3.png | GT=218 | OAI: pred=78 matched=78 MAE(start/end/all)=24.650/121.071/72.861
+  [249/594] image_45_crop_4.png | GT=214 | OAI: pred=56 matched=43 MAE(start/end/all)=110.661/69.674/90.168
+  [250/594] image_45_crop_5.png | GT=214 | OAI: pred=163 matched=93 MAE(start/end/all)=62.892/102.579/82.735
+  [251/594] image_46_crop_1.png | GT=43 | OAI: pred=34 matched=34 MAE(start/end/all)=88.031/61.895/74.963
+  [252/594] image_47_crop_1.png | GT=75 | OAI: pred=17 matched=6 MAE(start/end/all)=91.845/53.843/72.844
+  [253/594] image_47_crop_2.png | GT=71 | OAI: pred=31 matched=31 MAE(start/end/all)=56.361/42.402/49.382
+  [254/594] image_47_crop_3.png | GT=72 | OAI: pred=47 matched=47 MAE(start/end/all)=93.295/31.912/62.604
+  [255/594] image_47_crop_4.png | GT=74 | OAI: pred=23 matched=23 MAE(start/end/all)=25.417/118.253/71.835
+  [256/594] image_47_crop_5.png | GT=75 | OAI: pred=24 matched=24 MAE(start/end/all)=53.641/61.693/57.667
+  [257/594] image_48_crop_1.png | GT=74 | OAI: pred=34 matched=32 MAE(start/end/all)=63.103/41.104/52.103
+  [258/594] image_48_crop_10.png | GT=66 | OAI: pred=7 matched=7 MAE(start/end/all)=4.022/73.163/38.593
+  [259/594] image_48_crop_11.png | GT=68 | OAI: pred=44 matched=44 MAE(start/end/all)=40.805/96.084/68.444
+  [260/594] image_48_crop_2.png | GT=66 | OAI: pred=37 matched=37 MAE(start/end/all)=44.922/81.901/63.412
+  [261/594] image_48_crop_3.png | GT=72 | OAI: pred=63 matched=63 MAE(start/end/all)=47.045/35.153/41.099
+  [262/594] image_48_crop_4.png | GT=72 | OAI: pred=45 matched=45 MAE(start/end/all)=10.554/103.554/57.054
+  [263/594] image_48_crop_5.png | GT=56 | OAI: pred=43 matched=43 MAE(start/end/all)=60.335/77.833/69.084
+  [264/594] image_48_crop_6.png | GT=63 | OAI: pred=45 matched=45 MAE(start/end/all)=62.049/47.739/54.894
+  [265/594] image_48_crop_7.png | GT=58 | OAI: pred=58 matched=44 MAE(start/end/all)=75.077/88.904/81.991
+  [266/594] image_48_crop_8.png | GT=59 | OAI: pred=12 matched=12 MAE(start/end/all)=5.305/130.133/67.719
+  [267/594] image_48_crop_9.png | GT=68 | OAI: pred=15 matched=15 MAE(start/end/all)=18.257/108.782/63.519
+  [WARN] No GT found for image_49_crop_1.png, skipping.
+  [269/594] image_49_crop_2.png | GT=400 | OAI: pred=57 matched=57 MAE(start/end/all)=31.541/77.814/54.677
+  [WARN] No GT found for image_49_crop_3.png, skipping.
+  [WARN] No GT found for image_49_crop_4.png, skipping.
+  [WARN] No GT found for image_49_crop_5.png, skipping.
+  [273/594] image_49_crop_6.png | GT=400 | OAI: pred=8 matched=8 MAE(start/end/all)=106.228/55.080/80.654
+  [WARN] No GT found for image_49_crop_7.png, skipping.
+  [WARN] No GT found for image_49_crop_8.png, skipping.
+  [276/594] image_4_crop_1.png | GT=97 | OAI: pred=83 matched=83 MAE(start/end/all)=39.557/47.341/43.449
+  [277/594] image_4_crop_2.png | GT=107 | OAI: pred=78 matched=50 MAE(start/end/all)=85.664/48.365/67.015
+  [278/594] image_4_crop_3.png | GT=99 | OAI: pred=87 matched=87 MAE(start/end/all)=32.243/62.113/47.178
+  [279/594] image_50_crop_1.png | GT=114 | OAI: pred=40 matched=40 MAE(start/end/all)=48.611/41.199/44.905
+  [280/594] image_50_crop_2.png | GT=97 | OAI: pred=8 matched=8 MAE(start/end/all)=28.012/88.132/58.072
+  [281/594] image_50_crop_3.png | GT=102 | OAI: pred=18 matched=12 MAE(start/end/all)=108.988/92.914/100.951
+  [282/594] image_50_crop_4.png | GT=85 | OAI: pred=27 matched=27 MAE(start/end/all)=5.747/100.904/53.325
+  [283/594] image_50_crop_5.png | GT=85 | OAI: pred=51 matched=20 MAE(start/end/all)=90.593/78.776/84.685
+  [284/594] image_50_crop_6.png | GT=86 | OAI: pred=12 matched=12 MAE(start/end/all)=20.926/65.999/43.462
+  [285/594] image_50_crop_7.png | GT=107 | OAI: pred=47 matched=42 MAE(start/end/all)=61.144/49.576/55.360
+  [286/594] image_51_crop_1.png | GT=112 | OAI: pred=18 matched=18 MAE(start/end/all)=31.063/83.973/57.518
+  [287/594] image_51_crop_2.png | GT=84 | OAI: pred=15 matched=1 MAE(start/end/all)=21.665/226.585/124.125
+  [288/594] image_51_crop_3.png | GT=88 | OAI: pred=44 matched=44 MAE(start/end/all)=41.188/81.609/61.399
+  [289/594] image_51_crop_4.png | GT=105 | OAI: pred=28 matched=28 MAE(start/end/all)=4.531/93.523/49.027
+  [290/594] image_51_crop_5.png | GT=88 | OAI: pred=15 matched=15 MAE(start/end/all)=34.412/78.382/56.397
+  [291/594] image_52_crop_1.png | GT=169 | OAI: pred=50 matched=50 MAE(start/end/all)=19.101/90.812/54.956
+  [292/594] image_52_crop_2.png | GT=89 | OAI: pred=45 matched=27 MAE(start/end/all)=25.410/197.141/111.275
+  [293/594] image_53_crop_1.png | GT=112 | OAI: pred=22 matched=22 MAE(start/end/all)=38.452/39.720/39.086
+  [294/594] image_53_crop_2.png | GT=172 | OAI: pred=190 matched=172 MAE(start/end/all)=13.328/54.142/33.735
+  [295/594] image_53_crop_3.png | GT=214 | OAI: pred=43 matched=39 MAE(start/end/all)=65.507/54.953/60.230
+  [296/594] image_54_crop_1.png | GT=125 | OAI: pred=88 matched=88 MAE(start/end/all)=47.140/19.825/33.482
+  [297/594] image_54_crop_2.png | GT=125 | OAI: pred=35 matched=35 MAE(start/end/all)=1.092/107.809/54.451
+  [WARN] No GT found for image_54_crop_3.png, skipping.
+  [299/594] image_54_crop_4.png | GT=125 | OAI: pred=68 matched=44 MAE(start/end/all)=97.127/50.367/73.747
+  [WARN] No GT found for image_54_crop_5.png, skipping.
+  [WARN] No GT found for image_54_crop_6.png, skipping.
+  [WARN] No GT found for image_55_crop_1.png, skipping.
+  [WARN] No GT found for image_55_crop_10.png, skipping.
+  [304/594] image_55_crop_2.png | GT=125 | OAI: pred=15 matched=13 MAE(start/end/all)=28.909/112.627/70.768
+  [WARN] No GT found for image_55_crop_3.png, skipping.
+  [306/594] image_55_crop_4.png | GT=125 | OAI: pred=9 matched=9 MAE(start/end/all)=22.468/47.599/35.034
+  [WARN] No GT found for image_55_crop_5.png, skipping.
+  [WARN] No GT found for image_55_crop_6.png, skipping.
+  [309/594] image_55_crop_7.png | GT=125 | OAI: pred=20 matched=6 MAE(start/end/all)=113.831/24.312/69.071
+  [WARN] No GT found for image_55_crop_8.png, skipping.
+  [311/594] image_55_crop_9.png | GT=125 | OAI: pred=22 matched=9 MAE(start/end/all)=79.289/50.839/65.064
+  [WARN] No GT found for image_56_crop_1.png, skipping.
+  [313/594] image_56_crop_2.png | GT=54 | OAI: pred=61 matched=54 MAE(start/end/all)=67.811/75.274/71.542
+  [314/594] image_56_crop_3.png | GT=56 | OAI: pred=38 matched=38 MAE(start/end/all)=114.904/36.947/75.926
+  [315/594] image_56_crop_4.png | GT=74 | OAI: pred=60 matched=40 MAE(start/end/all)=69.170/47.805/58.488
+  [WARN] No GT found for image_56_crop_5.png, skipping.
+  [WARN] No GT found for image_56_crop_6.png, skipping.
+  [WARN] No GT found for image_57_crop_1.png, skipping.
+  [WARN] No GT found for image_57_crop_10.png, skipping.
+  [WARN] No GT found for image_57_crop_11.png, skipping.
+  [321/594] image_57_crop_12.png | GT=218 | OAI: pred=21 matched=21 MAE(start/end/all)=9.285/51.793/30.539
+  [WARN] No GT found for image_57_crop_2.png, skipping.
+  [323/594] image_57_crop_3.png | GT=298 | OAI: pred=16 matched=16 MAE(start/end/all)=60.339/41.533/50.936
+  [WARN] No GT found for image_57_crop_4.png, skipping.
+  [WARN] No GT found for image_57_crop_5.png, skipping.
+  [326/594] image_57_crop_6.png | GT=247 | OAI: pred=80 matched=80 MAE(start/end/all)=57.750/115.348/86.549
+  [327/594] image_57_crop_7.png | GT=223 | OAI: pred=24 matched=24 MAE(start/end/all)=28.550/65.026/46.788
+  [WARN] No GT found for image_57_crop_8.png, skipping.
+  [WARN] No GT found for image_57_crop_9.png, skipping.
+  [WARN] No GT found for image_58_crop_1.png, skipping.
+  [331/594] image_58_crop_2.png | GT=400 | OAI: pred=48 matched=48 MAE(start/end/all)=22.379/89.954/56.167
+  [WARN] No GT found for image_58_crop_3.png, skipping.
+  [WARN] No GT found for image_58_crop_4.png, skipping.
+  [WARN] No GT found for image_58_crop_5.png, skipping.
+  [335/594] image_58_crop_6.png | GT=400 | OAI: pred=34 matched=34 MAE(start/end/all)=75.785/39.769/57.777
+  [WARN] No GT found for image_58_crop_7.png, skipping.
+  [WARN] No GT found for image_58_crop_8.png, skipping.
+  [338/594] image_59_crop_1.png | GT=257 | OAI: pred=64 matched=19 MAE(start/end/all)=75.191/47.867/61.529
+  [339/594] image_59_crop_2.png | GT=372 | OAI: pred=40 matched=40 MAE(start/end/all)=30.034/129.355/79.694
+  [340/594] image_59_crop_3.png | GT=268 | OAI: pred=26 matched=3 MAE(start/end/all)=175.073/61.700/118.387
+  [341/594] image_59_crop_4.png | GT=285 | OAI: pred=57 matched=57 MAE(start/end/all)=83.607/33.319/58.463
+  [342/594] image_59_crop_5.png | GT=275 | OAI: pred=44 matched=44 MAE(start/end/all)=59.171/44.114/51.642
+  [343/594] image_59_crop_6.png | GT=243 | OAI: pred=3 matched=3 MAE(start/end/all)=9.632/90.200/49.916
+  [344/594] image_59_crop_7.png | GT=268 | OAI: pred=37 matched=37 MAE(start/end/all)=4.803/95.616/50.210
+  [345/594] image_5_crop_1.png | GT=113 | OAI: pred=27 matched=3 MAE(start/end/all)=87.530/51.705/69.617
+  [346/594] image_5_crop_2.png | GT=104 | OAI: pred=24 matched=1 MAE(start/end/all)=107.540/70.410/88.975
+  [347/594] image_5_crop_3.png | GT=88 | OAI: pred=25 matched=25 MAE(start/end/all)=30.021/42.085/36.053
+  [348/594] image_5_crop_4.png | GT=117 | OAI: pred=29 matched=29 MAE(start/end/all)=45.500/80.988/63.244
+  [349/594] image_60_crop_1.png | GT=275 | OAI: pred=25 matched=25 MAE(start/end/all)=11.476/82.738/47.107
+  [350/594] image_60_crop_2.png | GT=273 | OAI: pred=18 matched=18 MAE(start/end/all)=47.484/47.024/47.254
+  [351/594] image_60_crop_3.png | GT=266 | OAI: pred=86 matched=86 MAE(start/end/all)=67.060/30.884/48.972
+  [352/594] image_61_crop_1.png | GT=204 | OAI: pred=11 matched=11 MAE(start/end/all)=14.395/75.602/44.998
+  [353/594] image_61_crop_2.png | GT=217 | OAI: pred=25 matched=25 MAE(start/end/all)=13.696/49.084/31.390
+  [354/594] image_61_crop_3.png | GT=269 | OAI: pred=55 matched=6 MAE(start/end/all)=88.623/43.237/65.930
+  [355/594] image_61_crop_4.png | GT=136 | OAI: pred=16 matched=16 MAE(start/end/all)=71.623/41.148/56.386
+  [356/594] image_61_crop_5.png | GT=197 | OAI: pred=7 matched=7 MAE(start/end/all)=63.249/38.462/50.856
+  [357/594] image_61_crop_6.png | GT=171 | OAI: pred=216 matched=85 MAE(start/end/all)=91.314/56.758/74.036
+  [358/594] image_61_crop_7.png | GT=152 | OAI: pred=17 matched=17 MAE(start/end/all)=33.394/111.634/72.514
+  [359/594] image_62_crop_1.png | GT=225 | OAI: pred=6 matched=6 MAE(start/end/all)=38.374/66.699/52.537
+  [360/594] image_62_crop_2.png | GT=186 | OAI: pred=45 matched=45 MAE(start/end/all)=22.146/79.476/50.811
+  [361/594] image_63_crop_1.png | GT=99 | OAI: pred=64 matched=64 MAE(start/end/all)=56.231/44.766/50.499
+  [362/594] image_63_crop_2.png | GT=84 | OAI: pred=34 matched=34 MAE(start/end/all)=19.699/103.463/61.581
+  [363/594] image_63_crop_3.png | GT=88 | OAI: pred=33 matched=33 MAE(start/end/all)=62.765/37.342/50.053
+  [364/594] image_64_crop_1.png | GT=354 | OAI: pred=29 matched=29 MAE(start/end/all)=30.960/90.588/60.774
+  [365/594] image_64_crop_2.png | GT=317 | OAI: pred=29 matched=29 MAE(start/end/all)=15.986/56.522/36.254
+  [366/594] image_64_crop_3.png | GT=269 | OAI: pred=40 matched=15 MAE(start/end/all)=79.879/43.474/61.677
+  [WARN] No GT found for image_65_crop_1.png, skipping.
+  [368/594] image_65_crop_10.png | GT=324 | OAI: pred=59 matched=59 MAE(start/end/all)=10.289/130.690/70.490
+  [369/594] image_65_crop_11.png | GT=325 | OAI: pred=28 matched=28 MAE(start/end/all)=46.120/33.997/40.059
+  [WARN] No GT found for image_65_crop_12.png, skipping.
+  [WARN] No GT found for image_65_crop_13.png, skipping.
+  [WARN] No GT found for image_65_crop_2.png, skipping.
+  [373/594] image_65_crop_3.png | GT=366 | OAI: pred=34 matched=21 MAE(start/end/all)=65.655/61.345/63.500
+  [374/594] image_65_crop_4.png | GT=350 | OAI: pred=47 matched=47 MAE(start/end/all)=11.175/69.925/40.550
+  [WARN] No GT found for image_65_crop_5.png, skipping.
+  [WARN] No GT found for image_65_crop_6.png, skipping.
+  [377/594] image_65_crop_7.png | GT=344 | OAI: pred=24 matched=22 MAE(start/end/all)=5.521/82.373/43.947
+  [WARN] No GT found for image_65_crop_8.png, skipping.
+  [WARN] No GT found for image_65_crop_9.png, skipping.
+  [380/594] image_66_crop_1.png | GT=400 | OAI: pred=25 matched=25 MAE(start/end/all)=7.565/89.342/48.454
+  [381/594] image_66_crop_2.png | GT=400 | OAI: pred=10 matched=10 MAE(start/end/all)=9.589/138.676/74.133
+  [382/594] image_66_crop_3.png | GT=400 | OAI: pred=7 matched=7 MAE(start/end/all)=25.546/15.631/20.589
+  [383/594] image_66_crop_4.png | GT=400 | OAI: pred=13 matched=13 MAE(start/end/all)=27.011/72.897/49.954
+  [384/594] image_66_crop_5.png | GT=400 | OAI: pred=114 matched=114 MAE(start/end/all)=13.968/105.847/59.908
+  [WARN] No GT found for image_67_crop_1.png, skipping.
+  [WARN] No GT found for image_67_crop_10.png, skipping.
+  [WARN] No GT found for image_67_crop_11.png, skipping.
+  [388/594] image_67_crop_12.png | GT=400 | OAI: pred=115 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [WARN] No GT found for image_67_crop_2.png, skipping.
+  [390/594] image_67_crop_3.png | GT=400 | OAI: pred=25 matched=25 MAE(start/end/all)=1.528/106.162/53.845
+  [WARN] No GT found for image_67_crop_4.png, skipping.
+  [WARN] No GT found for image_67_crop_5.png, skipping.
+  [393/594] image_67_crop_6.png | GT=400 | OAI: pred=16 matched=16 MAE(start/end/all)=15.935/20.064/17.999
+  [394/594] image_67_crop_7.png | GT=400 | OAI: pred=33 matched=33 MAE(start/end/all)=49.412/59.069/54.240
+  [WARN] No GT found for image_67_crop_8.png, skipping.
+  [WARN] No GT found for image_67_crop_9.png, skipping.
+  [397/594] image_68_crop_1.png | GT=46 | OAI: pred=18 matched=18 MAE(start/end/all)=37.998/19.378/28.688
+  [398/594] image_68_crop_2.png | GT=90 | OAI: pred=73 matched=49 MAE(start/end/all)=73.787/37.378/55.583
+  [399/594] image_68_crop_3.png | GT=82 | OAI: pred=63 matched=39 MAE(start/end/all)=75.742/62.540/69.141
+  [400/594] image_68_crop_4.png | GT=94 | OAI: pred=36 matched=12 MAE(start/end/all)=43.851/91.648/67.750
+  [401/594] image_68_crop_5.png | GT=97 | OAI: pred=85 matched=84 MAE(start/end/all)=88.471/24.335/56.403
+  [402/594] image_69_crop_1.png | GT=400 | OAI: pred=17 matched=9 MAE(start/end/all)=108.318/59.886/84.102
+  [403/594] image_69_crop_2.png | GT=400 | OAI: pred=16 matched=16 MAE(start/end/all)=30.425/109.184/69.805
+  [404/594] image_69_crop_3.png | GT=349 | OAI: pred=44 matched=28 MAE(start/end/all)=1.074/125.315/63.195
+  [405/594] image_69_crop_4.png | GT=189 | OAI: pred=20 matched=20 MAE(start/end/all)=30.059/75.704/52.881
+  [406/594] image_69_crop_5.png | GT=69 | OAI: pred=53 matched=11 MAE(start/end/all)=166.991/42.747/104.869
+  [407/594] image_69_crop_6.png | GT=71 | OAI: pred=62 matched=40 MAE(start/end/all)=58.126/122.092/90.109
+  [408/594] image_69_crop_7.png | GT=160 | OAI: pred=65 matched=63 MAE(start/end/all)=97.774/90.201/93.987
+  [409/594] image_6_crop_1.png | GT=86 | OAI: pred=10 matched=10 MAE(start/end/all)=12.028/74.617/43.323
+  [410/594] image_6_crop_2.png | GT=71 | OAI: pred=10 matched=9 MAE(start/end/all)=19.112/68.541/43.826
+  [411/594] image_6_crop_3.png | GT=120 | OAI: pred=37 matched=19 MAE(start/end/all)=56.863/81.939/69.401
+  [412/594] image_6_crop_4.png | GT=116 | OAI: pred=26 matched=26 MAE(start/end/all)=26.664/120.536/73.600
+  [413/594] image_6_crop_5.png | GT=106 | OAI: pred=12 matched=12 MAE(start/end/all)=16.683/90.931/53.807
+  [414/594] image_70_crop_1.png | GT=400 | OAI: pred=28 matched=28 MAE(start/end/all)=51.263/52.066/51.665
+  [415/594] image_70_crop_2.png | GT=399 | OAI: pred=66 matched=66 MAE(start/end/all)=37.473/91.501/64.487
+  [416/594] image_70_crop_3.png | GT=328 | OAI: pred=25 matched=25 MAE(start/end/all)=32.136/84.384/58.260
+  [417/594] image_70_crop_4.png | GT=390 | OAI: pred=37 matched=10 MAE(start/end/all)=64.650/39.312/51.981
+  [418/594] image_70_crop_5.png | GT=400 | OAI: pred=115 matched=115 MAE(start/end/all)=105.887/57.588/81.737
+  [WARN] No GT found for image_71_crop_1.png, skipping.
+  [420/594] image_71_crop_2.png | GT=325 | OAI: pred=16 matched=16 MAE(start/end/all)=26.870/88.263/57.566
+  [WARN] No GT found for image_71_crop_3.png, skipping.
+  [WARN] No GT found for image_71_crop_4.png, skipping.
+  [WARN] No GT found for image_71_crop_5.png, skipping.
+  [424/594] image_71_crop_6.png | GT=325 | OAI: pred=62 matched=62 MAE(start/end/all)=51.552/27.120/39.336
+  [WARN] No GT found for image_71_crop_7.png, skipping.
+  [WARN] No GT found for image_71_crop_8.png, skipping.
+  [WARN] No GT found for image_72_crop_1.png, skipping.
+  [428/594] image_72_crop_2.png | GT=64 | OAI: pred=15 matched=15 MAE(start/end/all)=21.794/84.214/53.004
+  [429/594] image_72_crop_3.png | GT=55 | OAI: pred=51 matched=45 MAE(start/end/all)=136.268/61.847/99.058
+  [430/594] image_72_crop_4.png | GT=66 | OAI: pred=40 matched=40 MAE(start/end/all)=60.958/69.638/65.298
+  [WARN] No GT found for image_72_crop_5.png, skipping.
+  [WARN] No GT found for image_72_crop_6.png, skipping.
+  [433/594] image_73_crop_1.png | GT=175 | OAI: pred=45 matched=45 MAE(start/end/all)=12.832/45.016/28.924
+  [434/594] image_73_crop_2.png | GT=175 | OAI: pred=33 matched=33 MAE(start/end/all)=87.168/51.343/69.255
+  [435/594] image_73_crop_3.png | GT=175 | OAI: pred=5 matched=5 MAE(start/end/all)=21.835/65.311/43.573
+  [436/594] image_73_crop_4.png | GT=122 | OAI: pred=43 matched=29 MAE(start/end/all)=62.739/77.472/70.105
+  [437/594] image_73_crop_5.png | GT=108 | OAI: pred=20 matched=20 MAE(start/end/all)=28.569/73.390/50.980
+  [438/594] image_73_crop_6.png | GT=118 | OAI: pred=13 matched=13 MAE(start/end/all)=54.172/58.734/56.453
+  [439/594] image_73_crop_7.png | GT=159 | OAI: pred=69 matched=15 MAE(start/end/all)=144.220/56.165/100.193
+  [WARN] No GT found for image_74_crop_1.png, skipping.
+  [441/594] image_74_crop_2.png | GT=71 | OAI: pred=90 matched=31 MAE(start/end/all)=123.557/60.189/91.873
+  [442/594] image_74_crop_3.png | GT=69 | OAI: pred=33 matched=33 MAE(start/end/all)=37.440/49.558/43.499
+  [443/594] image_74_crop_4.png | GT=61 | OAI: pred=42 matched=42 MAE(start/end/all)=12.876/74.346/43.611
+  [WARN] No GT found for image_74_crop_5.png, skipping.
+  [WARN] No GT found for image_74_crop_6.png, skipping.
+  [446/594] image_75_crop_1.png | GT=231 | OAI: pred=69 matched=69 MAE(start/end/all)=8.444/75.380/41.912
+  [447/594] image_75_crop_2.png | GT=244 | OAI: pred=9 matched=9 MAE(start/end/all)=40.048/17.864/28.956
+  [448/594] image_76_crop_1.png | GT=48 | OAI: pred=121 matched=26 MAE(start/end/all)=163.875/44.984/104.430
+  [449/594] image_76_crop_2.png | GT=101 | OAI: pred=103 matched=101 MAE(start/end/all)=34.516/63.034/48.775
+  [450/594] image_76_crop_3.png | GT=168 | OAI: pred=60 matched=6 MAE(start/end/all)=105.565/92.547/99.056
+  [451/594] image_77_crop_1.png | GT=113 | OAI: pred=111 matched=111 MAE(start/end/all)=59.592/69.497/64.544
+  [452/594] image_77_crop_2.png | GT=81 | OAI: pred=143 matched=65 MAE(start/end/all)=131.089/91.929/111.509
+  [WARN] No GT found for image_77_crop_3.png, skipping.
+  [454/594] image_77_crop_4.png | GT=73 | OAI: pred=29 matched=24 MAE(start/end/all)=109.418/28.817/69.117
+  [WARN] No GT found for image_77_crop_5.png, skipping.
+  [WARN] No GT found for image_77_crop_6.png, skipping.
+  [WARN] No GT found for image_78_crop_1.png, skipping.
+  [458/594] image_78_crop_10.png | GT=115 | OAI: pred=151 matched=19 MAE(start/end/all)=154.925/41.432/98.178
+  [WARN] No GT found for image_78_crop_11.png, skipping.
+  [WARN] No GT found for image_78_crop_12.png, skipping.
+  [WARN] No GT found for image_78_crop_2.png, skipping.
+  [462/594] image_78_crop_3.png | GT=102 | OAI: pred=14 matched=12 MAE(start/end/all)=131.616/54.646/93.131
+  [WARN] No GT found for image_78_crop_4.png, skipping.
+  [WARN] No GT found for image_78_crop_5.png, skipping.
+  [465/594] image_78_crop_6.png | GT=79 | OAI: pred=51 matched=8 MAE(start/end/all)=71.198/48.199/59.698
+  [WARN] No GT found for image_78_crop_7.png, skipping.
+  [467/594] image_78_crop_8.png | GT=119 | OAI: pred=78 matched=32 MAE(start/end/all)=138.396/55.714/97.055
+  [WARN] No GT found for image_78_crop_9.png, skipping.
+  [WARN] No GT found for image_79_crop_1.png, skipping.
+  [470/594] image_79_crop_10.png | GT=87 | OAI: pred=47 matched=47 MAE(start/end/all)=24.969/70.557/47.763
+  [471/594] image_79_crop_11.png | GT=94 | OAI: pred=26 matched=26 MAE(start/end/all)=45.667/15.731/30.699
+  [WARN] No GT found for image_79_crop_12.png, skipping.
+  [WARN] No GT found for image_79_crop_13.png, skipping.
+  [WARN] No GT found for image_79_crop_2.png, skipping.
+  [WARN] No GT found for image_79_crop_3.png, skipping.
+  [476/594] image_79_crop_4.png | GT=99 | OAI: pred=64 matched=64 MAE(start/end/all)=26.355/20.442/23.398
+  [WARN] No GT found for image_79_crop_5.png, skipping.
+  [478/594] image_79_crop_6.png | GT=79 | OAI: pred=59 matched=59 MAE(start/end/all)=81.573/61.592/71.582
+  [WARN] No GT found for image_79_crop_7.png, skipping.
+  [WARN] No GT found for image_79_crop_8.png, skipping.
+  [WARN] No GT found for image_79_crop_9.png, skipping.
+  [482/594] image_7_crop_1.png | GT=54 | OAI: pred=36 matched=36 MAE(start/end/all)=10.892/108.378/59.635
+  [483/594] image_7_crop_2.png | GT=67 | OAI: pred=42 matched=42 MAE(start/end/all)=29.735/99.697/64.716
+  [484/594] image_80_crop_1.png | GT=400 | OAI: pred=73 matched=73 MAE(start/end/all)=25.957/87.674/56.815
+  [485/594] image_80_crop_2.png | GT=400 | OAI: pred=27 matched=2 MAE(start/end/all)=175.850/36.950/106.400
+  [486/594] image_81_crop_1.png | GT=124 | OAI: pred=35 matched=35 MAE(start/end/all)=71.484/47.092/59.288
+  [487/594] image_81_crop_2.png | GT=125 | OAI: pred=36 matched=33 MAE(start/end/all)=89.233/64.467/76.850
+  [488/594] image_81_crop_3.png | GT=125 | OAI: pred=46 matched=46 MAE(start/end/all)=56.759/67.177/61.968
+  [489/594] image_82_crop_1.png | GT=213 | OAI: pred=188 matched=66 MAE(start/end/all)=21.311/70.774/46.042
+  [490/594] image_82_crop_2.png | GT=302 | OAI: pred=44 matched=44 MAE(start/end/all)=37.862/87.796/62.829
+  [491/594] image_82_crop_3.png | GT=255 | OAI: pred=95 matched=95 MAE(start/end/all)=5.047/43.261/24.154
+  [492/594] image_82_crop_4.png | GT=245 | OAI: pred=40 matched=23 MAE(start/end/all)=68.351/99.116/83.733
+  [493/594] image_82_crop_5.png | GT=239 | OAI: pred=64 matched=64 MAE(start/end/all)=36.232/34.627/35.430
+  [WARN] No GT found for image_83_crop_1.png, skipping.
+  [495/594] image_83_crop_2.png | GT=75 | OAI: pred=6 matched=4 MAE(start/end/all)=41.661/39.045/40.353
+  [496/594] image_83_crop_3.png | GT=75 | OAI: pred=33 matched=33 MAE(start/end/all)=41.052/61.235/51.144
+  [497/594] image_83_crop_4.png | GT=75 | OAI: pred=13 matched=7 MAE(start/end/all)=88.844/46.421/67.633
+  [WARN] No GT found for image_83_crop_5.png, skipping.
+  [WARN] No GT found for image_83_crop_6.png, skipping.
+  [500/594] image_84_crop_1.png | GT=175 | OAI: pred=21 matched=21 MAE(start/end/all)=21.887/88.574/55.230
+  [501/594] image_84_crop_2.png | GT=174 | OAI: pred=16 matched=16 MAE(start/end/all)=68.997/60.467/64.732
+  [502/594] image_84_crop_3.png | GT=175 | OAI: pred=44 matched=44 MAE(start/end/all)=53.543/74.773/64.158
+  [503/594] image_85_crop_1.png | GT=397 | OAI: pred=26 matched=21 MAE(start/end/all)=76.292/36.778/56.535
+  [504/594] image_85_crop_2.png | GT=393 | OAI: pred=85 matched=85 MAE(start/end/all)=77.323/32.942/55.133
+  [505/594] image_85_crop_3.png | GT=387 | OAI: pred=49 matched=49 MAE(start/end/all)=29.675/72.158/50.917
+  [506/594] image_86_crop_1.png | GT=63 | OAI: pred=72 matched=63 MAE(start/end/all)=46.136/45.885/46.011
+  [507/594] image_86_crop_2.png | GT=48 | OAI: pred=18 matched=10 MAE(start/end/all)=172.220/39.405/105.813
+  [508/594] image_86_crop_3.png | GT=53 | OAI: pred=10 matched=10 MAE(start/end/all)=73.572/33.569/53.571
+  [WARN] No GT found for image_87_crop_1.png, skipping.
+  [WARN] No GT found for image_87_crop_2.png, skipping.
+  [511/594] image_87_crop_3.png | GT=360 | OAI: pred=66 matched=66 MAE(start/end/all)=72.103/71.957/72.030
+  [512/594] image_87_crop_4.png | GT=396 | OAI: pred=111 matched=89 MAE(start/end/all)=94.952/50.083/72.518
+  [WARN] No GT found for image_87_crop_5.png, skipping.
+  [WARN] No GT found for image_87_crop_6.png, skipping.
+  [515/594] image_88_crop_1.png | GT=133 | OAI: pred=20 matched=20 MAE(start/end/all)=36.227/46.413/41.320
+  [516/594] image_88_crop_2.png | GT=155 | OAI: pred=86 matched=86 MAE(start/end/all)=44.032/94.974/69.503
+  [517/594] image_88_crop_3.png | GT=170 | OAI: pred=7 matched=7 MAE(start/end/all)=46.677/59.785/53.231
+  [518/594] image_88_crop_4.png | GT=173 | OAI: pred=18 matched=18 MAE(start/end/all)=28.666/73.914/51.290
+  [519/594] image_89_crop_1.png | GT=84 | OAI: pred=90 matched=27 MAE(start/end/all)=85.437/48.860/67.149
+  [520/594] image_89_crop_2.png | GT=82 | OAI: pred=22 matched=22 MAE(start/end/all)=27.190/91.253/59.221
+  [521/594] image_89_crop_3.png | GT=56 | OAI: pred=15 matched=15 MAE(start/end/all)=21.319/82.678/51.998
+  [522/594] image_89_crop_4.png | GT=124 | OAI: pred=10 matched=10 MAE(start/end/all)=20.790/89.167/54.979
+  [523/594] image_89_crop_5.png | GT=61 | OAI: pred=10 matched=10 MAE(start/end/all)=15.773/109.680/62.726
+  [524/594] image_8_crop_1.png | GT=125 | OAI: pred=48 matched=48 MAE(start/end/all)=21.209/62.170/41.690
+  [525/594] image_8_crop_2.png | GT=125 | OAI: pred=16 matched=16 MAE(start/end/all)=6.692/56.188/31.440
+  [WARN] No GT found for image_8_crop_3.png, skipping.
+  [527/594] image_8_crop_4.png | GT=125 | OAI: pred=124 matched=81 MAE(start/end/all)=33.015/112.486/72.750
+  [WARN] No GT found for image_8_crop_5.png, skipping.
+  [WARN] No GT found for image_8_crop_6.png, skipping.
+  [530/594] image_90_crop_1.png | GT=125 | OAI: pred=23 matched=23 MAE(start/end/all)=27.578/103.315/65.447
+  [531/594] image_90_crop_2.png | GT=125 | OAI: pred=41 matched=18 MAE(start/end/all)=86.552/88.319/87.436
+  [532/594] image_90_crop_3.png | GT=125 | OAI: pred=23 matched=23 MAE(start/end/all)=33.271/53.285/43.278
+  [533/594] image_91_crop_1.png | GT=75 | OAI: pred=14 matched=14 MAE(start/end/all)=22.708/44.300/33.504
+  [534/594] image_91_crop_2.png | GT=75 | OAI: pred=10 matched=10 MAE(start/end/all)=45.090/66.892/55.991
+  [535/594] image_91_crop_3.png | GT=75 | OAI: pred=219 matched=75 MAE(start/end/all)=63.723/58.849/61.286
+  [536/594] image_91_crop_4.png | GT=75 | OAI: pred=33 matched=28 MAE(start/end/all)=54.768/63.056/58.912
+  [537/594] image_91_crop_5.png | GT=75 | OAI: pred=62 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [538/594] image_91_crop_6.png | GT=75 | OAI: pred=74 matched=74 MAE(start/end/all)=14.131/42.850/28.490
+  [539/594] image_91_crop_7.png | GT=75 | OAI: pred=27 matched=27 MAE(start/end/all)=29.094/34.190/31.642
+  [540/594] image_92_crop_1.png | GT=98 | OAI: pred=80 matched=21 MAE(start/end/all)=80.120/103.084/91.602
+  [541/594] image_92_crop_2.png | GT=85 | OAI: pred=41 matched=39 MAE(start/end/all)=62.102/55.990/59.046
+  [542/594] image_92_crop_3.png | GT=57 | OAI: pred=28 matched=24 MAE(start/end/all)=112.634/44.117/78.375
+  [WARN] No GT found for image_93_crop_1.png, skipping.
+  [544/594] image_93_crop_2.png | GT=63 | OAI: pred=81 matched=36 MAE(start/end/all)=52.550/58.472/55.511
+  [545/594] image_93_crop_3.png | GT=56 | OAI: pred=144 matched=14 MAE(start/end/all)=66.505/120.738/93.621
+  [546/594] image_93_crop_4.png | GT=66 | OAI: pred=20 matched=20 MAE(start/end/all)=13.030/95.569/54.299
+  [WARN] No GT found for image_93_crop_5.png, skipping.
+  [WARN] No GT found for image_93_crop_6.png, skipping.
+  [WARN] No GT found for image_94_crop_1.png, skipping.
+  [550/594] image_94_crop_10.png | GT=93 | OAI: pred=200 matched=93 MAE(start/end/all)=78.537/60.877/69.707
+  [551/594] image_94_crop_11.png | GT=76 | OAI: pred=25 matched=25 MAE(start/end/all)=49.481/52.360/50.921
+  [WARN] No GT found for image_94_crop_12.png, skipping.
+  [WARN] No GT found for image_94_crop_13.png, skipping.
+  [WARN] No GT found for image_94_crop_2.png, skipping.
+  [WARN] No GT found for image_94_crop_3.png, skipping.
+  [556/594] image_94_crop_4.png | GT=98 | OAI: pred=49 matched=49 MAE(start/end/all)=21.466/72.293/46.879
+  [WARN] No GT found for image_94_crop_5.png, skipping.
+  [558/594] image_94_crop_6.png | GT=107 | OAI: pred=267 matched=107 MAE(start/end/all)=56.373/29.840/43.106
+  [WARN] No GT found for image_94_crop_7.png, skipping.
+  [WARN] No GT found for image_94_crop_8.png, skipping.
+  [WARN] No GT found for image_94_crop_9.png, skipping.
+  [562/594] image_95_crop_1.png | GT=66 | OAI: pred=20 matched=20 MAE(start/end/all)=73.827/40.910/57.369
+  [563/594] image_95_crop_2.png | GT=54 | OAI: pred=53 matched=30 MAE(start/end/all)=95.092/37.420/66.256
+  [564/594] image_95_crop_3.png | GT=63 | OAI: pred=38 matched=28 MAE(start/end/all)=88.915/51.205/70.060
+  [565/594] image_96_crop_1.png | GT=275 | OAI: pred=58 matched=58 MAE(start/end/all)=23.840/80.527/52.183
+  [566/594] image_96_crop_2.png | GT=275 | OAI: pred=78 matched=38 MAE(start/end/all)=80.573/45.328/62.951
+  [WARN] No GT found for image_96_crop_3.png, skipping.
+  [568/594] image_96_crop_4.png | GT=275 | OAI: pred=40 matched=0 MAE(start/end/all)=0.000/0.000/0.000
+  [WARN] No GT found for image_96_crop_5.png, skipping.
+  [570/594] image_96_crop_6.png | GT=275 | OAI: pred=158 matched=39 MAE(start/end/all)=94.129/35.616/64.872
+  [WARN] No GT found for image_96_crop_7.png, skipping.
+  [WARN] No GT found for image_96_crop_8.png, skipping.
+  [573/594] image_97_crop_1.png | GT=110 | OAI: pred=14 matched=6 MAE(start/end/all)=34.263/103.130/68.696
+  [574/594] image_97_crop_2.png | GT=104 | OAI: pred=10 matched=10 MAE(start/end/all)=38.567/29.316/33.942
+  [575/594] image_97_crop_3.png | GT=116 | OAI: pred=20 matched=20 MAE(start/end/all)=36.573/71.943/54.258
+  [576/594] image_97_crop_4.png | GT=125 | OAI: pred=35 matched=35 MAE(start/end/all)=62.804/52.096/57.450
+  [577/594] image_97_crop_5.png | GT=104 | OAI: pred=21 matched=13 MAE(start/end/all)=112.683/39.150/75.916
+  [578/594] image_97_crop_6.png | GT=121 | OAI: pred=32 matched=21 MAE(start/end/all)=86.105/65.435/75.770
+  [579/594] image_97_crop_7.png | GT=113 | OAI: pred=20 matched=13 MAE(start/end/all)=45.346/92.644/68.995
+  [580/594] image_98_crop_1.png | GT=308 | OAI: pred=71 matched=71 MAE(start/end/all)=39.125/61.143/50.134
+  [581/594] image_98_crop_2.png | GT=293 | OAI: pred=26 matched=22 MAE(start/end/all)=66.596/46.670/56.633
+  [582/594] image_98_crop_3.png | GT=304 | OAI: pred=90 matched=90 MAE(start/end/all)=38.661/91.528/65.094
+  [583/594] image_98_crop_4.png | GT=216 | OAI: pred=45 matched=45 MAE(start/end/all)=69.677/37.107/53.392
+  [584/594] image_98_crop_5.png | GT=240 | OAI: pred=166 matched=103 MAE(start/end/all)=43.207/92.656/67.931
+  [585/594] image_99_crop_1.png | GT=75 | OAI: pred=86 matched=4 MAE(start/end/all)=168.889/68.794/118.841
+  [586/594] image_99_crop_2.png | GT=58 | OAI: pred=10 matched=10 MAE(start/end/all)=89.087/48.873/68.981
+  [587/594] image_99_crop_3.png | GT=47 | OAI: pred=16 matched=16 MAE(start/end/all)=39.997/151.100/95.549
+  [588/594] image_9_crop_1.png | GT=306 | OAI: pred=24 matched=24 MAE(start/end/all)=11.093/133.899/72.496
+  [589/594] image_9_crop_2.png | GT=334 | OAI: pred=55 matched=55 MAE(start/end/all)=11.332/23.426/17.379
+  [590/594] image_9_crop_3.png | GT=383 | OAI: pred=27 matched=27 MAE(start/end/all)=39.925/55.333/47.629
+  [591/594] image_9_crop_4.png | GT=325 | OAI: pred=18 matched=18 MAE(start/end/all)=36.838/74.404/55.621
+  [592/594] image_9_crop_5.png | GT=334 | OAI: pred=60 matched=60 MAE(start/end/all)=101.054/45.708/73.380
+  [593/594] image_9_crop_6.png | GT=375 | OAI: pred=31 matched=31 MAE(start/end/all)=84.221/61.094/72.657
+  [594/594] image_9_crop_7.png | GT=388 | OAI: pred=10 matched=7 MAE(start/end/all)=70.903/54.166/62.534
+
+  =============== TOTAL (MAE) ===============
+  matched=14891 | MAE(start/end/all)=52.575/69.868/61.222
+
+  =============== sAP (dataset) ===============
+  sAP5  = 0.000000
+  sAP10 = 0.000003
+  sAP15 = 0.000015
+  sAP5%  = 0.000%
+  sAP10% = 0.000%
+  sAP15% = 0.002%
+
+  Saved CSV: /home/poonam/myworkspace/PaCoNet/src/dhlp/results_openai_only_with_sap.csv
+
+  Process finished with exit code 0
+
+  ```

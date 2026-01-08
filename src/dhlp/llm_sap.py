@@ -55,7 +55,7 @@ project_root = Path(project_root)
 IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
 GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
-OUT_CSV = project_root /" outputs/llms/results_openai_only_with_sap_test_mae.csv"
+OUT_CSV = project_root / "outputs/llms/results_openai_only_with_sap_test_mae.csv"
 
 OPENAI_MODEL = "gpt-4.1-mini"  # change if you want
 
@@ -482,7 +482,6 @@ def main() -> None:
             f"[{k}/{len(img_paths)}] {fn} | GT={len(gt_lines)} | "
             f"OAI: pred={len(oai_lines)} matched={oai_stats.matched} "
             f"MAE(start/end/all)={oai_stats.mae_start:.3f}/{oai_stats.mae_end:.3f}/{oai_stats.mae_all:.3f} |"
-            f"SimpleMAE={simple_mae:.3f}"
         )
 
         time.sleep(0.15)
@@ -502,8 +501,6 @@ def main() -> None:
         f"matched={tot_oai.matched} | "
         f"MAE(start/end/all)={tot_oai.mae_start:.3f}/{tot_oai.mae_end:.3f}/{tot_oai.mae_all:.3f}"
     )
-    print("\n=============== GLOBAL SIMPLE MAE ===============")
-    print(f"Global Simple MAE (all images): {global_simple_mae:.6f}")
 
     print("\n=============== sAP (dataset) ===============")
     print(f"sAP5  = {sap.get(5.0, 0.0):.6f}")

@@ -734,3 +734,160 @@ def get_mask_for_label_path(label_path: str, MASK_ROOT, mask_key="mask", ) -> to
     return torch.from_numpy(mask > 0)  # [H,W] bool
 
 
+def coverage_mae_junctions(
+    gt_juncs: np.ndarray,          # shape (J, 2)
+    pred_points: np.ndarray,       # shape (K, 2) endpoints (start+end)
+    miss_penalty: float = 30.0,    # pixels
+) -> float:
+    """
+    Global-style MAE: average distance from each GT junction to nearest predicted point.
+    If no predicted points exist, each GT junction gets miss_penalty.
+    """
+    if gt_juncs.size == 0:
+        return 0.0
+    if pred_points.size == 0:
+        return float(miss_penalty)
+
+    # For each GT junction, compute distance to nearest predicted point
+    # (vectorized)
+    diff = gt_juncs[:, None, :] - pred_points[None, :, :]
+    dists = np.linalg.norm(diff, axis=-1)  # (J, K)
+    min_d = dists.min(axis=1)              # (J,)
+    min_d = np.clip(min_d, 0, miss_penalty)
+    return float(min_d.mean())
+
+
+def _canon_lines_yx(lines: np.ndarray) -> np.ndarray:
+    """lines: (n,2,2) in (y,x). Canonicalize so endpoint0 is 'leftmost' by x, tie by y."""
+    if lines.size == 0:
+        return lines.astype(np.float32)
+
+    a = lines[:, 0, :]  # (n,2) (y,x)
+    b = lines[:, 1, :]
+    # compare by x then y
+    swap = (b[:, 1] < a[:, 1]) | ((b[:, 1] == a[:, 1]) & (b[:, 0] < a[:, 0]))
+    out = lines.copy().astype(np.float32)
+    out[swap, 0, :] = b[swap]
+    out[swap, 1, :] = a[swap]
+    return out
+
+def match_count_lines(gt_lines_yx: np.ndarray, pr_lines_yx: np.ndarray, max_cost: float = 10.0) -> int:
+    """
+    Returns m = number of matched lines (Hungarian + threshold).
+    Cost = L2(start-start) + L2(end-end) after canonicalization.
+    """
+    if gt_lines_yx.size == 0 or pr_lines_yx.size == 0:
+        return 0
+
+    gt = _canon_lines_yx(gt_lines_yx)
+    pr = _canon_lines_yx(pr_lines_yx)
+
+    k = gt.shape[0]
+    l = pr.shape[0]
+    cost = np.zeros((k, l), dtype=np.float32)
+
+    for i in range(k):
+        gy0, gx0 = gt[i, 0]
+        gy1, gx1 = gt[i, 1]
+        for j in range(l):
+            py0, px0 = pr[j, 0]
+            py1, px1 = pr[j, 1]
+            cost[i, j] = np.hypot(gy0 - py0, gx0 - px0) + np.hypot(gy1 - py1, gx1 - px1)
+
+    from scipy.optimize import linear_sum_assignment
+    r, c = linear_sum_assignment(cost)
+
+    m = 0
+    for i, j in zip(r, c):
+        if float(cost[i, j]) <= max_cost:
+            m += 1
+    return m
+
+def match_count_lines_nearest(gt_lines_yx: np.ndarray, pr_lines_yx: np.ndarray, max_cost: float = 15.0) -> int:
+    """
+    Nearest matching with endpoint swap allowed + Hungarian assignment + threshold.
+    Lines are (n,2,2) with points in (y,x).
+    Cost = min( L2(s-s)+L2(e-e), L2(s-e)+L2(e-s) ).
+    """
+    if gt_lines_yx.size == 0 or pr_lines_yx.size == 0:
+        return 0
+
+    gt = gt_lines_yx.astype(np.float32)
+    pr = pr_lines_yx.astype(np.float32)
+
+    k, l = gt.shape[0], pr.shape[0]
+    cost = np.zeros((k, l), dtype=np.float32)
+
+    for i in range(k):
+        g0 = gt[i, 0]; g1 = gt[i, 1]
+        for j in range(l):
+            p0 = pr[j, 0]; p1 = pr[j, 1]
+            c_noswap = np.hypot(g0[0]-p0[0], g0[1]-p0[1]) + np.hypot(g1[0]-p1[0], g1[1]-p1[1])
+            c_swap   = np.hypot(g0[0]-p1[0], g0[1]-p1[1]) + np.hypot(g1[0]-p0[0], g1[1]-p0[1])
+            cost[i, j] = min(c_noswap, c_swap)
+
+    from scipy.optimize import linear_sum_assignment
+    r, c = linear_sum_assignment(cost)
+
+    m = 0
+    for i, j in zip(r, c):
+        if float(cost[i, j]) <= max_cost:
+            m += 1
+    return m
+
+
+def gt_lines_from_Lpos(meta_i, scale: float = 1.75) -> np.ndarray:
+    """
+    Returns GT lines as array (k,2,2) in same coord order as junc (likely (y,x)),
+    scaled to pixel coords.
+    """
+    junc = meta_i["junc"].detach().cpu().numpy() * scale   # (N,2)
+    Lpos = meta_i["Lpos"].detach().cpu().numpy()           # (N,N) 0/1
+
+    ys, xs = np.where(np.triu(Lpos, k=1) > 0)  # upper triangle to avoid duplicates
+    if len(ys) == 0:
+        return np.zeros((0, 2, 2), dtype=np.float32)
+
+    p1 = junc[ys]  # (k,2)
+    p2 = junc[xs]  # (k,2)
+    gt = np.stack([p1, p2], axis=1).astype(np.float32)     # (k,2,2)
+    return gt
+
+def count_gt_covered_by_pred(
+    gt_lines_yx: np.ndarray,   # (k,2,2) points in (y,x)
+    pr_lines_yx: np.ndarray,   # (l,2,2)
+    max_cost: float = 15.0,    # pixels
+) -> int:
+    """
+    Non-1-to-1 matching:
+    m = number of GT lines that have at least one predicted line within max_cost.
+
+    Cost between lines = min( noswap, swap )
+      noswap = L2(g0,p0) + L2(g1,p1)
+      swap   = L2(g0,p1) + L2(g1,p0)
+    """
+    if gt_lines_yx.size == 0:
+        return 0
+    if pr_lines_yx.size == 0:
+        return 0
+
+    gt = gt_lines_yx.astype(np.float32)
+    pr = pr_lines_yx.astype(np.float32)
+
+    m = 0
+    for i in range(gt.shape[0]):
+        g0 = gt[i, 0]; g1 = gt[i, 1]
+
+        best = float("inf")
+        for j in range(pr.shape[0]):
+            p0 = pr[j, 0]; p1 = pr[j, 1]
+            c_noswap = np.hypot(g0[0]-p0[0], g0[1]-p0[1]) + np.hypot(g1[0]-p1[0], g1[1]-p1[1])
+            c_swap   = np.hypot(g0[0]-p1[0], g0[1]-p1[1]) + np.hypot(g1[0]-p0[0], g1[1]-p0[1])
+            c = c_noswap if c_noswap < c_swap else c_swap
+            if c < best:
+                best = c
+
+        if best <= max_cost:
+            m += 1
+
+    return m

@@ -35,7 +35,8 @@ from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
 from process_utils import (nearest_junction, visualize_points, set_seed,
-                           get_mask_for_index, filter_lines_with_mask_heatmap, line_nms)
+                           get_mask_for_index, filter_lines_with_mask_heatmap, line_nms, coverage_mae_junctions,
+                           gt_lines_from_Lpos, match_count_lines, match_count_lines_nearest, count_gt_covered_by_pred)
 
 # # masks path for the color + unet 1
 # MASK_ROOT = "data/pcw_test/masks"
@@ -115,16 +116,19 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     output_file = "offset_results_c.txt"
-    output_dir = "output_offsets"
+    output_dir = "output_offsets_mae"
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, output_file)
 
-    vis_dir = "output_point_mae_vis_sing_c"
+    vis_dir = "output_point_mae_vis_sing_c_m"
     os.makedirs(vis_dir, exist_ok=True)
     plots_done = 0
 
     all_start_offsets = []
     all_end_offsets = []
+
+    total_k = 0  # total GT lines across dataset
+    total_k_minus_m = 0  # total missed GT lines across dataset
 
     with open(output_path, "w") as f:
         f.write("Image_Index, Avg_Start_Offset, Avg_End_Offset\n")
@@ -162,6 +166,14 @@ def main():
                             dist_thresh=2.0,
                         )
                     line_endpoints = lines_i.numpy() * 1.75
+                    gt_lines = gt_lines_from_Lpos(meta[i], scale=1.75)  # (k,2,2) in (y,x)
+                    pr_lines = line_endpoints.astype(np.float32)  # (l,2,2) in (y,x)
+
+                    k_gt = gt_lines.shape[0]
+                    m_match = count_gt_covered_by_pred(gt_lines, pr_lines, max_cost=5.0)  # choose threshold in pixels
+
+                    total_k += k_gt
+                    total_k_minus_m += (k_gt - m_match)
 
                     if len(line_endpoints) == 0:
                         continue
@@ -194,6 +206,7 @@ def main():
 
                     # Get ground truth junctions
                     ground_truth_junctions = meta[i]["junc"].cpu().numpy() *1.75  # Scale back
+
 
                     # Compute offsets
                     start_offsets = np.array([
@@ -242,6 +255,10 @@ def main():
         # Compute overall average offsets
         overall_start_offset = np.mean(all_start_offsets) if len(all_start_offsets) > 0 else 0
         overall_end_offset = np.mean(all_end_offsets) if len(all_end_offsets) > 0 else 0
+
+        global_mae = (total_k_minus_m / total_k) if total_k > 0 else 0.0
+        print(f"Global MAE (sum(k-m)/sum(k)): {global_mae:.6f}")
+        print(f"Total GT lines (sum k): {total_k} | Total missed (sum(k-m)): {total_k_minus_m}")
 
         # Write overall results to the file
         f.write(f"\nOverall_Avg_Start_Offset: {overall_start_offset:.3f}\n")
