@@ -34,27 +34,34 @@ import torch
 from docopt import docopt
 import scipy.io as sio
 
-from dhlp.process_utils import segment_distance, filter_lines_with_mask_heatmap, build_gt_lines_from_meta, match_lines, \
-    set_seed, crop_key_from_label_path
 
 # Make sure the project root (where "src/dhlp/lcnn" lives) is on PYTHONPATH.
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, project_root)
 
-import src.dhlp.lcnn  # noqa: F401
+
+import src.dhlp.lcnn
 from src.dhlp.lcnn.utils import recursive_to
 from src.dhlp.lcnn.config import C, M
 from src.dhlp.lcnn.datasets import WireframeDataset, collate
 from src.dhlp.lcnn.models.line_vectorizer import LineVectorizer
 from src.dhlp.lcnn.models.multitask_learner import MultitaskHead, MultitaskLearner
 from src.dhlp.lcnn.models.HT import hough_transform
+from src.dhlp.process_utils import segment_distance, filter_lines_with_mask_heatmap, build_gt_lines_from_meta, match_lines, \
+    set_seed, crop_key_from_label_path
 
 from src.dhlp.sap_metric import LineSegmentSAPMetric
 
 # ------------------------------------------------------------
 # YOU: set mask root (same as your current file)
 # ------------------------------------------------------------
-MASK_ROOT = "data/pcw_ntest_cls/masks"
+# MASK_ROOT = "data/pcw_ntest_cls/masks"
+
+# # masks path for the color + unet 1
+# MASK_ROOT = "data/pcw_test/masks"
+
+# masks path for the cluster  + unet  2
+MASK_ROOT = "data/pcw_test_cls/masks"
 
 # ---- soft toggles (same style as yours) ----
 USE_MASK = True
@@ -223,7 +230,7 @@ def main():
                 # optional mask filter (per cat-image)
                 if USE_MASK:
                     mask_i = get_mask_for_label_path(label_path)
-                    lines_i, scores_i = filter_lines_with_mask_heatmap(
+                    lines_i, scores_i,_ = filter_lines_with_mask_heatmap(
                         lines_i, scores_i, mask_i,
                         min_frac_inside=0.5,
                         n_samples=16,

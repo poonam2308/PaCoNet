@@ -55,7 +55,7 @@ project_root = Path(project_root)
 IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
 GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
-OUT_CSV = project_root / "outputs/llms/results_openai_only_with_sap_test_mae.csv"
+OUT_CSV = project_root / "outputs/llms/results_openai_only_with_sap_test_mae_color.csv"
 
 OPENAI_MODEL = "gpt-4.1-mini"  # change if you want
 
@@ -87,6 +87,7 @@ Rules:
 - Coordinates are IMAGE PIXELS with origin at top-left.
 - Ignore axes, tick marks, grid lines, legend boxes, and text.
 - Use numbers (ints or floats).
+- Lines beloging to each semantic color category in the image.
 """
 
 
