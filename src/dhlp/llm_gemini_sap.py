@@ -73,7 +73,6 @@ Rules:
 - Ignore axes, tick marks, grid lines, legend boxes, and text.
 - Use numbers (ints or floats).
 - Return ONLY JSON. No extra text.
-- Lines beloging to each semantic color category in the image.
 """
 
 

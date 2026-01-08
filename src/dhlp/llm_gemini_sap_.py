@@ -33,13 +33,13 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, project_root)
 project_root = Path(project_root)
 
-# IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
-# GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
+GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
 
 #
-IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
-GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
+# IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
+# GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
 
 OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test_mae.csv"
 
@@ -471,6 +471,9 @@ class GeminiLinePredictor:
         return extract_lines_from_any_json(pred)
 
 
+        # With schema, SDK returns parsed output
+        parsed = response.parsed  # should be LinesOut
+        return self._normalize_lines(parsed.lines)
 
     def list_models(self, limit: int = 50) -> List[str]:
         """
@@ -560,7 +563,7 @@ def main() -> None:
         if USE_Gemini:
             try:
                 gem = GeminiLinePredictor(
-                    model="gemini-2.5-flash",  # example model from Google docs :contentReference[gemcite:7]{index=7}
+                    model="gemini-2.0-flash",  # example model from Google docs :contentReference[gemcite:7]{index=7}
                     api_key=GEMINI_API_KEY        # optional; else use env GEMINI_API_KEY
                 )
                 gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
