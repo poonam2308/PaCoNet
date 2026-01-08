@@ -415,26 +415,26 @@ class GeminiLinePredictor:
         self.model = model
         self.temperature = temperature
 
-        http_options = types.HttpOptions(api_version=api_version)
-        if api_key:
-            self.client = genai.Client(api_key=api_key, http_options=http_options)
-        else:
-            self.client = genai.Client(http_options=http_options)
-
-        # client_kwargs = {}
-        #
-        # # Some versions of google-genai do not have types.HttpOptions
-        # try:
-        #     http_options = types.HttpOptions(api_version=api_version)
-        #     client_kwargs["http_options"] = http_options
-        # except Exception:
-        #     # Older SDK: just skip api_version override
-        #     pass
-        #
+        # http_options = types.HttpOptions(api_version=api_version)
         # if api_key:
-        #     self.client = genai.Client(api_key=api_key, **client_kwargs)
+        #     self.client = genai.Client(api_key=api_key, http_options=http_options)
         # else:
-        #     self.client = genai.Client(**client_kwargs)
+        #     self.client = genai.Client(http_options=http_options)
+
+        client_kwargs = {}
+
+        # Some versions of google-genai do not have types.HttpOptions
+        try:
+            http_options = types.HttpOptions(api_version=api_version)
+            client_kwargs["http_options"] = http_options
+        except Exception:
+            # Older SDK: just skip api_version override
+            pass
+
+        if api_key:
+            self.client = genai.Client(api_key=api_key, **client_kwargs)
+        else:
+            self.client = genai.Client(**client_kwargs)
 
     @staticmethod
     def _decode_b64_png(img_b64: str) -> bytes:
