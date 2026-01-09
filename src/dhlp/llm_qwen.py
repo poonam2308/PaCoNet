@@ -32,7 +32,7 @@ project_root = Path(project_root)
 IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
 GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
 
-OUT_CSV = project_root / "outputs/llms/results_openai_only_with_sap_test_mae_color.csv"
+OUT_CSV = project_root / "outputs/llms/results_openai_only_with_sap_test_mae_colorq.csv"
 
 
 USE_QWEN = True
