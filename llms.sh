@@ -3,5 +3,7 @@
 
 
 #python ./src/dhlp/llm_gemini_sap_.py
-pip install scipy
+python -m pip install -U pip setuptools wheel
+python -m pip install -r requirements.txt
+
 python ./src/dhlp/llm_qwen.py
