@@ -1,25 +1,20 @@
 import base64
 import csv
-import json
 import os
 import re
 import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
-from PIL import Image
-
-# Hungarian assignment
 from scipy.optimize import linear_sum_assignment
+import json
+import torch
+from PIL import Image
+from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
 
-# OpenAI + structured parsing
-from openai import OpenAI
-from pydantic import BaseModel, Field
-
-# Your sAP metric (must be importable; keep sap_metric.py in same folder or PYTHONPATH)
 from sap_metric import LineSegmentSAPMetric
 
 
@@ -63,10 +58,6 @@ Rules:
 # Types / data
 # =========================
 Line = Tuple[float, float, float, float]
-import json
-import torch
-from PIL import Image
-from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
 
 MODEL_ID = "Qwen/Qwen3-VL-8B-Instruct"
 
@@ -381,12 +372,6 @@ def scores_from_length(lines_xyxy: List[Line]) -> np.ndarray:
     dy = arr[:, 3] - arr[:, 1]
     return np.sqrt(dx * dx + dy * dy).astype(np.float32)
 
-
-# =========================
-# OpenAI structured output
-# =========================
-class LinesOut(BaseModel):
-    lines: List[List[float]] = Field(default_factory=list)
 
 
 # =========================

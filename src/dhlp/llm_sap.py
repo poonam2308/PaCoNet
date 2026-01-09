@@ -25,19 +25,12 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
-
+from typing import Any, Dict,Tuple
 import numpy as np
 from PIL import Image
-
-# Hungarian assignment
 from scipy.optimize import linear_sum_assignment
-
-# OpenAI + structured parsing
 from openai import OpenAI
 from pydantic import BaseModel, Field
-
-# Your sAP metric (must be importable; keep sap_metric.py in same folder or PYTHONPATH)
 from sap_metric import LineSegmentSAPMetric
 
 
