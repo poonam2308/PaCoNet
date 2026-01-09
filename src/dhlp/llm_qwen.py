@@ -1,0 +1,573 @@
+import base64
+import csv
+import json
+import os
+import re
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
+import numpy as np
+from PIL import Image
+
+# Hungarian assignment
+from scipy.optimize import linear_sum_assignment
+
+# OpenAI + structured parsing
+from openai import OpenAI
+from pydantic import BaseModel, Field
+
+# Your sAP metric (must be importable; keep sap_metric.py in same folder or PYTHONPATH)
+from sap_metric import LineSegmentSAPMetric
+
+
+# =========================
+# Config (edit these)
+# =========================
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.insert(0, project_root)
+project_root = Path(project_root)
+
+# IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
+# GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
+# OUT_CSV = "results_openai_only_with_sap1.csv"
+
+IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
+GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+
+OUT_CSV = project_root / "outputs/llms/results_openai_only_with_sap_test_mae_color.csv"
+
+
+USE_QWEN = True
+MAX_IMAGES = 0        # 0 = no limit
+MAX_SIDE = 0          # 0 = do NOT resize (recommended to match GT pixel scale)
+MAX_MATCH_COST = 400.0  # threshold on cost for match acceptance
+
+
+USER_PROMPT_BASE = """
+Task: Extract all polyline segments in this plot crop.
+Return JSON with this exact schema:
+{"lines": [[x0,y0,x1,y1], ...]}
+
+Rules:
+- coordinates are integers in pixel space
+- each line is one segment from left axis to right axis within the crop
+- do not include axes, ticks, labels
+- output only JSON
+"""
+
+
+# =========================
+# Types / data
+# =========================
+Line = Tuple[float, float, float, float]
+import json
+import torch
+from PIL import Image
+from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
+
+MODEL_ID = "Qwen/Qwen3-VL-8B-Instruct"
+
+# Load once (global)
+model = Qwen3VLForConditionalGeneration.from_pretrained(
+    MODEL_ID,
+    dtype="auto",
+    device_map="auto",
+    # optionally: attn_implementation="flash_attention_2",
+)
+processor = AutoProcessor.from_pretrained(MODEL_ID)
+
+SYSTEM_STYLE = (
+    "You are a precise extraction system. "
+    "Return ONLY valid JSON. No markdown, no extra text."
+)
+
+def safe_json(text: str):
+    text = text.strip()
+    text = re.sub(r"^```(?:json)?", "", text)
+    text = re.sub(r"```$", "", text)
+    m = re.search(r"\{[\s\S]*\}", text)
+    if not m:
+        raise ValueError("No JSON found")
+    return json.loads(m.group(0))
+
+def qwen3vl_predict_lines(image_path: str, user_prompt: str, max_new_tokens: int = 512):
+    img = Image.open(image_path).convert("RGB")
+
+    messages = [{
+        "role": "user",
+        "content": [
+            {"type": "image", "image": img},
+            {"type": "text", "text": SYSTEM_STYLE + "\n" + user_prompt},
+        ],
+    }]
+
+    inputs = processor.apply_chat_template(
+        messages,
+        tokenize=True,
+        add_generation_prompt=True,
+        return_dict=True,
+        return_tensors="pt",
+    )
+    inputs.pop("token_type_ids", None)
+    inputs = inputs.to(model.device)
+
+    with torch.no_grad():
+        gen = model.generate(**inputs, max_new_tokens=max_new_tokens)
+
+    gen_trim = gen[:, inputs["input_ids"].shape[1]:]
+    text = processor.batch_decode(gen_trim, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+
+    # Expect strict JSON like {"lines":[[x0,y0,x1,y1], ...]}
+    return safe_json(text)
+
+
+@dataclass
+class MAEStats:
+    matched: int = 0
+    unmatched_gt: int = 0
+    unmatched_pred: int = 0
+
+    mae_start: float = 0.0
+    mae_end: float = 0.0
+    mae_all: float = 0.0
+
+    _sum_abs_start: float = 0.0
+    _sum_abs_end: float = 0.0
+    _sum_abs_all: float = 0.0
+
+    def finalize(self) -> None:
+        if self.matched > 0:
+            self.mae_start = self._sum_abs_start / (self.matched * 2.0)
+            self.mae_end = self._sum_abs_end / (self.matched * 2.0)
+            self.mae_all = self._sum_abs_all / (self.matched * 4.0)
+        else:
+            self.mae_start = 0.0
+            self.mae_end = 0.0
+            self.mae_all = 0.0
+
+from typing import List
+
+def simple_line_mae(
+    gt_lines: List[Line],
+    pr_lines: List[Line],
+) -> float:
+    """
+    Simple MAE between GT and Pred lines.
+
+    - Pairs lines by index (no matching).
+    - Missing lines contribute full coordinate error.
+    - Normalized by total number of lines and 4 coordinates per line.
+    """
+
+    G = len(gt_lines)
+    P = len(pr_lines)
+    N = max(G, P)
+
+    if N == 0:
+        return 0.0
+
+    total_abs = 0.0
+
+    # Paired lines
+    M = min(G, P)
+    for i in range(M):
+        gx0, gy0, gx1, gy1 = gt_lines[i]
+        px0, py0, px1, py1 = pr_lines[i]
+
+        total_abs += (
+            abs(gx0 - px0) +
+            abs(gy0 - py0) +
+            abs(gx1 - px1) +
+            abs(gy1 - py1)
+        )
+
+    # Missing GT lines
+    for i in range(M, G):
+        gx0, gy0, gx1, gy1 = gt_lines[i]
+        total_abs += abs(gx0) + abs(gy0) + abs(gx1) + abs(gy1)
+
+    # Missing Pred lines
+    for i in range(M, P):
+        px0, py0, px1, py1 = pr_lines[i]
+        total_abs += abs(px0) + abs(py0) + abs(px1) + abs(py1)
+
+    return total_abs / (N * 4.0)
+
+# =========================
+# Helpers
+# =========================
+def is_image_file(p: Path) -> bool:
+    return p.suffix.lower() in {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff"}
+
+
+def image_to_base64_png(path: Path, max_side: int) -> str:
+    """Encode to PNG base64. If max_side==0, no resizing."""
+    img = Image.open(path).convert("RGB")
+    w, h = img.size
+    if max_side and max(w, h) > max_side:
+        scale = max_side / float(max(w, h))
+        new_w = int(round(w * scale))
+        new_h = int(round(h * scale))
+        img = img.resize((new_w, new_h), Image.BILINEAR)
+
+    from io import BytesIO
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+
+def load_json(path: Path) -> Any:
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def parse_gt_index(gt_payload: Any) -> Dict[str, List[Line]]:
+    """
+    GT payload expected:
+      [
+        {"filename": "...png", "lines": [[x0,y0,x1,y1], ...]},
+        ...
+      ]
+    Optionally wrapped:
+      {"images":[...]}
+    """
+    if isinstance(gt_payload, list):
+        records = gt_payload
+    elif isinstance(gt_payload, dict) and isinstance(gt_payload.get("images"), list):
+        records = gt_payload["images"]
+    else:
+        raise ValueError("Unsupported GT format. Expected list or {'images': list}.")
+
+    gt_index: Dict[str, List[Line]] = {}
+    for rec in records:
+        if not isinstance(rec, dict):
+            continue
+        fn = rec.get("filename")
+        arr = rec.get("lines")
+        if not isinstance(fn, str) or not isinstance(arr, list):
+            continue
+        parsed: List[Line] = []
+        for item in arr:
+            if isinstance(item, (list, tuple)) and len(item) == 4:
+                try:
+                    parsed.append((float(item[0]), float(item[1]), float(item[2]), float(item[3])))
+                except Exception:
+                    pass
+        gt_index[fn] = parsed
+    return gt_index
+
+
+def canonicalize_line(l: Line) -> Line:
+    """Make (x0,y0) the leftmost endpoint; tie -> upper."""
+    x0, y0, x1, y1 = l
+    if (x1 < x0) or (x1 == x0 and y1 < y0):
+        return (x1, y1, x0, y0)
+    return (x0, y0, x1, y1)
+
+
+# =========================
+# MAE matching (no swap)
+# =========================
+
+def clamp_lines(lines, w, h):
+    out = []
+    for x0,y0,x1,y1 in lines:
+        out.append((
+            max(0, min(x0, w-1)),
+            max(0, min(y0, h-1)),
+            max(0, min(x1, w-1)),
+            max(0, min(y1, h-1)),
+        ))
+    return out
+
+def endpoint_cost_l2_noswap(a: Line, b: Line) -> float:
+    """L2(start-start) + L2(end-end) after canonicalization."""
+    ax0, ay0, ax1, ay1 = a
+    bx0, by0, bx1, by1 = b
+    return float(np.hypot(ax0 - bx0, ay0 - by0) + np.hypot(ax1 - bx1, ay1 - by1))
+
+
+def hungarian_pairs(cost: np.ndarray) -> List[Tuple[int, int]]:
+    r, c = linear_sum_assignment(cost)
+    return list(zip(r.tolist(), c.tolist()))
+
+
+def compute_mae_stats(gt_lines_in: List[Line], pr_lines_in: List[Line]) -> MAEStats:
+    stats = MAEStats()
+
+    gt_lines = [canonicalize_line(l) for l in gt_lines_in]
+    pr_lines = [canonicalize_line(l) for l in pr_lines_in]
+
+    n_gt = len(gt_lines)
+    n_pr = len(pr_lines)
+
+    if n_gt == 0 and n_pr == 0:
+        stats.finalize()
+        return stats
+    if n_gt == 0:
+        stats.unmatched_pred = n_pr
+        stats.finalize()
+        return stats
+    if n_pr == 0:
+        stats.unmatched_gt = n_gt
+        stats.finalize()
+        return stats
+
+    cost = np.zeros((n_gt, n_pr), dtype=float)
+    for i in range(n_gt):
+        for j in range(n_pr):
+            cost[i, j] = endpoint_cost_l2_noswap(gt_lines[i], pr_lines[j])
+
+    pairs = hungarian_pairs(cost)
+
+    matched_gt = set()
+    matched_pr = set()
+
+    for i, j in pairs:
+        c = float(cost[i, j])
+        if c > MAX_MATCH_COST:
+            continue
+
+        matched_gt.add(i)
+        matched_pr.add(j)
+
+        gx0, gy0, gx1, gy1 = gt_lines[i]
+        px0, py0, px1, py1 = pr_lines[j]
+
+        s_abs = abs(gx0 - px0) + abs(gy0 - py0)
+        e_abs = abs(gx1 - px1) + abs(gy1 - py1)
+
+        stats._sum_abs_start += s_abs
+        stats._sum_abs_end += e_abs
+        stats._sum_abs_all += (s_abs + e_abs)
+        stats.matched += 1
+
+    stats.unmatched_gt = n_gt - len(matched_gt)
+    stats.unmatched_pred = n_pr - len(matched_pr)
+
+    stats.finalize()
+    return stats
+
+
+# =========================
+# sAP helpers (convert xyxy -> [N,2,2] in (y,x))
+# =========================
+def xyxy_list_to_yx_tensor(lines_xyxy: List[Line]) -> np.ndarray:
+    """
+    Convert [(x0,y0,x1,y1), ...] -> np.ndarray [N,2,2] with (y,x) endpoints.
+    """
+    if not lines_xyxy:
+        return np.zeros((0, 2, 2), dtype=np.float32)
+    arr = np.asarray(lines_xyxy, dtype=np.float32)  # [N,4]
+    yx = np.stack(
+        [
+            np.stack([arr[:, 1], arr[:, 0]], axis=-1),  # (y0, x0)
+            np.stack([arr[:, 3], arr[:, 2]], axis=-1),  # (y1, x1)
+        ],
+        axis=1,
+    )
+    return yx.astype(np.float32)
+
+
+def scores_from_length(lines_xyxy: List[Line]) -> np.ndarray:
+    """Proxy confidence scores for ChatGPT preds: segment length."""
+    if not lines_xyxy:
+        return np.zeros((0,), dtype=np.float32)
+    arr = np.asarray(lines_xyxy, dtype=np.float32)
+    dx = arr[:, 2] - arr[:, 0]
+    dy = arr[:, 3] - arr[:, 1]
+    return np.sqrt(dx * dx + dy * dy).astype(np.float32)
+
+
+# =========================
+# OpenAI structured output
+# =========================
+class LinesOut(BaseModel):
+    lines: List[List[float]] = Field(default_factory=list)
+
+
+# =========================
+# Main (no argparse, like your style)
+# =========================
+def main() -> None:
+    images_dir = Path(IMAGE_DIR)
+    gt_path = Path(GT_JSON_PATH)
+    out_csv = Path(OUT_CSV)
+
+    if not images_dir.exists():
+        raise RuntimeError(f"IMAGE_DIR not found: {images_dir}")
+    if not gt_path.exists():
+        raise RuntimeError(f"GT_JSON_PATH not found: {gt_path}")
+
+    img_paths = sorted([p for p in images_dir.iterdir() if p.is_file() and is_image_file(p)])
+    if MAX_IMAGES and MAX_IMAGES > 0:
+        img_paths = img_paths[:MAX_IMAGES]
+    if not img_paths:
+        raise RuntimeError(f"No images found in: {images_dir}")
+
+    gt_index = parse_gt_index(load_json(gt_path))
+
+    # sAP metric (dataset-level)
+    sap_metric = LineSegmentSAPMetric(thresholds=(5.0, 10.0, 15.0))
+
+    # Totals for MAE
+    tot_qwen = MAEStats()
+    # Global simple MAE accumulators (across all images)
+    global_simple_abs = 0.0
+    global_simple_count = 0  # counts lines (max(G,P)) across images
+
+    # CSV rows
+    rows: List[Dict[str, Any]] = []
+
+    for k, img_path in enumerate(img_paths, start=1):
+        fn = img_path.name
+        gt_lines = gt_index.get(fn)
+        if gt_lines is None:
+            print(f"[WARN] No GT found for {fn}, skipping.", file=sys.stderr)
+            continue
+
+        img_b64 = image_to_base64_png(img_path, max_side=MAX_SIDE)
+
+        # ---- OpenAI preds ----
+        qwen_lines: List[Line] = []
+        qwen_stats = MAEStats(unmatched_gt=len(gt_lines), unmatched_pred=0)
+
+        if USE_QWEN:
+            try:
+                pred = qwen3vl_predict_lines(img_b64, USER_PROMPT_BASE)
+                qwen_lines = pred["lines"]
+
+                if qwen_lines:
+                    xs = [v for l in qwen_lines for v in (l[0], l[2])]
+                    ys = [v for l in qwen_lines for v in (l[1], l[3])]
+                    print(f"[DBG] {fn} pred x:[{min(xs):.2f},{max(xs):.2f}] y:[{min(ys):.2f},{max(ys):.2f}]")
+
+                qwen_stats = compute_mae_stats(gt_lines, qwen_lines)
+                simple_mae = simple_line_mae(gt_lines, qwen_lines)
+                # ---- accumulate global simple MAE ----
+                G = len(gt_lines)
+                P = len(qwen_lines)
+                N = max(G, P)
+
+                if N > 0:
+                    global_simple_count += N
+                    global_simple_abs += simple_mae * (N * 4.0)
+
+                # ---- sAP add_image ----
+                pred_lines_yx = xyxy_list_to_yx_tensor(qwen_lines)
+                gt_lines_yx = xyxy_list_to_yx_tensor(gt_lines)
+                pred_scores = scores_from_length(qwen_lines)
+                sap_metric.add_image(pred_lines_yx, pred_scores, gt_lines_yx)
+
+            except Exception as e:
+                print(f"[WARN] OpenAI failed on {fn}: {e}", file=sys.stderr)
+
+        # accumulate totals (MAE)
+        tot_qwen.matched += qwen_stats.matched
+        tot_qwen.unmatched_gt += qwen_stats.unmatched_gt
+        tot_qwen.unmatched_pred += qwen_stats.unmatched_pred
+        tot_qwen._sum_abs_start += qwen_stats._sum_abs_start
+        tot_qwen._sum_abs_end += qwen_stats._sum_abs_end
+        tot_qwen._sum_abs_all += qwen_stats._sum_abs_all
+
+        rows.append(
+            {
+                "image": fn,
+                "gt_lines": len(gt_lines),
+                "oai_pred_lines": len(qwen_lines),
+                "oai_matched": qwen_stats.matched,
+                "oai_unmatched_gt": qwen_stats.unmatched_gt,
+                "oai_unmatched_pred": qwen_stats.unmatched_pred,
+                "oai_mae_start": qwen_stats.mae_start,
+                "oai_mae_end": qwen_stats.mae_end,
+                "oai_mae_all": qwen_stats.mae_all
+            }
+        )
+
+        print(
+            f"[{k}/{len(img_paths)}] {fn} | GT={len(gt_lines)} | "
+            f"OAI: pred={len(qwen_lines)} matched={qwen_stats.matched} "
+            f"MAE(start/end/all)={qwen_stats.mae_start:.3f}/{qwen_stats.mae_end:.3f}/{qwen_stats.mae_all:.3f} |"
+        )
+
+        time.sleep(0.15)
+
+    # finalize MAE totals
+    tot_qwen.finalize()
+    if global_simple_count > 0:
+        global_simple_mae = global_simple_abs / (global_simple_count * 4.0)
+    else:
+        global_simple_mae = 0.0
+
+    # compute sAP totals
+    sap = sap_metric.compute_sap()  # dict keyed by thresholds
+
+    print("\n=============== TOTAL (MAE) ===============")
+    print(
+        f"matched={tot_qwen.matched} | "
+        f"MAE(start/end/all)={tot_qwen.mae_start:.3f}/{tot_qwen.mae_end:.3f}/{tot_qwen.mae_all:.3f}"
+    )
+
+    print("\n=============== sAP (dataset) ===============")
+    print(f"sAP5  = {sap.get(5.0, 0.0):.6f}")
+    print(f"sAP10 = {sap.get(10.0, 0.0):.6f}")
+    print(f"sAP15 = {sap.get(15.0, 0.0):.6f}")
+    print(f"sAP5%  = {100.0 * sap.get(5.0, 0.0):.3f}%")
+    print(f"sAP10% = {100.0 * sap.get(10.0, 0.0):.3f}%")
+    print(f"sAP15% = {100.0 * sap.get(15.0, 0.0):.3f}%")
+
+    # write CSV
+    fieldnames = [
+        "image",
+        "gt_lines",
+        "oai_pred_lines",
+        "oai_matched",
+        "oai_unmatched_gt",
+        "oai_unmatched_pred",
+        "oai_mae_start",
+        "oai_mae_end",
+        "oai_mae_all",
+        "oai_simple_mae",
+        # sAP written in TOTAL row only:
+        "sap5",
+        "sap10",
+        "sap15",
+    ]
+
+    with out_csv.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+
+        for r in rows:
+            r2 = dict(r)
+            r2["sap5"] = ""
+            r2["sap10"] = ""
+            r2["sap15"] = ""
+            w.writerow(r2)
+
+        w.writerow(
+            {
+                "image": "TOTAL",
+                "gt_lines": "",
+                "oai_pred_lines": "",
+                "oai_matched": tot_qwen.matched,
+                "oai_unmatched_gt": tot_qwen.unmatched_gt,
+                "oai_unmatched_pred": tot_qwen.unmatched_pred,
+                "oai_mae_start": tot_qwen.mae_start,
+                "oai_mae_end": tot_qwen.mae_end,
+                "oai_mae_all": tot_qwen.mae_all,
+                "oai_simple_mae": global_simple_mae,
+                "sap5": sap.get(5.0, 0.0),
+                "sap10": sap.get(10.0, 0.0),
+                "sap15": sap.get(15.0, 0.0),
+            }
+        )
+
+    print(f"\nSaved CSV: {out_csv.resolve()}")
+
+
+if __name__ == "__main__":
+    main()

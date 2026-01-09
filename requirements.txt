@@ -6,8 +6,7 @@ openpyxl
 matplotlib >=3.5.1
 scipy >=1.9.3
 scikit-image[data] >=0.20
-Pillow >=2.1.0
-torch >=2.0.1
+torch >=2.1.0
 torchvision
 torchsummary
 einops >=0.3.0
@@ -28,3 +27,7 @@ hdbscan
 openai
 protobuf
 google-genai==0.3.0
+git+https://github.com/huggingface/transformers@main
+accelerate>=0.27.0
+safetensors>=0.4.0
+pillow>=9.5.0
