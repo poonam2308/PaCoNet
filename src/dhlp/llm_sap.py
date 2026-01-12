@@ -41,16 +41,16 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, project_root)
 project_root = Path(project_root)
 
-# IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
-# GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
-# OUT_CSV = "results_openai_only_with_sap1.csv"
+IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
+GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
+OUT_CSV = "results_openai_only_with_sap_chatgpt5.2.csv"
 
-IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
-GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+# IMAGE_DIR = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/images_224"
+# GT_JSON_PATH = project_root / "data/synthetic_plots/multi_cat/testing/m_crops/test.json"
+#
+# OUT_CSV = project_root / "outputs/llms/results_openai_only_with_sap_test_mae_color.csv"
 
-OUT_CSV = project_root / "outputs/llms/results_openai_only_with_sap_test_mae_color.csv"
-
-OPENAI_MODEL = "gpt-4.1-mini"  # change if you want
+OPENAI_MODEL = "gpt-5.2"  # change if you want
 
 USE_OPENAI = True
 MAX_IMAGES = 0        # 0 = no limit

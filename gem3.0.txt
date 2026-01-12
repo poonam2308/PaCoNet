@@ -1,0 +1,1055 @@
+/home/poonam/myworkspace/PaCoNet/.venv/bin/python /home/poonam/myworkspace/PaCoNet/src/dhlp/llm_gemini_sap_.py
+[1/5300] image_1000_crop_1.png | GT=249 | gem: pred=50 matched=50 MAE(start/end/all)=2.740/4.993/3.866 |
+[2/5300] image_1000_crop_2.png | GT=243 | gem: pred=57 matched=57 MAE(start/end/all)=1.571/17.454/9.512 |
+[3/5300] image_100_crop_1.png | GT=62 | gem: pred=59 matched=59 MAE(start/end/all)=4.991/25.203/15.097 |
+[4/5300] image_100_crop_2.png | GT=75 | gem: pred=56 matched=56 MAE(start/end/all)=6.968/26.808/16.888 |
+[5/5300] image_100_crop_3.png | GT=73 | gem: pred=46 matched=46 MAE(start/end/all)=6.626/16.766/11.696 |
+[6/5300] image_101_crop_1.png | GT=372 | gem: pred=59 matched=59 MAE(start/end/all)=2.627/21.559/12.093 |
+[7/5300] image_101_crop_2.png | GT=323 | gem: pred=65 matched=65 MAE(start/end/all)=2.151/17.456/9.804 |
+[8/5300] image_101_crop_3.png | GT=399 | gem: pred=71 matched=71 MAE(start/end/all)=1.891/16.016/8.953 |
+[9/5300] image_102_crop_1.png | GT=263 | gem: pred=82 matched=82 MAE(start/end/all)=2.067/17.836/9.951 |
+[10/5300] image_102_crop_2.png | GT=315 | gem: pred=83 matched=83 MAE(start/end/all)=2.575/22.193/12.384 |
+[11/5300] image_102_crop_3.png | GT=300 | gem: pred=61 matched=61 MAE(start/end/all)=0.688/15.752/8.220 |
+[12/5300] image_102_crop_4.png | GT=190 | gem: pred=61 matched=61 MAE(start/end/all)=1.547/16.603/9.075 |
+[13/5300] image_103_crop_1.png | GT=125 | gem: pred=51 matched=51 MAE(start/end/all)=9.042/24.427/16.735 |
+[14/5300] image_103_crop_2.png | GT=125 | gem: pred=75 matched=75 MAE(start/end/all)=6.313/18.594/12.453 |
+[15/5300] image_103_crop_3.png | GT=125 | gem: pred=62 matched=62 MAE(start/end/all)=15.560/18.591/17.075 |
+[16/5300] image_103_crop_4.png | GT=125 | gem: pred=45 matched=45 MAE(start/end/all)=6.895/22.131/14.513 |
+[17/5300] image_103_crop_5.png | GT=125 | gem: pred=57 matched=57 MAE(start/end/all)=3.584/26.094/14.839 |
+[18/5300] image_104_crop_1.png | GT=53 | gem: pred=53 matched=53 MAE(start/end/all)=15.927/22.795/19.361 |
+[19/5300] image_104_crop_2.png | GT=74 | gem: pred=45 matched=45 MAE(start/end/all)=3.151/16.166/9.658 |
+[20/5300] image_104_crop_3.png | GT=58 | gem: pred=47 matched=47 MAE(start/end/all)=9.424/20.500/14.962 |
+[21/5300] image_104_crop_4.png | GT=55 | gem: pred=58 matched=55 MAE(start/end/all)=6.112/19.279/12.696 |
+[22/5300] image_105_crop_1.png | GT=399 | gem: pred=82 matched=82 MAE(start/end/all)=0.653/16.535/8.594 |
+[23/5300] image_105_crop_2.png | GT=398 | gem: pred=44 matched=44 MAE(start/end/all)=3.185/18.641/10.913 |
+[24/5300] image_106_crop_1.png | GT=93 | gem: pred=39 matched=39 MAE(start/end/all)=8.260/26.760/17.510 |
+[25/5300] image_106_crop_2.png | GT=125 | gem: pred=77 matched=77 MAE(start/end/all)=8.045/16.457/12.251 |
+[26/5300] image_106_crop_3.png | GT=103 | gem: pred=0 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[WARN] Gemini failed on image_106_crop_3.png: Expecting ',' delimiter: line 128 column 25 (char 3110)
+[27/5300] image_106_crop_4.png | GT=114 | gem: pred=51 matched=51 MAE(start/end/all)=8.274/24.980/16.627 |
+[28/5300] image_107_crop_1.png | GT=125 | gem: pred=52 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[29/5300] image_107_crop_2.png | GT=121 | gem: pred=81 matched=81 MAE(start/end/all)=3.469/17.889/10.679 |
+[30/5300] image_108_crop_1.png | GT=400 | gem: pred=42 matched=42 MAE(start/end/all)=4.425/19.836/12.130 |
+[31/5300] image_108_crop_2.png | GT=400 | gem: pred=48 matched=48 MAE(start/end/all)=1.030/17.055/9.042 |
+[32/5300] image_108_crop_3.png | GT=400 | gem: pred=51 matched=51 MAE(start/end/all)=3.341/22.445/12.893 |
+[33/5300] image_109_crop_1.png | GT=74 | gem: pred=57 matched=57 MAE(start/end/all)=2.050/30.689/16.369 |
+[34/5300] image_109_crop_2.png | GT=50 | gem: pred=57 matched=50 MAE(start/end/all)=6.896/22.020/14.458 |
+[35/5300] image_10_crop_1.png | GT=125 | gem: pred=58 matched=58 MAE(start/end/all)=3.541/20.395/11.968 |
+[36/5300] image_10_crop_2.png | GT=107 | gem: pred=32 matched=32 MAE(start/end/all)=3.945/24.616/14.281 |
+[37/5300] image_110_crop_1.png | GT=64 | gem: pred=62 matched=62 MAE(start/end/all)=8.296/22.052/15.174 |
+[38/5300] image_110_crop_2.png | GT=61 | gem: pred=57 matched=57 MAE(start/end/all)=2.921/21.631/12.276 |
+[39/5300] image_110_crop_3.png | GT=68 | gem: pred=50 matched=50 MAE(start/end/all)=4.971/17.069/11.020 |
+[WARN] No GT found for image_111_crop_1.png, skipping.
+[41/5300] image_111_crop_10.png | GT=174 | gem: pred=56 matched=56 MAE(start/end/all)=7.926/21.304/14.615 |
+[WARN] No GT found for image_111_crop_11.png, skipping.
+[43/5300] image_111_crop_12.png | GT=144 | gem: pred=55 matched=55 MAE(start/end/all)=5.316/68.394/36.855 |
+[WARN] No GT found for image_111_crop_13.png, skipping.
+[WARN] No GT found for image_111_crop_2.png, skipping.
+[46/5300] image_111_crop_3.png | GT=175 | gem: pred=49 matched=49 MAE(start/end/all)=9.209/22.519/15.864 |
+[47/5300] image_111_crop_4.png | GT=175 | gem: pred=57 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[WARN] No GT found for image_111_crop_5.png, skipping.
+[WARN] No GT found for image_111_crop_6.png, skipping.
+[50/5300] image_111_crop_7.png | GT=175 | gem: pred=44 matched=44 MAE(start/end/all)=7.229/77.151/42.190 |
+[WARN] No GT found for image_111_crop_8.png, skipping.
+[WARN] No GT found for image_111_crop_9.png, skipping.
+[53/5300] image_112_crop_1.png | GT=242 | gem: pred=31 matched=31 MAE(start/end/all)=1.101/19.703/10.402 |
+[54/5300] image_112_crop_2.png | GT=344 | gem: pred=30 matched=30 MAE(start/end/all)=2.088/17.067/9.577 |
+[55/5300] image_112_crop_3.png | GT=320 | gem: pred=38 matched=38 MAE(start/end/all)=0.759/15.025/7.892 |
+[56/5300] image_113_crop_1.png | GT=61 | gem: pred=48 matched=48 MAE(start/end/all)=10.438/25.395/17.916 |
+[57/5300] image_113_crop_2.png | GT=66 | gem: pred=63 matched=63 MAE(start/end/all)=6.427/20.174/13.301 |
+[58/5300] image_113_crop_3.png | GT=70 | gem: pred=70 matched=70 MAE(start/end/all)=6.972/34.021/20.496 |
+[59/5300] image_114_crop_1.png | GT=172 | gem: pred=45 matched=45 MAE(start/end/all)=3.733/16.972/10.352 |
+[60/5300] image_114_crop_2.png | GT=71 | gem: pred=36 matched=36 MAE(start/end/all)=5.548/19.280/12.414 |
+[61/5300] image_114_crop_3.png | GT=103 | gem: pred=50 matched=50 MAE(start/end/all)=8.400/24.261/16.330 |
+[62/5300] image_114_crop_4.png | GT=171 | gem: pred=53 matched=53 MAE(start/end/all)=1.959/18.477/10.218 |
+[63/5300] image_115_crop_1.png | GT=63 | gem: pred=54 matched=54 MAE(start/end/all)=15.764/28.205/21.984 |
+[64/5300] image_115_crop_2.png | GT=38 | gem: pred=58 matched=38 MAE(start/end/all)=3.542/22.919/13.230 |
+[65/5300] image_115_crop_3.png | GT=48 | gem: pred=90 matched=48 MAE(start/end/all)=5.252/18.148/11.700 |
+[66/5300] image_115_crop_4.png | GT=58 | gem: pred=48 matched=48 MAE(start/end/all)=7.244/24.421/15.833 |
+[67/5300] image_116_crop_1.png | GT=400 | gem: pred=69 matched=69 MAE(start/end/all)=2.051/17.006/9.529 |
+[68/5300] image_116_crop_2.png | GT=400 | gem: pred=48 matched=48 MAE(start/end/all)=4.372/17.770/11.071 |
+[69/5300] image_116_crop_3.png | GT=400 | gem: pred=60 matched=60 MAE(start/end/all)=1.969/16.369/9.169 |
+[70/5300] image_116_crop_4.png | GT=400 | gem: pred=87 matched=87 MAE(start/end/all)=2.414/16.970/9.692 |
+[WARN] No GT found for image_117_crop_1.png, skipping.
+[72/5300] image_117_crop_10.png | GT=108 | gem: pred=43 matched=43 MAE(start/end/all)=6.617/19.167/12.892 |
+[73/5300] image_117_crop_11.png | GT=90 | gem: pred=36 matched=36 MAE(start/end/all)=13.713/81.446/47.579 |
+[WARN] No GT found for image_117_crop_12.png, skipping.
+[WARN] No GT found for image_117_crop_13.png, skipping.
+[WARN] No GT found for image_117_crop_2.png, skipping.
+[WARN] No GT found for image_117_crop_3.png, skipping.
+[78/5300] image_117_crop_4.png | GT=90 | gem: pred=49 matched=49 MAE(start/end/all)=20.071/87.098/53.584 |
+[WARN] No GT found for image_117_crop_5.png, skipping.
+[80/5300] image_117_crop_6.png | GT=96 | gem: pred=32 matched=32 MAE(start/end/all)=10.126/28.744/19.435 |
+[WARN] No GT found for image_117_crop_7.png, skipping.
+[WARN] No GT found for image_117_crop_8.png, skipping.
+[WARN] No GT found for image_117_crop_9.png, skipping.
+[WARN] No GT found for image_118_crop_1.png, skipping.
+[85/5300] image_118_crop_2.png | GT=60 | gem: pred=83 matched=60 MAE(start/end/all)=10.745/25.447/18.096 |
+[86/5300] image_118_crop_3.png | GT=71 | gem: pred=62 matched=62 MAE(start/end/all)=4.284/22.190/13.237 |
+[87/5300] image_118_crop_4.png | GT=66 | gem: pred=52 matched=52 MAE(start/end/all)=9.578/24.535/17.057 |
+[WARN] No GT found for image_118_crop_5.png, skipping.
+[WARN] No GT found for image_118_crop_6.png, skipping.
+[90/5300] image_119_crop_1.png | GT=115 | gem: pred=38 matched=38 MAE(start/end/all)=2.295/18.554/10.424 |
+[91/5300] image_119_crop_2.png | GT=115 | gem: pred=85 matched=85 MAE(start/end/all)=9.698/23.397/16.548 |
+[92/5300] image_119_crop_3.png | GT=114 | gem: pred=82 matched=82 MAE(start/end/all)=4.850/20.115/12.482 |
+[WARN] No GT found for image_11_crop_1.png, skipping.
+[WARN] No GT found for image_11_crop_10.png, skipping.
+[95/5300] image_11_crop_2.png | GT=58 | gem: pred=34 matched=34 MAE(start/end/all)=15.590/31.166/23.378 |
+[WARN] No GT found for image_11_crop_3.png, skipping.
+[97/5300] image_11_crop_4.png | GT=63 | gem: pred=44 matched=44 MAE(start/end/all)=10.671/92.544/51.607 |
+[WARN] No GT found for image_11_crop_5.png, skipping.
+[WARN] No GT found for image_11_crop_6.png, skipping.
+[100/5300] image_11_crop_7.png | GT=64 | gem: pred=51 matched=51 MAE(start/end/all)=22.322/88.597/55.459 |
+[WARN] No GT found for image_11_crop_8.png, skipping.
+[102/5300] image_11_crop_9.png | GT=67 | gem: pred=52 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[103/5300] image_120_crop_1.png | GT=231 | gem: pred=131 matched=131 MAE(start/end/all)=1.787/22.326/12.056 |
+[104/5300] image_120_crop_2.png | GT=216 | gem: pred=70 matched=70 MAE(start/end/all)=2.964/17.607/10.285 |
+[105/5300] image_120_crop_3.png | GT=205 | gem: pred=45 matched=45 MAE(start/end/all)=1.451/19.181/10.316 |
+[106/5300] image_121_crop_1.png | GT=263 | gem: pred=92 matched=92 MAE(start/end/all)=7.080/19.380/13.230 |
+[107/5300] image_121_crop_2.png | GT=267 | gem: pred=56 matched=56 MAE(start/end/all)=5.823/19.149/12.486 |
+[108/5300] image_121_crop_3.png | GT=107 | gem: pred=68 matched=68 MAE(start/end/all)=4.950/20.709/12.830 |
+[109/5300] image_121_crop_4.png | GT=93 | gem: pred=75 matched=75 MAE(start/end/all)=5.507/31.160/18.334 |
+[110/5300] image_121_crop_5.png | GT=265 | gem: pred=74 matched=74 MAE(start/end/all)=2.196/18.194/10.195 |
+[111/5300] image_122_crop_1.png | GT=288 | gem: pred=51 matched=51 MAE(start/end/all)=8.060/8.998/8.529 |
+[112/5300] image_122_crop_2.png | GT=371 | gem: pred=66 matched=66 MAE(start/end/all)=10.289/5.655/7.972 |
+[113/5300] image_122_crop_3.png | GT=332 | gem: pred=33 matched=33 MAE(start/end/all)=6.859/24.862/15.860 |
+[114/5300] image_122_crop_4.png | GT=318 | gem: pred=40 matched=40 MAE(start/end/all)=0.850/15.217/8.033 |
+[115/5300] image_122_crop_5.png | GT=382 | gem: pred=59 matched=59 MAE(start/end/all)=3.090/20.378/11.734 |
+[116/5300] image_123_crop_1.png | GT=129 | gem: pred=25 matched=25 MAE(start/end/all)=1.558/78.207/39.882 |
+[117/5300] image_123_crop_2.png | GT=120 | gem: pred=48 matched=48 MAE(start/end/all)=14.664/72.110/43.387 |
+[118/5300] image_123_crop_3.png | GT=130 | gem: pred=32 matched=32 MAE(start/end/all)=7.818/71.275/39.547 |
+[119/5300] image_123_crop_4.png | GT=114 | gem: pred=43 matched=43 MAE(start/end/all)=5.602/41.375/23.489 |
+[120/5300] image_123_crop_5.png | GT=171 | gem: pred=33 matched=33 MAE(start/end/all)=0.950/22.238/11.594 |
+[121/5300] image_123_crop_6.png | GT=155 | gem: pred=28 matched=28 MAE(start/end/all)=1.292/20.093/10.693 |
+[122/5300] image_123_crop_7.png | GT=157 | gem: pred=44 matched=44 MAE(start/end/all)=2.632/21.227/11.930 |
+[123/5300] image_124_crop_1.png | GT=125 | gem: pred=81 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[124/5300] image_124_crop_2.png | GT=125 | gem: pred=73 matched=73 MAE(start/end/all)=2.796/17.883/10.339 |
+[125/5300] image_124_crop_3.png | GT=125 | gem: pred=50 matched=50 MAE(start/end/all)=4.691/23.975/14.333 |
+[126/5300] image_124_crop_4.png | GT=125 | gem: pred=67 matched=67 MAE(start/end/all)=4.971/23.517/14.244 |
+[127/5300] image_125_crop_1.png | GT=400 | gem: pred=51 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[128/5300] image_125_crop_2.png | GT=400 | gem: pred=74 matched=74 MAE(start/end/all)=4.361/20.342/12.351 |
+[129/5300] image_125_crop_3.png | GT=400 | gem: pred=122 matched=122 MAE(start/end/all)=3.228/16.393/9.811 |
+[130/5300] image_126_crop_1.png | GT=125 | gem: pred=57 matched=57 MAE(start/end/all)=1.430/17.042/9.236 |
+[131/5300] image_126_crop_2.png | GT=108 | gem: pred=38 matched=38 MAE(start/end/all)=4.879/23.114/13.997 |
+[WARN] No GT found for image_126_crop_3.png, skipping.
+[133/5300] image_126_crop_4.png | GT=125 | gem: pred=78 matched=78 MAE(start/end/all)=7.322/20.758/14.040 |
+[WARN] No GT found for image_126_crop_5.png, skipping.
+[WARN] No GT found for image_126_crop_6.png, skipping.
+[136/5300] image_127_crop_1.png | GT=125 | gem: pred=56 matched=56 MAE(start/end/all)=7.873/21.174/14.524 |
+[137/5300] image_127_crop_2.png | GT=125 | gem: pred=78 matched=78 MAE(start/end/all)=6.816/47.482/27.149 |
+[138/5300] image_127_crop_3.png | GT=125 | gem: pred=60 matched=60 MAE(start/end/all)=10.909/29.608/20.259 |
+[139/5300] image_127_crop_4.png | GT=125 | gem: pred=62 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[140/5300] image_127_crop_5.png | GT=125 | gem: pred=38 matched=38 MAE(start/end/all)=6.358/19.980/13.169 |
+[141/5300] image_127_crop_6.png | GT=125 | gem: pred=79 matched=79 MAE(start/end/all)=22.981/84.282/53.631 |
+[142/5300] image_127_crop_7.png | GT=125 | gem: pred=41 matched=41 MAE(start/end/all)=2.504/46.242/24.373 |
+[143/5300] image_127_crop_8.png | GT=125 | gem: pred=49 matched=49 MAE(start/end/all)=10.667/22.629/16.648 |
+[144/5300] image_127_crop_9.png | GT=124 | gem: pred=85 matched=85 MAE(start/end/all)=6.292/19.678/12.985 |
+[145/5300] image_128_crop_1.png | GT=175 | gem: pred=68 matched=68 MAE(start/end/all)=2.038/19.232/10.635 |
+[146/5300] image_128_crop_2.png | GT=175 | gem: pred=56 matched=56 MAE(start/end/all)=13.454/21.207/17.331 |
+[147/5300] image_128_crop_3.png | GT=175 | gem: pred=74 matched=74 MAE(start/end/all)=0.901/16.308/8.604 |
+[148/5300] image_129_crop_1.png | GT=197 | gem: pred=60 matched=60 MAE(start/end/all)=2.501/17.958/10.229 |
+[149/5300] image_129_crop_2.png | GT=211 | gem: pred=46 matched=46 MAE(start/end/all)=2.984/17.616/10.300 |
+[150/5300] image_129_crop_3.png | GT=194 | gem: pred=95 matched=95 MAE(start/end/all)=4.783/20.932/12.857 |
+[151/5300] image_129_crop_4.png | GT=184 | gem: pred=58 matched=58 MAE(start/end/all)=2.964/16.870/9.917 |
+[152/5300] image_12_crop_1.png | GT=377 | gem: pred=60 matched=60 MAE(start/end/all)=0.838/22.105/11.472 |
+[153/5300] image_12_crop_2.png | GT=395 | gem: pred=41 matched=41 MAE(start/end/all)=2.362/15.526/8.944 |
+[154/5300] image_130_crop_1.png | GT=152 | gem: pred=49 matched=49 MAE(start/end/all)=7.688/19.931/13.809 |
+[155/5300] image_130_crop_2.png | GT=112 | gem: pred=41 matched=41 MAE(start/end/all)=8.686/23.364/16.025 |
+[WARN] No GT found for image_130_crop_3.png, skipping.
+[157/5300] image_130_crop_4.png | GT=142 | gem: pred=46 matched=46 MAE(start/end/all)=7.498/24.170/15.834 |
+[WARN] No GT found for image_130_crop_5.png, skipping.
+[159/5300] image_130_crop_6.png | GT=124 | gem: pred=113 matched=113 MAE(start/end/all)=6.075/26.455/16.265 |
+[WARN] No GT found for image_130_crop_7.png, skipping.
+[161/5300] image_130_crop_8.png | GT=172 | gem: pred=44 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[162/5300] image_131_crop_1.png | GT=325 | gem: pred=68 matched=68 MAE(start/end/all)=7.664/24.182/15.923 |
+[163/5300] image_131_crop_2.png | GT=325 | gem: pred=86 matched=86 MAE(start/end/all)=5.355/19.679/12.517 |
+[164/5300] image_131_crop_3.png | GT=325 | gem: pred=40 matched=40 MAE(start/end/all)=4.023/20.694/12.358 |
+[165/5300] image_131_crop_4.png | GT=325 | gem: pred=50 matched=50 MAE(start/end/all)=2.955/21.648/12.301 |
+[166/5300] image_132_crop_1.png | GT=54 | gem: pred=68 matched=54 MAE(start/end/all)=8.576/19.629/14.103 |
+[167/5300] image_132_crop_2.png | GT=62 | gem: pred=67 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[168/5300] image_132_crop_3.png | GT=60 | gem: pred=48 matched=48 MAE(start/end/all)=3.197/22.385/12.791 |
+[169/5300] image_132_crop_4.png | GT=58 | gem: pred=65 matched=58 MAE(start/end/all)=4.358/18.269/11.313 |
+[170/5300] image_133_crop_1.png | GT=400 | gem: pred=49 matched=49 MAE(start/end/all)=3.401/16.781/10.091 |
+[171/5300] image_133_crop_10.png | GT=333 | gem: pred=54 matched=54 MAE(start/end/all)=3.860/17.121/10.491 |
+[172/5300] image_133_crop_11.png | GT=302 | gem: pred=55 matched=55 MAE(start/end/all)=7.342/23.993/15.668 |
+[173/5300] image_133_crop_2.png | GT=400 | gem: pred=42 matched=42 MAE(start/end/all)=5.151/17.955/11.553 |
+[174/5300] image_133_crop_3.png | GT=288 | gem: pred=53 matched=53 MAE(start/end/all)=3.347/17.036/10.192 |
+[175/5300] image_133_crop_4.png | GT=268 | gem: pred=42 matched=42 MAE(start/end/all)=3.571/89.293/46.432 |
+[176/5300] image_133_crop_5.png | GT=363 | gem: pred=50 matched=50 MAE(start/end/all)=8.533/22.346/15.439 |
+[177/5300] image_133_crop_6.png | GT=372 | gem: pred=66 matched=66 MAE(start/end/all)=10.608/25.647/18.128 |
+[178/5300] image_133_crop_7.png | GT=400 | gem: pred=51 matched=51 MAE(start/end/all)=3.317/16.468/9.892 |
+[179/5300] image_133_crop_8.png | GT=400 | gem: pred=40 matched=40 MAE(start/end/all)=5.684/18.908/12.296 |
+[180/5300] image_133_crop_9.png | GT=400 | gem: pred=59 matched=59 MAE(start/end/all)=4.492/20.073/12.282 |
+[WARN] No GT found for image_134_crop_1.png, skipping.
+[182/5300] image_134_crop_2.png | GT=399 | gem: pred=37 matched=37 MAE(start/end/all)=0.436/14.408/7.422 |
+[WARN] No GT found for image_134_crop_3.png, skipping.
+[WARN] No GT found for image_134_crop_4.png, skipping.
+[WARN] No GT found for image_134_crop_5.png, skipping.
+[186/5300] image_134_crop_6.png | GT=399 | gem: pred=38 matched=38 MAE(start/end/all)=8.513/21.033/14.773 |
+[WARN] No GT found for image_134_crop_7.png, skipping.
+[WARN] No GT found for image_134_crop_8.png, skipping.
+[189/5300] image_135_crop_1.png | GT=66 | gem: pred=18 matched=18 MAE(start/end/all)=4.776/15.673/10.224 |
+[190/5300] image_135_crop_2.png | GT=49 | gem: pred=23 matched=7 MAE(start/end/all)=37.602/98.791/68.197 |
+[191/5300] image_135_crop_3.png | GT=48 | gem: pred=32 matched=32 MAE(start/end/all)=4.149/24.378/14.264 |
+[192/5300] image_135_crop_4.png | GT=75 | gem: pred=41 matched=41 MAE(start/end/all)=8.249/24.000/16.124 |
+[193/5300] image_135_crop_5.png | GT=75 | gem: pred=49 matched=49 MAE(start/end/all)=3.493/16.851/10.172 |
+[194/5300] image_135_crop_6.png | GT=43 | gem: pred=42 matched=42 MAE(start/end/all)=13.458/19.619/16.539 |
+[195/5300] image_135_crop_7.png | GT=65 | gem: pred=20 matched=20 MAE(start/end/all)=7.497/73.816/40.656 |
+[196/5300] image_136_crop_1.png | GT=385 | gem: pred=50 matched=50 MAE(start/end/all)=2.480/16.653/9.566 |
+[197/5300] image_136_crop_2.png | GT=324 | gem: pred=45 matched=45 MAE(start/end/all)=0.757/16.316/8.537 |
+[198/5300] image_136_crop_3.png | GT=386 | gem: pred=110 matched=110 MAE(start/end/all)=1.947/17.172/9.559 |
+[199/5300] image_136_crop_4.png | GT=392 | gem: pred=60 matched=60 MAE(start/end/all)=1.518/16.763/9.141 |
+[200/5300] image_136_crop_5.png | GT=396 | gem: pred=65 matched=65 MAE(start/end/all)=1.859/42.150/22.004 |
+[201/5300] image_136_crop_6.png | GT=367 | gem: pred=32 matched=32 MAE(start/end/all)=3.720/21.206/12.463 |
+[202/5300] image_136_crop_7.png | GT=267 | gem: pred=55 matched=55 MAE(start/end/all)=2.795/19.130/10.963 |
+[WARN] No GT found for image_137_crop_1.png, skipping.
+[204/5300] image_137_crop_2.png | GT=67 | gem: pred=53 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[WARN] No GT found for image_137_crop_3.png, skipping.
+[206/5300] image_137_crop_4.png | GT=61 | gem: pred=53 matched=53 MAE(start/end/all)=6.215/25.878/16.047 |
+[207/5300] image_137_crop_5.png | GT=74 | gem: pred=52 matched=52 MAE(start/end/all)=3.340/20.136/11.738 |
+[WARN] No GT found for image_137_crop_6.png, skipping.
+[WARN] Gemini failed on image_137_crop_7.png: Expecting ',' delimiter: line 134 column 23 (char 3138)
+[209/5300] image_137_crop_7.png | GT=62 | gem: pred=0 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[210/5300] image_137_crop_8.png | GT=64 | gem: pred=40 matched=40 MAE(start/end/all)=4.357/17.039/10.698 |
+[211/5300] image_138_crop_1.png | GT=140 | gem: pred=46 matched=46 MAE(start/end/all)=5.064/19.019/12.042 |
+[212/5300] image_138_crop_2.png | GT=225 | gem: pred=60 matched=60 MAE(start/end/all)=2.212/17.768/9.990 |
+[213/5300] image_138_crop_3.png | GT=225 | gem: pred=64 matched=64 MAE(start/end/all)=1.879/20.775/11.327 |
+[214/5300] image_138_crop_4.png | GT=201 | gem: pred=43 matched=43 MAE(start/end/all)=1.784/22.791/12.288 |
+[215/5300] image_139_crop_1.png | GT=162 | gem: pred=109 matched=109 MAE(start/end/all)=9.636/23.686/16.661 |
+[216/5300] image_139_crop_2.png | GT=181 | gem: pred=50 matched=50 MAE(start/end/all)=4.653/19.373/12.013 |
+[217/5300] image_139_crop_3.png | GT=222 | gem: pred=62 matched=62 MAE(start/end/all)=2.091/17.215/9.653 |
+[218/5300] image_139_crop_4.png | GT=214 | gem: pred=49 matched=49 MAE(start/end/all)=4.292/21.653/12.973 |
+[219/5300] image_139_crop_5.png | GT=174 | gem: pred=50 matched=50 MAE(start/end/all)=7.002/21.609/14.305 |
+[220/5300] image_13_crop_1.png | GT=181 | gem: pred=36 matched=36 MAE(start/end/all)=2.876/16.900/9.888 |
+[WARN] No GT found for image_13_crop_2.png, skipping.
+[222/5300] image_13_crop_3.png | GT=205 | gem: pred=50 matched=50 MAE(start/end/all)=10.290/24.561/17.425 |
+[223/5300] image_13_crop_4.png | GT=193 | gem: pred=51 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[WARN] No GT found for image_13_crop_5.png, skipping.
+[WARN] No GT found for image_13_crop_6.png, skipping.
+[226/5300] image_140_crop_1.png | GT=164 | gem: pred=43 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[227/5300] image_140_crop_2.png | GT=213 | gem: pred=43 matched=43 MAE(start/end/all)=6.410/19.342/12.876 |
+[228/5300] image_140_crop_3.png | GT=147 | gem: pred=30 matched=30 MAE(start/end/all)=2.916/21.515/12.216 |
+[229/5300] image_141_crop_1.png | GT=384 | gem: pred=48 matched=48 MAE(start/end/all)=9.613/29.687/19.650 |
+[230/5300] image_141_crop_2.png | GT=304 | gem: pred=61 matched=61 MAE(start/end/all)=11.061/28.030/19.545 |
+[231/5300] image_141_crop_3.png | GT=282 | gem: pred=45 matched=45 MAE(start/end/all)=10.725/23.917/17.321 |
+[232/5300] image_141_crop_4.png | GT=238 | gem: pred=68 matched=68 MAE(start/end/all)=6.490/20.908/13.699 |
+[233/5300] image_141_crop_5.png | GT=370 | gem: pred=53 matched=53 MAE(start/end/all)=8.176/22.008/15.092 |
+[234/5300] image_142_crop_1.png | GT=275 | gem: pred=60 matched=60 MAE(start/end/all)=3.639/18.724/11.182 |
+[235/5300] image_142_crop_2.png | GT=347 | gem: pred=67 matched=67 MAE(start/end/all)=1.656/16.181/8.918 |
+[236/5300] image_142_crop_3.png | GT=262 | gem: pred=51 matched=51 MAE(start/end/all)=5.709/21.930/13.819 |
+[237/5300] image_142_crop_4.png | GT=250 | gem: pred=71 matched=71 MAE(start/end/all)=1.158/16.095/8.626 |
+[238/5300] image_143_crop_1.png | GT=99 | gem: pred=58 matched=58 MAE(start/end/all)=5.638/18.755/12.196 |
+[239/5300] image_143_crop_2.png | GT=107 | gem: pred=85 matched=85 MAE(start/end/all)=2.494/16.520/9.507 |
+[240/5300] image_143_crop_3.png | GT=81 | gem: pred=62 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[241/5300] image_144_crop_1.png | GT=125 | gem: pred=58 matched=58 MAE(start/end/all)=1.329/17.369/9.349 |
+[242/5300] image_144_crop_2.png | GT=114 | gem: pred=70 matched=70 MAE(start/end/all)=7.769/20.061/13.915 |
+[243/5300] image_144_crop_3.png | GT=120 | gem: pred=41 matched=41 MAE(start/end/all)=3.285/19.956/11.621 |
+[244/5300] image_144_crop_4.png | GT=104 | gem: pred=34 matched=34 MAE(start/end/all)=2.684/19.864/11.274 |
+[245/5300] image_145_crop_1.png | GT=199 | gem: pred=40 matched=40 MAE(start/end/all)=1.727/20.819/11.273 |
+[246/5300] image_145_crop_2.png | GT=124 | gem: pred=30 matched=30 MAE(start/end/all)=3.210/20.617/11.913 |
+[247/5300] image_145_crop_3.png | GT=303 | gem: pred=63 matched=63 MAE(start/end/all)=1.015/44.376/22.695 |
+[248/5300] image_145_crop_4.png | GT=400 | gem: pred=51 matched=51 MAE(start/end/all)=1.239/16.773/9.006 |
+[249/5300] image_145_crop_5.png | GT=381 | gem: pred=61 matched=61 MAE(start/end/all)=2.459/19.719/11.089 |
+[250/5300] image_145_crop_6.png | GT=246 | gem: pred=26 matched=26 MAE(start/end/all)=2.162/47.009/24.585 |
+[251/5300] image_145_crop_7.png | GT=400 | gem: pred=92 matched=92 MAE(start/end/all)=4.327/16.881/10.604 |
+[252/5300] image_146_crop_1.png | GT=60 | gem: pred=73 matched=60 MAE(start/end/all)=10.557/22.714/16.635 |
+[253/5300] image_146_crop_2.png | GT=58 | gem: pred=47 matched=47 MAE(start/end/all)=3.040/20.414/11.727 |
+[254/5300] image_146_crop_3.png | GT=55 | gem: pred=121 matched=55 MAE(start/end/all)=4.337/21.924/13.130 |
+[255/5300] image_146_crop_4.png | GT=55 | gem: pred=76 matched=55 MAE(start/end/all)=7.017/19.688/13.352 |
+[256/5300] image_147_crop_1.png | GT=400 | gem: pred=40 matched=40 MAE(start/end/all)=4.075/17.924/11.000 |
+[257/5300] image_147_crop_2.png | GT=400 | gem: pred=50 matched=50 MAE(start/end/all)=3.511/19.151/11.331 |
+[WARN] No GT found for image_148_crop_1.png, skipping.
+[WARN] No GT found for image_148_crop_10.png, skipping.
+[260/5300] image_148_crop_2.png | GT=175 | gem: pred=40 matched=40 MAE(start/end/all)=5.327/83.188/44.258 |
+[WARN] No GT found for image_148_crop_3.png, skipping.
+[262/5300] image_148_crop_4.png | GT=175 | gem: pred=47 matched=47 MAE(start/end/all)=8.840/75.305/42.073 |
+[WARN] No GT found for image_148_crop_5.png, skipping.
+[WARN] No GT found for image_148_crop_6.png, skipping.
+[WARN] No GT found for image_148_crop_7.png, skipping.
+[WARN] No GT found for image_148_crop_8.png, skipping.
+[267/5300] image_148_crop_9.png | GT=175 | gem: pred=42 matched=42 MAE(start/end/all)=10.981/81.984/46.482 |
+[268/5300] image_149_crop_1.png | GT=384 | gem: pred=33 matched=33 MAE(start/end/all)=5.772/18.518/12.145 |
+[269/5300] image_149_crop_2.png | GT=290 | gem: pred=33 matched=33 MAE(start/end/all)=3.085/16.134/9.609 |
+[270/5300] image_149_crop_3.png | GT=325 | gem: pred=44 matched=44 MAE(start/end/all)=1.092/15.065/8.078 |
+[271/5300] image_149_crop_4.png | GT=174 | gem: pred=33 matched=33 MAE(start/end/all)=10.521/24.086/17.304 |
+[272/5300] image_14_crop_1.png | GT=275 | gem: pred=41 matched=41 MAE(start/end/all)=2.062/70.178/36.120 |
+[273/5300] image_14_crop_2.png | GT=275 | gem: pred=41 matched=41 MAE(start/end/all)=5.890/16.843/11.367 |
+[WARN] No GT found for image_14_crop_3.png, skipping.
+[275/5300] image_14_crop_4.png | GT=275 | gem: pred=47 matched=47 MAE(start/end/all)=8.948/22.068/15.508 |
+[WARN] No GT found for image_14_crop_5.png, skipping.
+[277/5300] image_14_crop_6.png | GT=242 | gem: pred=48 matched=48 MAE(start/end/all)=13.904/28.255/21.080 |
+[WARN] No GT found for image_14_crop_7.png, skipping.
+[WARN] No GT found for image_14_crop_8.png, skipping.
+[280/5300] image_150_crop_1.png | GT=79 | gem: pred=60 matched=60 MAE(start/end/all)=22.412/33.096/27.754 |
+[281/5300] image_150_crop_2.png | GT=66 | gem: pred=72 matched=66 MAE(start/end/all)=13.017/23.725/18.371 |
+[282/5300] image_150_crop_3.png | GT=93 | gem: pred=69 matched=69 MAE(start/end/all)=3.409/15.870/9.639 |
+[283/5300] image_151_crop_1.png | GT=313 | gem: pred=32 matched=32 MAE(start/end/all)=2.495/17.841/10.168 |
+[284/5300] image_151_crop_2.png | GT=376 | gem: pred=64 matched=64 MAE(start/end/all)=5.752/18.189/11.971 |
+[285/5300] image_152_crop_1.png | GT=117 | gem: pred=36 matched=36 MAE(start/end/all)=5.541/22.399/13.970 |
+[286/5300] image_152_crop_2.png | GT=88 | gem: pred=72 matched=72 MAE(start/end/all)=4.009/27.744/15.876 |
+[287/5300] image_152_crop_3.png | GT=99 | gem: pred=48 matched=48 MAE(start/end/all)=7.347/19.937/13.642 |
+[288/5300] image_152_crop_4.png | GT=95 | gem: pred=84 matched=84 MAE(start/end/all)=12.517/27.352/19.935 |
+[289/5300] image_153_crop_1.png | GT=122 | gem: pred=51 matched=51 MAE(start/end/all)=3.298/71.060/37.179 |
+[290/5300] image_153_crop_2.png | GT=90 | gem: pred=57 matched=57 MAE(start/end/all)=10.008/22.471/16.240 |
+[291/5300] image_153_crop_3.png | GT=80 | gem: pred=72 matched=72 MAE(start/end/all)=4.034/21.256/12.645 |
+[292/5300] image_154_crop_1.png | GT=150 | gem: pred=44 matched=44 MAE(start/end/all)=26.626/25.273/25.949 |
+[293/5300] image_155_crop_1.png | GT=400 | gem: pred=49 matched=49 MAE(start/end/all)=2.442/18.923/10.682 |
+[294/5300] image_155_crop_2.png | GT=372 | gem: pred=60 matched=60 MAE(start/end/all)=4.731/23.439/14.085 |
+[295/5300] image_155_crop_3.png | GT=328 | gem: pred=40 matched=40 MAE(start/end/all)=3.490/19.830/11.660 |
+[296/5300] image_156_crop_1.png | GT=79 | gem: pred=53 matched=53 MAE(start/end/all)=2.645/20.063/11.354 |
+[297/5300] image_156_crop_2.png | GT=56 | gem: pred=49 matched=49 MAE(start/end/all)=19.325/26.458/22.892 |
+[298/5300] image_156_crop_3.png | GT=107 | gem: pred=51 matched=51 MAE(start/end/all)=2.014/19.870/10.942 |
+[299/5300] image_157_crop_1.png | GT=275 | gem: pred=33 matched=33 MAE(start/end/all)=1.162/15.651/8.407 |
+[300/5300] image_157_crop_10.png | GT=275 | gem: pred=37 matched=37 MAE(start/end/all)=3.192/76.325/39.758 |
+[301/5300] image_157_crop_11.png | GT=274 | gem: pred=34 matched=34 MAE(start/end/all)=4.454/72.823/38.638 |
+[302/5300] image_157_crop_2.png | GT=269 | gem: pred=28 matched=28 MAE(start/end/all)=1.066/14.330/7.698 |
+[303/5300] image_157_crop_3.png | GT=275 | gem: pred=39 matched=39 MAE(start/end/all)=10.095/79.493/44.794 |
+[304/5300] image_157_crop_4.png | GT=275 | gem: pred=42 matched=42 MAE(start/end/all)=10.145/22.892/16.518 |
+[305/5300] image_157_crop_5.png | GT=275 | gem: pred=31 matched=31 MAE(start/end/all)=10.886/27.354/19.120 |
+[306/5300] image_157_crop_6.png | GT=275 | gem: pred=24 matched=24 MAE(start/end/all)=8.667/25.040/16.854 |
+[307/5300] image_157_crop_7.png | GT=275 | gem: pred=54 matched=54 MAE(start/end/all)=4.095/70.136/37.116 |
+[308/5300] image_157_crop_8.png | GT=265 | gem: pred=46 matched=46 MAE(start/end/all)=9.963/24.246/17.105 |
+[309/5300] image_157_crop_9.png | GT=275 | gem: pred=53 matched=53 MAE(start/end/all)=10.642/27.337/18.989 |
+[310/5300] image_158_crop_1.png | GT=99 | gem: pred=42 matched=42 MAE(start/end/all)=15.347/34.885/25.116 |
+[311/5300] image_158_crop_2.png | GT=234 | gem: pred=40 matched=40 MAE(start/end/all)=5.595/21.217/13.406 |
+[312/5300] image_158_crop_3.png | GT=128 | gem: pred=55 matched=55 MAE(start/end/all)=11.913/39.359/25.636 |
+[313/5300] image_159_crop_1.png | GT=188 | gem: pred=62 matched=62 MAE(start/end/all)=10.170/28.392/19.281 |
+[314/5300] image_159_crop_2.png | GT=100 | gem: pred=26 matched=26 MAE(start/end/all)=5.819/53.155/29.487 |
+[315/5300] image_159_crop_3.png | GT=176 | gem: pred=92 matched=92 MAE(start/end/all)=8.972/22.101/15.537 |
+[316/5300] image_159_crop_4.png | GT=146 | gem: pred=60 matched=60 MAE(start/end/all)=13.126/63.138/38.132 |
+[317/5300] image_159_crop_5.png | GT=189 | gem: pred=113 matched=113 MAE(start/end/all)=16.183/23.649/19.916 |
+[318/5300] image_159_crop_6.png | GT=120 | gem: pred=60 matched=60 MAE(start/end/all)=3.081/20.955/12.018 |
+[319/5300] image_159_crop_7.png | GT=150 | gem: pred=40 matched=40 MAE(start/end/all)=3.882/18.915/11.398 |
+[320/5300] image_15_crop_1.png | GT=58 | gem: pred=83 matched=58 MAE(start/end/all)=5.010/24.015/14.513 |
+[321/5300] image_15_crop_2.png | GT=75 | gem: pred=77 matched=75 MAE(start/end/all)=4.866/20.796/12.831 |
+[322/5300] image_15_crop_3.png | GT=62 | gem: pred=36 matched=36 MAE(start/end/all)=3.784/20.572/12.178 |
+[323/5300] image_15_crop_4.png | GT=59 | gem: pred=136 matched=59 MAE(start/end/all)=2.552/19.493/11.022 |
+[324/5300] image_160_crop_1.png | GT=72 | gem: pred=61 matched=61 MAE(start/end/all)=5.743/24.550/15.146 |
+[325/5300] image_160_crop_2.png | GT=67 | gem: pred=36 matched=36 MAE(start/end/all)=2.690/17.132/9.911 |
+[326/5300] image_160_crop_3.png | GT=70 | gem: pred=32 matched=32 MAE(start/end/all)=2.281/16.170/9.226 |
+[WARN] No GT found for image_161_crop_1.png, skipping.
+[328/5300] image_161_crop_10.png | GT=63 | gem: pred=43 matched=43 MAE(start/end/all)=16.059/80.357/48.208 |
+[329/5300] image_161_crop_11.png | GT=62 | gem: pred=29 matched=29 MAE(start/end/all)=8.159/21.177/14.668 |
+[WARN] No GT found for image_161_crop_12.png, skipping.
+[WARN] No GT found for image_161_crop_13.png, skipping.
+[WARN] No GT found for image_161_crop_2.png, skipping.
+[333/5300] image_161_crop_3.png | GT=50 | gem: pred=48 matched=48 MAE(start/end/all)=20.817/96.484/58.651 |
+[334/5300] image_161_crop_4.png | GT=63 | gem: pred=31 matched=31 MAE(start/end/all)=16.215/69.453/42.834 |
+[335/5300] image_161_crop_5.png | GT=72 | gem: pred=48 matched=48 MAE(start/end/all)=9.323/18.979/14.151 |
+[336/5300] image_161_crop_6.png | GT=55 | gem: pred=41 matched=41 MAE(start/end/all)=15.867/83.890/49.878 |
+[WARN] No GT found for image_161_crop_7.png, skipping.
+[338/5300] image_161_crop_8.png | GT=50 | gem: pred=42 matched=42 MAE(start/end/all)=10.141/81.832/45.986 |
+[WARN] No GT found for image_161_crop_9.png, skipping.
+[340/5300] image_162_crop_1.png | GT=400 | gem: pred=36 matched=36 MAE(start/end/all)=6.089/21.137/13.613 |
+[341/5300] image_162_crop_10.png | GT=400 | gem: pred=50 matched=50 MAE(start/end/all)=11.056/25.589/18.322 |
+[342/5300] image_162_crop_11.png | GT=400 | gem: pred=55 matched=55 MAE(start/end/all)=2.060/15.309/8.684 |
+[343/5300] image_162_crop_12.png | GT=400 | gem: pred=45 matched=45 MAE(start/end/all)=5.521/21.191/13.356 |
+[344/5300] image_162_crop_13.png | GT=400 | gem: pred=40 matched=40 MAE(start/end/all)=7.129/20.613/13.871 |
+[345/5300] image_162_crop_14.png | GT=400 | gem: pred=28 matched=28 MAE(start/end/all)=2.051/69.093/35.572 |
+[346/5300] image_162_crop_15.png | GT=400 | gem: pred=47 matched=47 MAE(start/end/all)=6.518/69.099/37.809 |
+[347/5300] image_162_crop_16.png | GT=381 | gem: pred=26 matched=26 MAE(start/end/all)=3.933/81.491/42.712 |
+[348/5300] image_162_crop_17.png | GT=400 | gem: pred=64 matched=64 MAE(start/end/all)=6.878/20.340/13.609 |
+[349/5300] image_162_crop_18.png | GT=400 | gem: pred=31 matched=31 MAE(start/end/all)=9.015/26.122/17.568 |
+[350/5300] image_162_crop_19.png | GT=400 | gem: pred=43 matched=43 MAE(start/end/all)=7.868/19.842/13.855 |
+[351/5300] image_162_crop_2.png | GT=383 | gem: pred=56 matched=56 MAE(start/end/all)=6.008/18.502/12.255 |
+[352/5300] image_162_crop_3.png | GT=400 | gem: pred=40 matched=40 MAE(start/end/all)=6.163/23.037/14.600 |
+[353/5300] image_162_crop_4.png | GT=400 | gem: pred=48 matched=48 MAE(start/end/all)=6.196/26.424/16.310 |
+[354/5300] image_162_crop_5.png | GT=375 | gem: pred=84 matched=84 MAE(start/end/all)=8.227/26.155/17.191 |
+[355/5300] image_162_crop_6.png | GT=381 | gem: pred=71 matched=71 MAE(start/end/all)=7.250/21.707/14.479 |
+[356/5300] image_162_crop_7.png | GT=400 | gem: pred=28 matched=28 MAE(start/end/all)=17.147/30.426/23.786 |
+[357/5300] image_162_crop_8.png | GT=400 | gem: pred=50 matched=50 MAE(start/end/all)=5.939/17.601/11.770 |
+[358/5300] image_162_crop_9.png | GT=400 | gem: pred=48 matched=48 MAE(start/end/all)=6.066/18.724/12.395 |
+[359/5300] image_163_crop_1.png | GT=107 | gem: pred=27 matched=27 MAE(start/end/all)=4.847/67.827/36.337 |
+[360/5300] image_163_crop_2.png | GT=119 | gem: pred=36 matched=36 MAE(start/end/all)=1.428/18.789/10.109 |
+[361/5300] image_163_crop_3.png | GT=106 | gem: pred=46 matched=46 MAE(start/end/all)=1.279/16.508/8.893 |
+[362/5300] image_163_crop_4.png | GT=114 | gem: pred=58 matched=58 MAE(start/end/all)=9.544/17.170/13.357 |
+[363/5300] image_163_crop_5.png | GT=96 | gem: pred=36 matched=36 MAE(start/end/all)=2.189/18.343/10.266 |
+[364/5300] image_163_crop_6.png | GT=99 | gem: pred=47 matched=47 MAE(start/end/all)=3.792/16.885/10.339 |
+[365/5300] image_163_crop_7.png | GT=86 | gem: pred=24 matched=24 MAE(start/end/all)=5.132/75.840/40.486 |
+[366/5300] image_164_crop_1.png | GT=175 | gem: pred=57 matched=57 MAE(start/end/all)=1.662/48.783/25.222 |
+[367/5300] image_164_crop_2.png | GT=118 | gem: pred=87 matched=87 MAE(start/end/all)=1.224/14.028/7.626 |
+[368/5300] image_164_crop_3.png | GT=165 | gem: pred=74 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[369/5300] image_165_crop_1.png | GT=275 | gem: pred=72 matched=72 MAE(start/end/all)=5.032/17.256/11.144 |
+[370/5300] image_165_crop_2.png | GT=275 | gem: pred=59 matched=59 MAE(start/end/all)=6.376/20.928/13.652 |
+[371/5300] image_165_crop_3.png | GT=274 | gem: pred=38 matched=38 MAE(start/end/all)=5.836/18.917/12.377 |
+[372/5300] image_165_crop_4.png | GT=275 | gem: pred=71 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[373/5300] image_166_crop_1.png | GT=372 | gem: pred=65 matched=65 MAE(start/end/all)=6.485/19.956/13.220 |
+[374/5300] image_166_crop_2.png | GT=248 | gem: pred=41 matched=41 MAE(start/end/all)=6.712/21.135/13.924 |
+[375/5300] image_166_crop_3.png | GT=249 | gem: pred=39 matched=39 MAE(start/end/all)=1.550/16.734/9.142 |
+[376/5300] image_166_crop_4.png | GT=276 | gem: pred=61 matched=61 MAE(start/end/all)=7.526/22.063/14.794 |
+[377/5300] image_166_crop_5.png | GT=327 | gem: pred=55 matched=55 MAE(start/end/all)=7.712/20.847/14.280 |
+[378/5300] image_167_crop_1.png | GT=122 | gem: pred=34 matched=34 MAE(start/end/all)=7.422/19.941/13.681 |
+[379/5300] image_167_crop_2.png | GT=107 | gem: pred=40 matched=40 MAE(start/end/all)=9.677/26.460/18.068 |
+[380/5300] image_167_crop_3.png | GT=102 | gem: pred=33 matched=33 MAE(start/end/all)=6.283/18.161/12.222 |
+[381/5300] image_168_crop_1.png | GT=67 | gem: pred=84 matched=67 MAE(start/end/all)=7.349/25.027/16.188 |
+[382/5300] image_168_crop_2.png | GT=122 | gem: pred=49 matched=49 MAE(start/end/all)=3.729/18.283/11.006 |
+[383/5300] image_168_crop_3.png | GT=117 | gem: pred=56 matched=56 MAE(start/end/all)=1.863/17.312/9.588 |
+[384/5300] image_169_crop_1.png | GT=273 | gem: pred=60 matched=60 MAE(start/end/all)=3.060/16.177/9.618 |
+[385/5300] image_169_crop_2.png | GT=185 | gem: pred=81 matched=81 MAE(start/end/all)=6.615/24.659/15.637 |
+[386/5300] image_169_crop_3.png | GT=182 | gem: pred=72 matched=72 MAE(start/end/all)=4.637/23.954/14.296 |
+[387/5300] image_16_crop_1.png | GT=345 | gem: pred=39 matched=39 MAE(start/end/all)=0.905/69.839/35.372 |
+[388/5300] image_16_crop_2.png | GT=263 | gem: pred=39 matched=39 MAE(start/end/all)=3.451/17.436/10.444 |
+[389/5300] image_16_crop_3.png | GT=288 | gem: pred=54 matched=54 MAE(start/end/all)=2.371/19.816/11.094 |
+[390/5300] image_16_crop_4.png | GT=349 | gem: pred=47 matched=47 MAE(start/end/all)=3.890/18.129/11.009 |
+[391/5300] image_16_crop_5.png | GT=273 | gem: pred=51 matched=51 MAE(start/end/all)=1.495/16.646/9.070 |
+[392/5300] image_16_crop_6.png | GT=238 | gem: pred=49 matched=49 MAE(start/end/all)=1.758/16.694/9.226 |
+[393/5300] image_16_crop_7.png | GT=342 | gem: pred=41 matched=41 MAE(start/end/all)=0.883/20.262/10.572 |
+[394/5300] image_170_crop_1.png | GT=115 | gem: pred=43 matched=43 MAE(start/end/all)=9.151/21.589/15.370 |
+[395/5300] image_170_crop_2.png | GT=115 | gem: pred=61 matched=61 MAE(start/end/all)=3.415/72.078/37.747 |
+[WARN] No GT found for image_170_crop_3.png, skipping.
+[397/5300] image_170_crop_4.png | GT=119 | gem: pred=42 matched=42 MAE(start/end/all)=9.736/24.834/17.285 |
+[WARN] No GT found for image_170_crop_5.png, skipping.
+[WARN] No GT found for image_170_crop_6.png, skipping.
+[WARN] No GT found for image_171_crop_1.png, skipping.
+[WARN] No GT found for image_171_crop_10.png, skipping.
+[402/5300] image_171_crop_2.png | GT=101 | gem: pred=55 matched=55 MAE(start/end/all)=12.921/17.115/15.018 |
+[WARN] No GT found for image_171_crop_3.png, skipping.
+[404/5300] image_171_crop_4.png | GT=79 | gem: pred=68 matched=68 MAE(start/end/all)=25.604/24.116/24.860 |
+[WARN] No GT found for image_171_crop_5.png, skipping.
+[WARN] No GT found for image_171_crop_6.png, skipping.
+[407/5300] image_171_crop_7.png | GT=106 | gem: pred=45 matched=45 MAE(start/end/all)=12.207/20.961/16.584 |
+[WARN] No GT found for image_171_crop_8.png, skipping.
+[409/5300] image_171_crop_9.png | GT=94 | gem: pred=34 matched=34 MAE(start/end/all)=13.836/14.952/14.394 |
+[410/5300] image_172_crop_1.png | GT=117 | gem: pred=53 matched=53 MAE(start/end/all)=2.152/16.960/9.556 |
+[411/5300] image_172_crop_2.png | GT=55 | gem: pred=63 matched=55 MAE(start/end/all)=9.398/40.900/25.149 |
+[412/5300] image_172_crop_3.png | GT=43 | gem: pred=99 matched=43 MAE(start/end/all)=7.181/23.353/15.267 |
+[413/5300] image_172_crop_4.png | GT=66 | gem: pred=62 matched=62 MAE(start/end/all)=18.493/24.238/21.366 |
+[WARN] No GT found for image_173_crop_1.png, skipping.
+[WARN] No GT found for image_173_crop_10.png, skipping.
+[416/5300] image_173_crop_2.png | GT=109 | gem: pred=57 matched=57 MAE(start/end/all)=16.648/89.848/53.248 |
+[WARN] No GT found for image_173_crop_3.png, skipping.
+[418/5300] image_173_crop_4.png | GT=116 | gem: pred=55 matched=55 MAE(start/end/all)=7.159/21.442/14.301 |
+[WARN] No GT found for image_173_crop_5.png, skipping.
+[WARN] No GT found for image_173_crop_6.png, skipping.
+[421/5300] image_173_crop_7.png | GT=119 | gem: pred=42 matched=42 MAE(start/end/all)=7.628/22.477/15.053 |
+[WARN] No GT found for image_173_crop_8.png, skipping.
+[423/5300] image_173_crop_9.png | GT=117 | gem: pred=37 matched=37 MAE(start/end/all)=11.913/25.736/18.825 |
+[424/5300] image_174_crop_1.png | GT=125 | gem: pred=80 matched=80 MAE(start/end/all)=8.104/30.397/19.251 |
+[425/5300] image_174_crop_2.png | GT=125 | gem: pred=53 matched=53 MAE(start/end/all)=1.904/20.578/11.241 |
+[426/5300] image_174_crop_3.png | GT=125 | gem: pred=42 matched=42 MAE(start/end/all)=4.315/17.316/10.816 |
+[427/5300] image_175_crop_1.png | GT=400 | gem: pred=60 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[428/5300] image_175_crop_2.png | GT=396 | gem: pred=66 matched=66 MAE(start/end/all)=2.135/16.219/9.177 |
+[429/5300] image_176_crop_1.png | GT=57 | gem: pred=48 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[430/5300] image_176_crop_2.png | GT=69 | gem: pred=39 matched=39 MAE(start/end/all)=3.634/17.284/10.459 |
+[431/5300] image_176_crop_3.png | GT=50 | gem: pred=52 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[432/5300] image_177_crop_1.png | GT=124 | gem: pred=44 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[433/5300] image_177_crop_2.png | GT=121 | gem: pred=38 matched=38 MAE(start/end/all)=1.640/30.482/16.061 |
+[434/5300] image_178_crop_1.png | GT=51 | gem: pred=54 matched=51 MAE(start/end/all)=17.578/23.656/20.617 |
+[435/5300] image_178_crop_2.png | GT=61 | gem: pred=45 matched=45 MAE(start/end/all)=9.054/22.031/15.543 |
+[436/5300] image_178_crop_3.png | GT=53 | gem: pred=32 matched=32 MAE(start/end/all)=2.851/18.244/10.548 |
+[WARN] No GT found for image_179_crop_1.png, skipping.
+[WARN] No GT found for image_179_crop_10.png, skipping.
+[439/5300] image_179_crop_11.png | GT=122 | gem: pred=41 matched=41 MAE(start/end/all)=15.312/28.098/21.705 |
+[WARN] No GT found for image_179_crop_12.png, skipping.
+[441/5300] image_179_crop_2.png | GT=164 | gem: pred=62 matched=62 MAE(start/end/all)=10.685/72.853/41.769 |
+[442/5300] image_179_crop_3.png | GT=175 | gem: pred=62 matched=62 MAE(start/end/all)=6.054/79.739/42.896 |
+[WARN] No GT found for image_179_crop_4.png, skipping.
+[WARN] No GT found for image_179_crop_5.png, skipping.
+[WARN] No GT found for image_179_crop_6.png, skipping.
+[WARN] No GT found for image_179_crop_7.png, skipping.
+[447/5300] image_179_crop_8.png | GT=167 | gem: pred=65 matched=65 MAE(start/end/all)=7.235/21.915/14.575 |
+[WARN] No GT found for image_179_crop_9.png, skipping.
+[449/5300] image_17_crop_1.png | GT=175 | gem: pred=60 matched=60 MAE(start/end/all)=4.917/23.521/14.219 |
+[450/5300] image_17_crop_2.png | GT=175 | gem: pred=82 matched=40 MAE(start/end/all)=17.877/153.312/85.594 |
+[451/5300] image_17_crop_3.png | GT=175 | gem: pred=44 matched=44 MAE(start/end/all)=1.205/16.781/8.993 |
+[452/5300] image_180_crop_1.png | GT=374 | gem: pred=64 matched=64 MAE(start/end/all)=7.827/23.289/15.558 |
+[453/5300] image_180_crop_2.png | GT=377 | gem: pred=68 matched=68 MAE(start/end/all)=2.597/18.215/10.406 |
+[454/5300] image_180_crop_3.png | GT=248 | gem: pred=59 matched=59 MAE(start/end/all)=3.983/18.014/10.998 |
+[WARN] No GT found for image_181_crop_1.png, skipping.
+[456/5300] image_181_crop_10.png | GT=388 | gem: pred=50 matched=50 MAE(start/end/all)=6.593/22.692/14.643 |
+[457/5300] image_181_crop_2.png | GT=218 | gem: pred=83 matched=83 MAE(start/end/all)=15.032/25.511/20.271 |
+[WARN] No GT found for image_181_crop_3.png, skipping.
+[WARN] No GT found for image_181_crop_4.png, skipping.
+[460/5300] image_181_crop_5.png | GT=188 | gem: pred=62 matched=62 MAE(start/end/all)=9.776/22.578/16.177 |
+[461/5300] image_181_crop_6.png | GT=203 | gem: pred=44 matched=44 MAE(start/end/all)=8.453/96.159/52.306 |
+[WARN] No GT found for image_181_crop_7.png, skipping.
+[WARN] No GT found for image_181_crop_8.png, skipping.
+[WARN] No GT found for image_181_crop_9.png, skipping.
+[465/5300] image_182_crop_1.png | GT=251 | gem: pred=40 matched=40 MAE(start/end/all)=1.508/16.618/9.063 |
+[466/5300] image_182_crop_2.png | GT=258 | gem: pred=64 matched=64 MAE(start/end/all)=1.604/17.400/9.502 |
+[467/5300] image_182_crop_3.png | GT=264 | gem: pred=70 matched=70 MAE(start/end/all)=1.780/17.905/9.843 |
+[468/5300] image_183_crop_1.png | GT=187 | gem: pred=52 matched=52 MAE(start/end/all)=1.281/16.094/8.687 |
+[469/5300] image_183_crop_2.png | GT=266 | gem: pred=58 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[WARN] No GT found for image_184_crop_1.png, skipping.
+[471/5300] image_184_crop_10.png | GT=125 | gem: pred=30 matched=30 MAE(start/end/all)=9.427/23.038/16.232 |
+[472/5300] image_184_crop_11.png | GT=125 | gem: pred=72 matched=72 MAE(start/end/all)=17.207/79.752/48.480 |
+[WARN] No GT found for image_184_crop_12.png, skipping.
+[WARN] No GT found for image_184_crop_13.png, skipping.
+[WARN] No GT found for image_184_crop_2.png, skipping.
+[WARN] No GT found for image_184_crop_3.png, skipping.
+[477/5300] image_184_crop_4.png | GT=125 | gem: pred=49 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[WARN] No GT found for image_184_crop_5.png, skipping.
+[479/5300] image_184_crop_6.png | GT=125 | gem: pred=56 matched=56 MAE(start/end/all)=6.198/22.550/14.374 |
+[WARN] No GT found for image_184_crop_7.png, skipping.
+[WARN] No GT found for image_184_crop_8.png, skipping.
+[WARN] No GT found for image_184_crop_9.png, skipping.
+[483/5300] image_185_crop_1.png | GT=66 | gem: pred=60 matched=60 MAE(start/end/all)=6.241/21.655/13.948 |
+[484/5300] image_185_crop_2.png | GT=69 | gem: pred=44 matched=44 MAE(start/end/all)=8.394/22.979/15.687 |
+[485/5300] image_185_crop_3.png | GT=70 | gem: pred=40 matched=40 MAE(start/end/all)=3.398/18.212/10.805 |
+[486/5300] image_185_crop_4.png | GT=67 | gem: pred=50 matched=50 MAE(start/end/all)=8.109/21.117/14.613 |
+[487/5300] image_186_crop_1.png | GT=109 | gem: pred=63 matched=63 MAE(start/end/all)=5.306/24.331/14.818 |
+[488/5300] image_186_crop_2.png | GT=101 | gem: pred=29 matched=29 MAE(start/end/all)=2.949/19.734/11.341 |
+[489/5300] image_186_crop_3.png | GT=121 | gem: pred=46 matched=46 MAE(start/end/all)=3.403/2.125/2.764 |
+[490/5300] image_187_crop_1.png | GT=65 | gem: pred=50 matched=50 MAE(start/end/all)=9.531/20.487/15.009 |
+[491/5300] image_187_crop_2.png | GT=69 | gem: pred=37 matched=37 MAE(start/end/all)=3.914/19.188/11.551 |
+[492/5300] image_187_crop_3.png | GT=59 | gem: pred=78 matched=59 MAE(start/end/all)=4.420/23.239/13.829 |
+[493/5300] image_187_crop_4.png | GT=60 | gem: pred=78 matched=60 MAE(start/end/all)=8.394/21.846/15.120 |
+[494/5300] image_187_crop_5.png | GT=70 | gem: pred=66 matched=66 MAE(start/end/all)=8.805/22.688/15.747 |
+[495/5300] image_188_crop_1.png | GT=79 | gem: pred=92 matched=79 MAE(start/end/all)=16.604/25.636/21.120 |
+[496/5300] image_188_crop_2.png | GT=86 | gem: pred=81 matched=81 MAE(start/end/all)=5.271/27.440/16.356 |
+[497/5300] image_188_crop_3.png | GT=80 | gem: pred=84 matched=80 MAE(start/end/all)=8.074/23.583/15.828 |
+[498/5300] image_189_crop_1.png | GT=88 | gem: pred=66 matched=66 MAE(start/end/all)=14.900/21.349/18.124 |
+[499/5300] image_189_crop_2.png | GT=72 | gem: pred=72 matched=72 MAE(start/end/all)=19.633/27.911/23.772 |
+[WARN] No GT found for image_189_crop_3.png, skipping.
+[501/5300] image_189_crop_4.png | GT=90 | gem: pred=58 matched=58 MAE(start/end/all)=3.629/23.490/13.559 |
+[502/5300] image_189_crop_5.png | GT=124 | gem: pred=61 matched=61 MAE(start/end/all)=8.767/22.106/15.437 |
+[WARN] No GT found for image_189_crop_6.png, skipping.
+[504/5300] image_189_crop_7.png | GT=86 | gem: pred=35 matched=35 MAE(start/end/all)=8.364/23.707/16.036 |
+[505/5300] image_189_crop_8.png | GT=124 | gem: pred=38 matched=38 MAE(start/end/all)=9.520/88.764/49.142 |
+[506/5300] image_18_crop_1.png | GT=285 | gem: pred=27 matched=27 MAE(start/end/all)=9.015/26.121/17.568 |
+[507/5300] image_18_crop_10.png | GT=215 | gem: pred=33 matched=33 MAE(start/end/all)=6.217/19.906/13.061 |
+[508/5300] image_18_crop_11.png | GT=216 | gem: pred=33 matched=33 MAE(start/end/all)=8.357/26.361/17.359 |
+[509/5300] image_18_crop_12.png | GT=167 | gem: pred=40 matched=40 MAE(start/end/all)=15.453/13.267/14.360 |
+[510/5300] image_18_crop_13.png | GT=204 | gem: pred=40 matched=40 MAE(start/end/all)=5.841/8.004/6.923 |
+[511/5300] image_18_crop_14.png | GT=219 | gem: pred=30 matched=30 MAE(start/end/all)=7.882/26.314/17.098 |
+[512/5300] image_18_crop_15.png | GT=206 | gem: pred=19 matched=19 MAE(start/end/all)=6.938/19.489/13.214 |
+[513/5300] image_18_crop_16.png | GT=202 | gem: pred=31 matched=31 MAE(start/end/all)=8.175/25.663/16.919 |
+[514/5300] image_18_crop_17.png | GT=230 | gem: pred=20 matched=20 MAE(start/end/all)=11.812/21.297/16.555 |
+[515/5300] image_18_crop_18.png | GT=215 | gem: pred=50 matched=50 MAE(start/end/all)=43.389/43.856/43.622 |
+[516/5300] image_18_crop_19.png | GT=209 | gem: pred=20 matched=20 MAE(start/end/all)=18.847/32.208/25.527 |
+[517/5300] image_18_crop_2.png | GT=187 | gem: pred=24 matched=24 MAE(start/end/all)=6.240/19.624/12.932 |
+[518/5300] image_18_crop_3.png | GT=137 | gem: pred=46 matched=46 MAE(start/end/all)=6.897/26.550/16.723 |
+[519/5300] image_18_crop_4.png | GT=197 | gem: pred=38 matched=38 MAE(start/end/all)=9.854/21.862/15.858 |
+[520/5300] image_18_crop_5.png | GT=264 | gem: pred=30 matched=30 MAE(start/end/all)=5.006/7.809/6.408 |
+[521/5300] image_18_crop_6.png | GT=169 | gem: pred=39 matched=39 MAE(start/end/all)=7.684/21.612/14.648 |
+[522/5300] image_18_crop_7.png | GT=249 | gem: pred=33 matched=33 MAE(start/end/all)=8.915/21.283/15.099 |
+[523/5300] image_18_crop_8.png | GT=135 | gem: pred=32 matched=32 MAE(start/end/all)=31.647/45.252/38.449 |
+[524/5300] image_18_crop_9.png | GT=233 | gem: pred=40 matched=40 MAE(start/end/all)=9.669/25.880/17.775 |
+[525/5300] image_190_crop_1.png | GT=125 | gem: pred=40 matched=40 MAE(start/end/all)=3.079/23.174/13.126 |
+[526/5300] image_190_crop_2.png | GT=125 | gem: pred=54 matched=54 MAE(start/end/all)=4.781/19.976/12.379 |
+[527/5300] image_190_crop_3.png | GT=125 | gem: pred=43 matched=43 MAE(start/end/all)=4.944/18.524/11.734 |
+[528/5300] image_190_crop_4.png | GT=125 | gem: pred=51 matched=51 MAE(start/end/all)=2.436/20.357/11.397 |
+[529/5300] image_191_crop_1.png | GT=75 | gem: pred=35 matched=35 MAE(start/end/all)=1.999/15.474/8.737 |
+[530/5300] image_191_crop_2.png | GT=75 | gem: pred=38 matched=38 MAE(start/end/all)=3.716/18.797/11.257 |
+[531/5300] image_191_crop_3.png | GT=75 | gem: pred=47 matched=47 MAE(start/end/all)=3.319/17.648/10.483 |
+[532/5300] image_191_crop_4.png | GT=75 | gem: pred=65 matched=65 MAE(start/end/all)=20.477/58.013/39.245 |
+[533/5300] image_192_crop_1.png | GT=295 | gem: pred=59 matched=59 MAE(start/end/all)=1.716/20.530/11.123 |
+[534/5300] image_192_crop_2.png | GT=216 | gem: pred=58 matched=58 MAE(start/end/all)=4.798/20.624/12.711 |
+[535/5300] image_192_crop_3.png | GT=190 | gem: pred=82 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[536/5300] image_193_crop_1.png | GT=368 | gem: pred=79 matched=79 MAE(start/end/all)=5.076/20.375/12.725 |
+[537/5300] image_193_crop_2.png | GT=381 | gem: pred=69 matched=69 MAE(start/end/all)=1.556/15.990/8.773 |
+[538/5300] image_193_crop_3.png | GT=369 | gem: pred=74 matched=74 MAE(start/end/all)=1.919/17.631/9.775 |
+[539/5300] image_194_crop_1.png | GT=222 | gem: pred=57 matched=57 MAE(start/end/all)=6.252/19.515/12.884 |
+[540/5300] image_194_crop_10.png | GT=225 | gem: pred=42 matched=42 MAE(start/end/all)=8.117/71.589/39.853 |
+[541/5300] image_194_crop_11.png | GT=225 | gem: pred=31 matched=31 MAE(start/end/all)=3.432/71.807/37.620 |
+[542/5300] image_194_crop_12.png | GT=225 | gem: pred=49 matched=49 MAE(start/end/all)=10.503/26.532/18.517 |
+[543/5300] image_194_crop_13.png | GT=225 | gem: pred=92 matched=92 MAE(start/end/all)=12.555/81.017/46.786 |
+[544/5300] image_194_crop_14.png | GT=225 | gem: pred=50 matched=50 MAE(start/end/all)=9.186/71.430/40.308 |
+[545/5300] image_194_crop_15.png | GT=225 | gem: pred=50 matched=50 MAE(start/end/all)=6.818/21.658/14.238 |
+[546/5300] image_194_crop_16.png | GT=225 | gem: pred=59 matched=59 MAE(start/end/all)=5.586/18.988/12.287 |
+[547/5300] image_194_crop_17.png | GT=225 | gem: pred=50 matched=50 MAE(start/end/all)=2.960/82.641/42.801 |
+[548/5300] image_194_crop_18.png | GT=218 | gem: pred=60 matched=60 MAE(start/end/all)=6.327/20.191/13.259 |
+[549/5300] image_194_crop_19.png | GT=225 | gem: pred=68 matched=68 MAE(start/end/all)=11.362/74.857/43.110 |
+[550/5300] image_194_crop_2.png | GT=225 | gem: pred=64 matched=64 MAE(start/end/all)=4.849/75.869/40.359 |
+[551/5300] image_194_crop_3.png | GT=225 | gem: pred=46 matched=46 MAE(start/end/all)=7.800/74.391/41.095 |
+[552/5300] image_194_crop_4.png | GT=225 | gem: pred=72 matched=72 MAE(start/end/all)=5.732/78.555/42.144 |
+[553/5300] image_194_crop_5.png | GT=225 | gem: pred=65 matched=65 MAE(start/end/all)=11.643/78.696/45.170 |
+[554/5300] image_194_crop_6.png | GT=222 | gem: pred=27 matched=27 MAE(start/end/all)=4.507/17.415/10.961 |
+[555/5300] image_194_crop_7.png | GT=225 | gem: pred=65 matched=65 MAE(start/end/all)=8.238/71.053/39.645 |
+[556/5300] image_194_crop_8.png | GT=225 | gem: pred=64 matched=64 MAE(start/end/all)=6.067/78.525/42.296 |
+[557/5300] image_194_crop_9.png | GT=225 | gem: pred=39 matched=39 MAE(start/end/all)=7.918/21.549/14.734 |
+[558/5300] image_195_crop_1.png | GT=121 | gem: pred=100 matched=100 MAE(start/end/all)=7.214/20.942/14.078 |
+[559/5300] image_195_crop_2.png | GT=122 | gem: pred=60 matched=60 MAE(start/end/all)=5.086/18.375/11.731 |
+[560/5300] image_195_crop_3.png | GT=105 | gem: pred=73 matched=73 MAE(start/end/all)=2.905/24.266/13.585 |
+[561/5300] image_196_crop_1.png | GT=230 | gem: pred=30 matched=30 MAE(start/end/all)=2.376/18.493/10.434 |
+[562/5300] image_196_crop_2.png | GT=241 | gem: pred=44 matched=44 MAE(start/end/all)=2.015/5.595/3.805 |
+[563/5300] image_196_crop_3.png | GT=304 | gem: pred=32 matched=32 MAE(start/end/all)=1.290/14.524/7.907 |
+[564/5300] image_196_crop_4.png | GT=305 | gem: pred=35 matched=35 MAE(start/end/all)=5.013/25.971/15.492 |
+[565/5300] image_196_crop_5.png | GT=292 | gem: pred=52 matched=52 MAE(start/end/all)=1.121/16.123/8.622 |
+[566/5300] image_196_crop_6.png | GT=304 | gem: pred=48 matched=48 MAE(start/end/all)=4.083/4.576/4.330 |
+[567/5300] image_196_crop_7.png | GT=321 | gem: pred=36 matched=36 MAE(start/end/all)=5.269/6.120/5.695 |
+[568/5300] image_197_crop_1.png | GT=86 | gem: pred=59 matched=59 MAE(start/end/all)=4.948/27.190/16.069 |
+[569/5300] image_197_crop_2.png | GT=106 | gem: pred=56 matched=56 MAE(start/end/all)=8.731/27.537/18.134 |
+[570/5300] image_197_crop_3.png | GT=98 | gem: pred=77 matched=77 MAE(start/end/all)=13.511/27.105/20.308 |
+[571/5300] image_197_crop_4.png | GT=98 | gem: pred=45 matched=45 MAE(start/end/all)=8.467/20.434/14.451 |
+[572/5300] image_197_crop_5.png | GT=96 | gem: pred=44 matched=44 MAE(start/end/all)=6.313/24.221/15.267 |
+[573/5300] image_198_crop_1.png | GT=74 | gem: pred=63 matched=63 MAE(start/end/all)=12.389/26.578/19.484 |
+[574/5300] image_198_crop_2.png | GT=88 | gem: pred=40 matched=40 MAE(start/end/all)=7.809/23.854/15.831 |
+[575/5300] image_198_crop_3.png | GT=79 | gem: pred=74 matched=74 MAE(start/end/all)=12.741/24.338/18.539 |
+[576/5300] image_198_crop_4.png | GT=72 | gem: pred=62 matched=62 MAE(start/end/all)=7.926/22.368/15.147 |
+[577/5300] image_198_crop_5.png | GT=44 | gem: pred=58 matched=44 MAE(start/end/all)=25.932/95.355/60.644 |
+[578/5300] image_198_crop_6.png | GT=106 | gem: pred=59 matched=59 MAE(start/end/all)=4.858/21.978/13.418 |
+[579/5300] image_198_crop_7.png | GT=122 | gem: pred=48 matched=48 MAE(start/end/all)=1.929/18.514/10.221 |
+[580/5300] image_199_crop_1.png | GT=121 | gem: pred=94 matched=94 MAE(start/end/all)=11.747/26.895/19.321 |
+[581/5300] image_199_crop_2.png | GT=61 | gem: pred=52 matched=52 MAE(start/end/all)=10.324/20.824/15.574 |
+[582/5300] image_199_crop_3.png | GT=125 | gem: pred=49 matched=49 MAE(start/end/all)=1.962/22.119/12.040 |
+[583/5300] image_199_crop_4.png | GT=125 | gem: pred=74 matched=74 MAE(start/end/all)=2.644/19.381/11.012 |
+[584/5300] image_19_crop_1.png | GT=272 | gem: pred=52 matched=52 MAE(start/end/all)=2.128/18.975/10.551 |
+[585/5300] image_19_crop_2.png | GT=183 | gem: pred=47 matched=47 MAE(start/end/all)=5.221/29.419/17.320 |
+[586/5300] image_19_crop_3.png | GT=207 | gem: pred=60 matched=60 MAE(start/end/all)=10.691/17.370/14.031 |
+[587/5300] image_19_crop_4.png | GT=218 | gem: pred=61 matched=61 MAE(start/end/all)=3.431/21.636/12.533 |
+[588/5300] image_19_crop_5.png | GT=284 | gem: pred=41 matched=41 MAE(start/end/all)=1.952/16.995/9.473 |
+[589/5300] image_19_crop_6.png | GT=230 | gem: pred=40 matched=40 MAE(start/end/all)=4.468/19.588/12.028 |
+[590/5300] image_19_crop_7.png | GT=193 | gem: pred=58 matched=58 MAE(start/end/all)=4.101/19.247/11.674 |
+[591/5300] image_1_crop_1.png | GT=118 | gem: pred=47 matched=47 MAE(start/end/all)=3.884/18.300/11.092 |
+[592/5300] image_1_crop_2.png | GT=124 | gem: pred=36 matched=36 MAE(start/end/all)=7.499/24.132/15.816 |
+[593/5300] image_1_crop_3.png | GT=151 | gem: pred=59 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[594/5300] image_1_crop_4.png | GT=162 | gem: pred=57 matched=57 MAE(start/end/all)=9.422/23.360/16.391 |
+[595/5300] image_1_crop_5.png | GT=157 | gem: pred=108 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[596/5300] image_200_crop_1.png | GT=124 | gem: pred=57 matched=57 MAE(start/end/all)=1.845/23.554/12.699 |
+[597/5300] image_200_crop_2.png | GT=113 | gem: pred=47 matched=47 MAE(start/end/all)=2.995/19.476/11.236 |
+[598/5300] image_200_crop_3.png | GT=129 | gem: pred=58 matched=58 MAE(start/end/all)=4.196/20.533/12.364 |
+[599/5300] image_201_crop_1.png | GT=178 | gem: pred=68 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[600/5300] image_201_crop_2.png | GT=204 | gem: pred=61 matched=61 MAE(start/end/all)=0.933/14.681/7.807 |
+[601/5300] image_202_crop_1.png | GT=68 | gem: pred=58 matched=58 MAE(start/end/all)=9.537/27.699/18.618 |
+[602/5300] image_202_crop_2.png | GT=73 | gem: pred=42 matched=42 MAE(start/end/all)=9.346/4.964/7.155 |
+[603/5300] image_202_crop_3.png | GT=48 | gem: pred=80 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[604/5300] image_203_crop_1.png | GT=96 | gem: pred=71 matched=71 MAE(start/end/all)=4.831/24.468/14.649 |
+[605/5300] image_203_crop_2.png | GT=89 | gem: pred=105 matched=89 MAE(start/end/all)=4.721/26.790/15.756 |
+[606/5300] image_204_crop_1.png | GT=73 | gem: pred=50 matched=50 MAE(start/end/all)=7.957/31.181/19.569 |
+[607/5300] image_204_crop_2.png | GT=125 | gem: pred=44 matched=44 MAE(start/end/all)=2.013/15.086/8.549 |
+[608/5300] image_204_crop_3.png | GT=83 | gem: pred=53 matched=53 MAE(start/end/all)=7.191/29.070/18.130 |
+[609/5300] image_205_crop_1.png | GT=107 | gem: pred=158 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[610/5300] image_205_crop_2.png | GT=108 | gem: pred=77 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[611/5300] image_205_crop_3.png | GT=124 | gem: pred=39 matched=39 MAE(start/end/all)=1.895/16.693/9.294 |
+[612/5300] image_206_crop_1.png | GT=55 | gem: pred=46 matched=46 MAE(start/end/all)=10.987/28.367/19.677 |
+[613/5300] image_206_crop_2.png | GT=35 | gem: pred=50 matched=35 MAE(start/end/all)=7.165/19.151/13.158 |
+[614/5300] image_206_crop_3.png | GT=61 | gem: pred=108 matched=61 MAE(start/end/all)=4.581/28.112/16.346 |
+[615/5300] image_207_crop_1.png | GT=125 | gem: pred=44 matched=44 MAE(start/end/all)=2.558/19.688/11.123 |
+[616/5300] image_207_crop_2.png | GT=123 | gem: pred=44 matched=44 MAE(start/end/all)=2.392/20.319/11.355 |
+[617/5300] image_207_crop_3.png | GT=125 | gem: pred=46 matched=46 MAE(start/end/all)=3.855/28.172/16.014 |
+[618/5300] image_208_crop_1.png | GT=97 | gem: pred=57 matched=57 MAE(start/end/all)=2.603/18.239/10.421 |
+[619/5300] image_208_crop_2.png | GT=95 | gem: pred=50 matched=50 MAE(start/end/all)=5.689/18.599/12.144 |
+[620/5300] image_208_crop_3.png | GT=120 | gem: pred=77 matched=77 MAE(start/end/all)=3.057/19.755/11.406 |
+[621/5300] image_209_crop_1.png | GT=73 | gem: pred=58 matched=58 MAE(start/end/all)=5.582/25.007/15.295 |
+[622/5300] image_209_crop_2.png | GT=64 | gem: pred=35 matched=35 MAE(start/end/all)=5.768/21.007/13.387 |
+[623/5300] image_20_crop_1.png | GT=98 | gem: pred=58 matched=58 MAE(start/end/all)=13.163/91.698/52.431 |
+[624/5300] image_20_crop_2.png | GT=121 | gem: pred=110 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[625/5300] image_210_crop_1.png | GT=64 | gem: pred=47 matched=47 MAE(start/end/all)=2.469/21.691/12.080 |
+[626/5300] image_210_crop_2.png | GT=71 | gem: pred=35 matched=30 MAE(start/end/all)=66.886/38.317/52.601 |
+[627/5300] image_210_crop_3.png | GT=53 | gem: pred=38 matched=38 MAE(start/end/all)=6.891/27.496/17.193 |
+[628/5300] image_210_crop_4.png | GT=69 | gem: pred=38 matched=38 MAE(start/end/all)=4.726/83.995/44.360 |
+[629/5300] image_210_crop_5.png | GT=67 | gem: pred=29 matched=29 MAE(start/end/all)=6.656/99.752/53.204 |
+[630/5300] image_210_crop_6.png | GT=70 | gem: pred=36 matched=36 MAE(start/end/all)=3.732/19.083/11.407 |
+[631/5300] image_210_crop_7.png | GT=69 | gem: pred=56 matched=56 MAE(start/end/all)=15.836/85.155/50.495 |
+[632/5300] image_211_crop_1.png | GT=321 | gem: pred=34 matched=34 MAE(start/end/all)=3.673/18.345/11.009 |
+[633/5300] image_211_crop_2.png | GT=252 | gem: pred=62 matched=62 MAE(start/end/all)=4.807/4.766/4.786 |
+[634/5300] image_211_crop_3.png | GT=309 | gem: pred=45 matched=19 MAE(start/end/all)=19.074/205.019/112.047 |
+[WARN] No GT found for image_212_crop_1.png, skipping.
+[636/5300] image_212_crop_2.png | GT=66 | gem: pred=43 matched=43 MAE(start/end/all)=11.916/29.303/20.609 |
+[WARN] No GT found for image_212_crop_3.png, skipping.
+[638/5300] image_212_crop_4.png | GT=73 | gem: pred=50 matched=50 MAE(start/end/all)=5.041/22.417/13.729 |
+[639/5300] image_212_crop_5.png | GT=75 | gem: pred=36 matched=36 MAE(start/end/all)=9.564/26.209/17.886 |
+[WARN] No GT found for image_212_crop_6.png, skipping.
+[641/5300] image_212_crop_7.png | GT=75 | gem: pred=38 matched=38 MAE(start/end/all)=11.270/22.995/17.132 |
+[642/5300] image_212_crop_8.png | GT=70 | gem: pred=47 matched=47 MAE(start/end/all)=7.548/22.039/14.794 |
+[643/5300] image_213_crop_1.png | GT=400 | gem: pred=50 matched=50 MAE(start/end/all)=3.434/20.101/11.768 |
+[644/5300] image_213_crop_2.png | GT=400 | gem: pred=66 matched=66 MAE(start/end/all)=1.894/19.816/10.855 |
+[645/5300] image_213_crop_3.png | GT=200 | gem: pred=40 matched=40 MAE(start/end/all)=4.315/97.716/51.015 |
+[646/5300] image_213_crop_4.png | GT=302 | gem: pred=50 matched=50 MAE(start/end/all)=2.429/15.706/9.067 |
+[647/5300] image_213_crop_5.png | GT=400 | gem: pred=50 matched=50 MAE(start/end/all)=2.701/19.431/11.066 |
+[648/5300] image_213_crop_6.png | GT=400 | gem: pred=89 matched=89 MAE(start/end/all)=2.441/20.889/11.665 |
+[649/5300] image_213_crop_7.png | GT=400 | gem: pred=63 matched=63 MAE(start/end/all)=6.639/24.499/15.569 |
+[WARN] No GT found for image_214_crop_1.png, skipping.
+[651/5300] image_214_crop_2.png | GT=75 | gem: pred=38 matched=38 MAE(start/end/all)=13.769/27.302/20.536 |
+[WARN] No GT found for image_214_crop_3.png, skipping.
+[653/5300] image_214_crop_4.png | GT=58 | gem: pred=70 matched=58 MAE(start/end/all)=11.427/27.212/19.320 |
+[654/5300] image_214_crop_5.png | GT=58 | gem: pred=31 matched=31 MAE(start/end/all)=16.507/29.013/22.760 |
+[WARN] No GT found for image_214_crop_6.png, skipping.
+[656/5300] image_214_crop_7.png | GT=56 | gem: pred=34 matched=34 MAE(start/end/all)=7.397/21.530/14.463 |
+[657/5300] image_214_crop_8.png | GT=52 | gem: pred=61 matched=52 MAE(start/end/all)=12.294/26.513/19.403 |
+[658/5300] image_215_crop_1.png | GT=235 | gem: pred=52 matched=52 MAE(start/end/all)=5.362/26.183/15.773 |
+[659/5300] image_215_crop_2.png | GT=207 | gem: pred=58 matched=58 MAE(start/end/all)=3.214/23.498/13.356 |
+[660/5300] image_216_crop_1.png | GT=91 | gem: pred=49 matched=49 MAE(start/end/all)=16.146/15.585/15.866 |
+[661/5300] image_216_crop_2.png | GT=78 | gem: pred=71 matched=71 MAE(start/end/all)=25.722/32.385/29.054 |
+[662/5300] image_216_crop_3.png | GT=81 | gem: pred=62 matched=62 MAE(start/end/all)=26.701/19.634/23.168 |
+[663/5300] image_216_crop_4.png | GT=94 | gem: pred=50 matched=50 MAE(start/end/all)=18.914/14.991/16.953 |
+[664/5300] image_216_crop_5.png | GT=81 | gem: pred=54 matched=54 MAE(start/end/all)=12.268/28.670/20.469 |
+[665/5300] image_216_crop_6.png | GT=92 | gem: pred=46 matched=46 MAE(start/end/all)=17.524/22.150/19.837 |
+[666/5300] image_216_crop_7.png | GT=78 | gem: pred=51 matched=51 MAE(start/end/all)=22.939/24.697/23.818 |
+[667/5300] image_216_crop_8.png | GT=95 | gem: pred=68 matched=68 MAE(start/end/all)=20.079/29.720/24.900 |
+[668/5300] image_216_crop_9.png | GT=86 | gem: pred=67 matched=67 MAE(start/end/all)=22.690/19.426/21.058 |
+[669/5300] image_217_crop_1.png | GT=324 | gem: pred=45 matched=45 MAE(start/end/all)=6.003/18.823/12.413 |
+[670/5300] image_217_crop_2.png | GT=325 | gem: pred=50 matched=50 MAE(start/end/all)=8.593/23.500/16.046 |
+[671/5300] image_217_crop_3.png | GT=325 | gem: pred=43 matched=43 MAE(start/end/all)=8.752/22.980/15.866 |
+[672/5300] image_217_crop_4.png | GT=325 | gem: pred=55 matched=55 MAE(start/end/all)=10.732/21.803/16.268 |
+[673/5300] image_217_crop_5.png | GT=325 | gem: pred=50 matched=50 MAE(start/end/all)=6.481/20.852/13.666 |
+[674/5300] image_218_crop_1.png | GT=264 | gem: pred=65 matched=65 MAE(start/end/all)=3.554/19.603/11.579 |
+[675/5300] image_218_crop_2.png | GT=253 | gem: pred=54 matched=54 MAE(start/end/all)=0.987/17.177/9.082 |
+[676/5300] image_218_crop_3.png | GT=224 | gem: pred=31 matched=31 MAE(start/end/all)=7.828/14.860/11.344 |
+[677/5300] image_219_crop_1.png | GT=91 | gem: pred=85 matched=85 MAE(start/end/all)=12.863/23.740/18.302 |
+[678/5300] image_219_crop_2.png | GT=99 | gem: pred=46 matched=46 MAE(start/end/all)=1.676/18.481/10.079 |
+[679/5300] image_219_crop_3.png | GT=112 | gem: pred=48 matched=48 MAE(start/end/all)=2.734/24.070/13.402 |
+[680/5300] image_21_crop_1.png | GT=265 | gem: pred=84 matched=84 MAE(start/end/all)=5.173/18.487/11.830 |
+[681/5300] image_21_crop_2.png | GT=218 | gem: pred=94 matched=94 MAE(start/end/all)=4.376/21.287/12.832 |
+[682/5300] image_21_crop_3.png | GT=275 | gem: pred=73 matched=73 MAE(start/end/all)=1.757/18.516/10.136 |
+[683/5300] image_220_crop_1.png | GT=75 | gem: pred=45 matched=45 MAE(start/end/all)=11.774/19.047/15.411 |
+[684/5300] image_220_crop_2.png | GT=75 | gem: pred=51 matched=51 MAE(start/end/all)=8.382/24.817/16.600 |
+[WARN] No GT found for image_221_crop_1.png, skipping.
+[686/5300] image_221_crop_2.png | GT=74 | gem: pred=51 matched=51 MAE(start/end/all)=7.965/23.209/15.587 |
+[687/5300] image_221_crop_3.png | GT=75 | gem: pred=50 matched=50 MAE(start/end/all)=8.533/24.567/16.550 |
+[688/5300] image_221_crop_4.png | GT=74 | gem: pred=43 matched=43 MAE(start/end/all)=7.815/22.909/15.362 |
+[WARN] No GT found for image_221_crop_5.png, skipping.
+[WARN] No GT found for image_221_crop_6.png, skipping.
+[691/5300] image_222_crop_1.png | GT=154 | gem: pred=50 matched=50 MAE(start/end/all)=3.674/18.710/11.192 |
+[WARN] No GT found for image_222_crop_2.png, skipping.
+[693/5300] image_222_crop_3.png | GT=175 | gem: pred=43 matched=43 MAE(start/end/all)=4.108/18.329/11.219 |
+[694/5300] image_222_crop_4.png | GT=150 | gem: pred=74 matched=74 MAE(start/end/all)=5.049/34.788/19.919 |
+[WARN] No GT found for image_222_crop_5.png, skipping.
+[WARN] No GT found for image_222_crop_6.png, skipping.
+[697/5300] image_223_crop_1.png | GT=179 | gem: pred=49 matched=49 MAE(start/end/all)=1.985/17.964/9.974 |
+[698/5300] image_223_crop_2.png | GT=88 | gem: pred=77 matched=77 MAE(start/end/all)=10.255/28.986/19.620 |
+[699/5300] image_223_crop_3.png | GT=101 | gem: pred=60 matched=60 MAE(start/end/all)=5.615/28.018/16.816 |
+[700/5300] image_223_crop_4.png | GT=145 | gem: pred=66 matched=66 MAE(start/end/all)=5.982/18.340/12.161 |
+[701/5300] image_224_crop_1.png | GT=116 | gem: pred=48 matched=48 MAE(start/end/all)=2.296/17.664/9.980 |
+[702/5300] image_224_crop_2.png | GT=103 | gem: pred=44 matched=44 MAE(start/end/all)=6.984/23.936/15.460 |
+[703/5300] image_224_crop_3.png | GT=117 | gem: pred=36 matched=36 MAE(start/end/all)=10.723/24.291/17.507 |
+[704/5300] image_224_crop_4.png | GT=114 | gem: pred=63 matched=63 MAE(start/end/all)=8.531/16.608/12.570 |
+[705/5300] image_225_crop_1.png | GT=40 | gem: pred=95 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[706/5300] image_225_crop_2.png | GT=32 | gem: pred=38 matched=32 MAE(start/end/all)=6.791/23.531/15.161 |
+[707/5300] image_225_crop_3.png | GT=56 | gem: pred=75 matched=56 MAE(start/end/all)=9.039/33.827/21.433 |
+[708/5300] image_226_crop_1.png | GT=124 | gem: pred=30 matched=30 MAE(start/end/all)=2.535/70.515/36.525 |
+[709/5300] image_226_crop_10.png | GT=124 | gem: pred=22 matched=22 MAE(start/end/all)=3.912/70.273/37.092 |
+[710/5300] image_226_crop_11.png | GT=124 | gem: pred=36 matched=36 MAE(start/end/all)=10.502/84.679/47.591 |
+[711/5300] image_226_crop_12.png | GT=123 | gem: pred=52 matched=52 MAE(start/end/all)=26.895/95.924/61.409 |
+[712/5300] image_226_crop_13.png | GT=124 | gem: pred=35 matched=35 MAE(start/end/all)=2.992/22.289/12.640 |
+[713/5300] image_226_crop_14.png | GT=125 | gem: pred=25 matched=25 MAE(start/end/all)=6.917/17.795/12.356 |
+[714/5300] image_226_crop_15.png | GT=123 | gem: pred=48 matched=48 MAE(start/end/all)=29.106/43.775/36.441 |
+[715/5300] image_226_crop_16.png | GT=125 | gem: pred=32 matched=32 MAE(start/end/all)=9.673/76.297/42.985 |
+[716/5300] image_226_crop_17.png | GT=124 | gem: pred=25 matched=25 MAE(start/end/all)=4.211/71.880/38.045 |
+[717/5300] image_226_crop_18.png | GT=122 | gem: pred=20 matched=20 MAE(start/end/all)=19.395/32.534/25.965 |
+[718/5300] image_226_crop_19.png | GT=125 | gem: pred=60 matched=60 MAE(start/end/all)=20.152/92.160/56.156 |
+[719/5300] image_226_crop_2.png | GT=122 | gem: pred=36 matched=36 MAE(start/end/all)=18.409/82.678/50.543 |
+[720/5300] image_226_crop_3.png | GT=120 | gem: pred=51 matched=51 MAE(start/end/all)=7.971/87.578/47.775 |
+[721/5300] image_226_crop_4.png | GT=115 | gem: pred=28 matched=28 MAE(start/end/all)=12.327/82.281/47.304 |
+[722/5300] image_226_crop_5.png | GT=124 | gem: pred=24 matched=24 MAE(start/end/all)=6.345/78.919/42.632 |
+[723/5300] image_226_crop_6.png | GT=125 | gem: pred=34 matched=34 MAE(start/end/all)=5.690/78.461/42.075 |
+[724/5300] image_226_crop_7.png | GT=124 | gem: pred=33 matched=33 MAE(start/end/all)=27.568/95.260/61.414 |
+[725/5300] image_226_crop_8.png | GT=125 | gem: pred=48 matched=48 MAE(start/end/all)=28.926/94.106/61.516 |
+[726/5300] image_226_crop_9.png | GT=124 | gem: pred=46 matched=46 MAE(start/end/all)=10.758/86.087/48.423 |
+[WARN] No GT found for image_227_crop_1.png, skipping.
+[WARN] No GT found for image_227_crop_10.png, skipping.
+[729/5300] image_227_crop_2.png | GT=125 | gem: pred=64 matched=64 MAE(start/end/all)=6.209/17.750/11.980 |
+[WARN] No GT found for image_227_crop_3.png, skipping.
+[731/5300] image_227_crop_4.png | GT=125 | gem: pred=63 matched=63 MAE(start/end/all)=8.593/23.145/15.869 |
+[WARN] No GT found for image_227_crop_5.png, skipping.
+[WARN] No GT found for image_227_crop_6.png, skipping.
+[734/5300] image_227_crop_7.png | GT=125 | gem: pred=82 matched=82 MAE(start/end/all)=6.135/17.794/11.965 |
+[WARN] No GT found for image_227_crop_8.png, skipping.
+[736/5300] image_227_crop_9.png | GT=125 | gem: pred=61 matched=61 MAE(start/end/all)=9.245/22.453/15.849 |
+[737/5300] image_228_crop_1.png | GT=214 | gem: pred=60 matched=60 MAE(start/end/all)=10.111/25.500/17.806 |
+[738/5300] image_228_crop_2.png | GT=230 | gem: pred=59 matched=59 MAE(start/end/all)=7.655/23.563/15.609 |
+[739/5300] image_228_crop_3.png | GT=194 | gem: pred=41 matched=41 MAE(start/end/all)=6.649/21.142/13.896 |
+[740/5300] image_228_crop_4.png | GT=213 | gem: pred=48 matched=48 MAE(start/end/all)=0.759/14.675/7.717 |
+[741/5300] image_228_crop_5.png | GT=201 | gem: pred=45 matched=45 MAE(start/end/all)=7.893/22.923/15.408 |
+[742/5300] image_229_crop_1.png | GT=387 | gem: pred=50 matched=50 MAE(start/end/all)=5.388/19.379/12.384 |
+[743/5300] image_229_crop_2.png | GT=398 | gem: pred=52 matched=52 MAE(start/end/all)=2.125/18.478/10.302 |
+[744/5300] image_229_crop_3.png | GT=400 | gem: pred=104 matched=104 MAE(start/end/all)=1.174/15.574/8.374 |
+[WARN] No GT found for image_22_crop_1.png, skipping.
+[746/5300] image_22_crop_10.png | GT=53 | gem: pred=57 matched=53 MAE(start/end/all)=10.605/25.311/17.958 |
+[747/5300] image_22_crop_11.png | GT=45 | gem: pred=85 matched=45 MAE(start/end/all)=5.549/23.387/14.468 |
+[WARN] No GT found for image_22_crop_12.png, skipping.
+[749/5300] image_22_crop_2.png | GT=62 | gem: pred=40 matched=40 MAE(start/end/all)=19.725/91.078/55.402 |
+[WARN] No GT found for image_22_crop_3.png, skipping.
+[WARN] No GT found for image_22_crop_4.png, skipping.
+[752/5300] image_22_crop_5.png | GT=62 | gem: pred=102 matched=62 MAE(start/end/all)=4.388/18.546/11.467 |
+[WARN] No GT found for image_22_crop_6.png, skipping.
+[754/5300] image_22_crop_7.png | GT=62 | gem: pred=82 matched=62 MAE(start/end/all)=10.785/46.145/28.465 |
+[WARN] No GT found for image_22_crop_8.png, skipping.
+[WARN] No GT found for image_22_crop_9.png, skipping.
+[757/5300] image_230_crop_1.png | GT=39 | gem: pred=61 matched=39 MAE(start/end/all)=5.642/18.086/11.864 |
+[758/5300] image_230_crop_2.png | GT=37 | gem: pred=56 matched=37 MAE(start/end/all)=7.587/25.545/16.566 |
+[759/5300] image_230_crop_3.png | GT=42 | gem: pred=45 matched=42 MAE(start/end/all)=9.167/29.467/19.317 |
+[760/5300] image_230_crop_4.png | GT=36 | gem: pred=60 matched=36 MAE(start/end/all)=7.199/21.894/14.546 |
+[761/5300] image_230_crop_5.png | GT=29 | gem: pred=53 matched=29 MAE(start/end/all)=11.006/24.026/17.516 |
+[762/5300] image_231_crop_1.png | GT=125 | gem: pred=49 matched=49 MAE(start/end/all)=6.806/19.617/13.212 |
+[763/5300] image_231_crop_2.png | GT=125 | gem: pred=69 matched=69 MAE(start/end/all)=8.114/22.786/15.450 |
+[WARN] No GT found for image_231_crop_3.png, skipping.
+[765/5300] image_231_crop_4.png | GT=125 | gem: pred=67 matched=67 MAE(start/end/all)=8.359/22.891/15.625 |
+[WARN] No GT found for image_231_crop_5.png, skipping.
+[WARN] No GT found for image_231_crop_6.png, skipping.
+[768/5300] image_232_crop_1.png | GT=75 | gem: pred=42 matched=42 MAE(start/end/all)=4.956/20.382/12.669 |
+[769/5300] image_232_crop_2.png | GT=75 | gem: pred=43 matched=43 MAE(start/end/all)=19.427/32.916/26.171 |
+[770/5300] image_232_crop_3.png | GT=75 | gem: pred=54 matched=54 MAE(start/end/all)=3.556/17.833/10.694 |
+[771/5300] image_233_crop_1.png | GT=125 | gem: pred=36 matched=36 MAE(start/end/all)=5.708/85.723/45.716 |
+[772/5300] image_233_crop_2.png | GT=114 | gem: pred=45 matched=45 MAE(start/end/all)=5.912/19.015/12.464 |
+[773/5300] image_233_crop_3.png | GT=94 | gem: pred=32 matched=32 MAE(start/end/all)=2.212/18.337/10.274 |
+[774/5300] image_233_crop_4.png | GT=96 | gem: pred=47 matched=47 MAE(start/end/all)=4.855/16.357/10.606 |
+[775/5300] image_233_crop_5.png | GT=119 | gem: pred=30 matched=30 MAE(start/end/all)=4.510/17.199/10.855 |
+[776/5300] image_233_crop_6.png | GT=125 | gem: pred=24 matched=24 MAE(start/end/all)=2.412/74.641/38.527 |
+[777/5300] image_233_crop_7.png | GT=125 | gem: pred=74 matched=74 MAE(start/end/all)=2.463/28.042/15.253 |
+[778/5300] image_234_crop_1.png | GT=213 | gem: pred=40 matched=40 MAE(start/end/all)=2.384/16.917/9.650 |
+[779/5300] image_234_crop_2.png | GT=195 | gem: pred=53 matched=53 MAE(start/end/all)=6.818/7.791/7.304 |
+[780/5300] image_234_crop_3.png | GT=203 | gem: pred=44 matched=44 MAE(start/end/all)=1.000/16.262/8.631 |
+[781/5300] image_234_crop_4.png | GT=214 | gem: pred=51 matched=51 MAE(start/end/all)=2.350/18.196/10.273 |
+[782/5300] image_234_crop_5.png | GT=210 | gem: pred=35 matched=35 MAE(start/end/all)=2.223/18.120/10.172 |
+[783/5300] image_234_crop_6.png | GT=207 | gem: pred=32 matched=32 MAE(start/end/all)=1.595/17.545/9.570 |
+[784/5300] image_234_crop_7.png | GT=193 | gem: pred=50 matched=50 MAE(start/end/all)=1.948/19.323/10.635 |
+[785/5300] image_235_crop_1.png | GT=400 | gem: pred=31 matched=31 MAE(start/end/all)=9.830/68.947/39.388 |
+[786/5300] image_235_crop_10.png | GT=398 | gem: pred=51 matched=51 MAE(start/end/all)=9.380/68.477/38.928 |
+[787/5300] image_235_crop_11.png | GT=400 | gem: pred=34 matched=34 MAE(start/end/all)=10.905/66.232/38.569 |
+[788/5300] image_235_crop_2.png | GT=380 | gem: pred=45 matched=45 MAE(start/end/all)=2.539/69.776/36.158 |
+[789/5300] image_235_crop_3.png | GT=400 | gem: pred=36 matched=36 MAE(start/end/all)=4.306/73.295/38.801 |
+[790/5300] image_235_crop_4.png | GT=400 | gem: pred=20 matched=20 MAE(start/end/all)=1.675/69.288/35.481 |
+[791/5300] image_235_crop_5.png | GT=400 | gem: pred=34 matched=34 MAE(start/end/all)=8.185/20.810/14.498 |
+[792/5300] image_235_crop_6.png | GT=396 | gem: pred=54 matched=54 MAE(start/end/all)=1.226/73.919/37.572 |
+[793/5300] image_235_crop_7.png | GT=400 | gem: pred=34 matched=34 MAE(start/end/all)=8.450/65.861/37.156 |
+[794/5300] image_235_crop_8.png | GT=400 | gem: pred=39 matched=39 MAE(start/end/all)=0.861/15.802/8.332 |
+[795/5300] image_235_crop_9.png | GT=400 | gem: pred=41 matched=41 MAE(start/end/all)=4.411/19.923/12.167 |
+[WARN] No GT found for image_236_crop_1.png, skipping.
+[797/5300] image_236_crop_10.png | GT=118 | gem: pred=36 matched=36 MAE(start/end/all)=1.386/66.148/33.767 |
+[WARN] No GT found for image_236_crop_11.png, skipping.
+[799/5300] image_236_crop_12.png | GT=154 | gem: pred=33 matched=33 MAE(start/end/all)=6.379/20.759/13.569 |
+[WARN] No GT found for image_236_crop_13.png, skipping.
+[WARN] No GT found for image_236_crop_2.png, skipping.
+[802/5300] image_236_crop_3.png | GT=139 | gem: pred=41 matched=41 MAE(start/end/all)=2.792/77.653/40.223 |
+[803/5300] image_236_crop_4.png | GT=147 | gem: pred=31 matched=31 MAE(start/end/all)=2.520/85.074/43.797 |
+[WARN] No GT found for image_236_crop_5.png, skipping.
+[WARN] No GT found for image_236_crop_6.png, skipping.
+[806/5300] image_236_crop_7.png | GT=138 | gem: pred=37 matched=37 MAE(start/end/all)=12.071/69.503/40.787 |
+[WARN] No GT found for image_236_crop_8.png, skipping.
+[WARN] No GT found for image_236_crop_9.png, skipping.
+[809/5300] image_237_crop_1.png | GT=400 | gem: pred=33 matched=33 MAE(start/end/all)=5.825/19.194/12.510 |
+[810/5300] image_237_crop_2.png | GT=400 | gem: pred=74 matched=74 MAE(start/end/all)=0.609/14.776/7.692 |
+[811/5300] image_237_crop_3.png | GT=400 | gem: pred=43 matched=43 MAE(start/end/all)=1.994/17.382/9.688 |
+[812/5300] image_237_crop_4.png | GT=400 | gem: pred=50 matched=50 MAE(start/end/all)=6.634/19.660/13.147 |
+[813/5300] image_238_crop_1.png | GT=244 | gem: pred=31 matched=31 MAE(start/end/all)=15.904/25.295/20.600 |
+[814/5300] image_238_crop_2.png | GT=261 | gem: pred=39 matched=39 MAE(start/end/all)=3.732/17.053/10.392 |
+[815/5300] image_238_crop_3.png | GT=263 | gem: pred=156 matched=156 MAE(start/end/all)=68.741/48.189/58.465 |
+[816/5300] image_238_crop_4.png | GT=270 | gem: pred=72 matched=72 MAE(start/end/all)=51.618/43.726/47.672 |
+[WARN] No GT found for image_239_crop_1.png, skipping.
+[818/5300] image_239_crop_10.png | GT=75 | gem: pred=25 matched=25 MAE(start/end/all)=4.141/19.137/11.639 |
+[WARN] No GT found for image_239_crop_11.png, skipping.
+[WARN] No GT found for image_239_crop_12.png, skipping.
+[WARN] No GT found for image_239_crop_2.png, skipping.
+[822/5300] image_239_crop_3.png | GT=75 | gem: pred=63 matched=63 MAE(start/end/all)=7.434/20.796/14.115 |
+[WARN] No GT found for image_239_crop_4.png, skipping.
+[824/5300] image_239_crop_5.png | GT=75 | gem: pred=62 matched=62 MAE(start/end/all)=8.630/26.375/17.502 |
+[825/5300] image_239_crop_6.png | GT=75 | gem: pred=28 matched=28 MAE(start/end/all)=9.809/74.050/41.929 |
+[826/5300] image_239_crop_7.png | GT=75 | gem: pred=36 matched=36 MAE(start/end/all)=5.295/19.640/12.467 |
+[WARN] No GT found for image_239_crop_8.png, skipping.
+[WARN] No GT found for image_239_crop_9.png, skipping.
+[829/5300] image_23_crop_1.png | GT=66 | gem: pred=70 matched=66 MAE(start/end/all)=13.698/34.492/24.095 |
+[830/5300] image_23_crop_2.png | GT=47 | gem: pred=45 matched=45 MAE(start/end/all)=4.426/24.923/14.674 |
+[831/5300] image_240_crop_1.png | GT=161 | gem: pred=54 matched=54 MAE(start/end/all)=7.204/21.611/14.407 |
+[832/5300] image_240_crop_2.png | GT=203 | gem: pred=52 matched=52 MAE(start/end/all)=3.934/7.685/5.810 |
+[WARN] No GT found for image_241_crop_1.png, skipping.
+[WARN] No GT found for image_241_crop_2.png, skipping.
+[835/5300] image_241_crop_3.png | GT=281 | gem: pred=40 matched=40 MAE(start/end/all)=11.600/22.570/17.085 |
+[836/5300] image_241_crop_4.png | GT=309 | gem: pred=40 matched=40 MAE(start/end/all)=6.926/21.604/14.265 |
+[WARN] No GT found for image_241_crop_5.png, skipping.
+[WARN] No GT found for image_241_crop_6.png, skipping.
+[839/5300] image_242_crop_1.png | GT=175 | gem: pred=95 matched=95 MAE(start/end/all)=10.488/26.481/18.484 |
+[840/5300] image_242_crop_2.png | GT=175 | gem: pred=61 matched=61 MAE(start/end/all)=9.616/22.148/15.882 |
+[WARN] No GT found for image_242_crop_3.png, skipping.
+[842/5300] image_242_crop_4.png | GT=175 | gem: pred=89 matched=89 MAE(start/end/all)=7.957/21.985/14.971 |
+[843/5300] image_242_crop_5.png | GT=175 | gem: pred=79 matched=79 MAE(start/end/all)=7.964/20.128/14.046 |
+[WARN] No GT found for image_242_crop_6.png, skipping.
+[WARN] No GT found for image_242_crop_7.png, skipping.
+[846/5300] image_242_crop_8.png | GT=175 | gem: pred=128 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[847/5300] image_243_crop_1.png | GT=125 | gem: pred=126 matched=125 MAE(start/end/all)=12.970/26.962/19.966 |
+[848/5300] image_243_crop_2.png | GT=125 | gem: pred=38 matched=38 MAE(start/end/all)=8.811/23.186/15.998 |
+[849/5300] image_243_crop_3.png | GT=125 | gem: pred=101 matched=101 MAE(start/end/all)=16.976/19.340/18.158 |
+[850/5300] image_243_crop_4.png | GT=125 | gem: pred=71 matched=71 MAE(start/end/all)=16.526/30.263/23.394 |
+[851/5300] image_243_crop_5.png | GT=125 | gem: pred=38 matched=38 MAE(start/end/all)=16.655/19.306/17.981 |
+[852/5300] image_244_crop_1.png | GT=64 | gem: pred=41 matched=41 MAE(start/end/all)=4.926/32.622/18.774 |
+[853/5300] image_244_crop_2.png | GT=71 | gem: pred=86 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[854/5300] image_245_crop_1.png | GT=170 | gem: pred=58 matched=58 MAE(start/end/all)=3.581/21.144/12.363 |
+[855/5300] image_245_crop_2.png | GT=192 | gem: pred=87 matched=87 MAE(start/end/all)=2.850/23.174/13.012 |
+[856/5300] image_245_crop_3.png | GT=251 | gem: pred=43 matched=43 MAE(start/end/all)=1.335/16.438/8.886 |
+[857/5300] image_246_crop_1.png | GT=125 | gem: pred=50 matched=50 MAE(start/end/all)=4.013/22.243/13.128 |
+[858/5300] image_246_crop_2.png | GT=125 | gem: pred=46 matched=46 MAE(start/end/all)=3.064/16.049/9.556 |
+[WARN] No GT found for image_246_crop_3.png, skipping.
+[860/5300] image_246_crop_4.png | GT=125 | gem: pred=47 matched=47 MAE(start/end/all)=1.969/19.951/10.960 |
+[WARN] No GT found for image_246_crop_5.png, skipping.
+[WARN] No GT found for image_246_crop_6.png, skipping.
+[863/5300] image_247_crop_1.png | GT=91 | gem: pred=60 matched=60 MAE(start/end/all)=2.615/22.116/12.366 |
+[864/5300] image_247_crop_2.png | GT=81 | gem: pred=58 matched=58 MAE(start/end/all)=10.466/24.869/17.668 |
+[865/5300] image_247_crop_3.png | GT=115 | gem: pred=64 matched=64 MAE(start/end/all)=4.030/16.956/10.493 |
+[866/5300] image_248_crop_1.png | GT=301 | gem: pred=66 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[867/5300] image_248_crop_2.png | GT=203 | gem: pred=103 matched=103 MAE(start/end/all)=1.979/73.374/37.677 |
+[868/5300] image_248_crop_3.png | GT=257 | gem: pred=57 matched=57 MAE(start/end/all)=1.310/15.694/8.502 |
+[WARN] No GT found for image_249_crop_1.png, skipping.
+[WARN] No GT found for image_249_crop_2.png, skipping.
+[871/5300] image_249_crop_3.png | GT=398 | gem: pred=48 matched=48 MAE(start/end/all)=8.525/21.482/15.004 |
+[872/5300] image_249_crop_4.png | GT=380 | gem: pred=94 matched=94 MAE(start/end/all)=2.698/19.884/11.291 |
+[WARN] No GT found for image_249_crop_5.png, skipping.
+[WARN] No GT found for image_249_crop_6.png, skipping.
+[875/5300] image_24_crop_1.png | GT=59 | gem: pred=84 matched=59 MAE(start/end/all)=44.719/39.888/42.303 |
+[876/5300] image_24_crop_2.png | GT=52 | gem: pred=60 matched=52 MAE(start/end/all)=5.794/25.904/15.849 |
+[877/5300] image_24_crop_3.png | GT=69 | gem: pred=45 matched=45 MAE(start/end/all)=2.773/17.079/9.926 |
+[878/5300] image_250_crop_1.png | GT=275 | gem: pred=56 matched=56 MAE(start/end/all)=5.410/22.099/13.755 |
+[WARN] No GT found for image_250_crop_2.png, skipping.
+[880/5300] image_250_crop_3.png | GT=275 | gem: pred=50 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[881/5300] image_250_crop_4.png | GT=275 | gem: pred=65 matched=65 MAE(start/end/all)=2.040/20.031/11.035 |
+[WARN] No GT found for image_250_crop_5.png, skipping.
+[WARN] No GT found for image_250_crop_6.png, skipping.
+[884/5300] image_251_crop_1.png | GT=175 | gem: pred=61 matched=61 MAE(start/end/all)=2.441/21.084/11.762 |
+[885/5300] image_251_crop_2.png | GT=175 | gem: pred=53 matched=53 MAE(start/end/all)=2.749/18.576/10.662 |
+[886/5300] image_251_crop_3.png | GT=175 | gem: pred=69 matched=69 MAE(start/end/all)=3.527/16.859/10.193 |
+[887/5300] image_252_crop_1.png | GT=74 | gem: pred=45 matched=45 MAE(start/end/all)=8.217/22.494/15.356 |
+[888/5300] image_252_crop_2.png | GT=113 | gem: pred=82 matched=82 MAE(start/end/all)=4.563/20.684/12.624 |
+[889/5300] image_252_crop_3.png | GT=119 | gem: pred=54 matched=54 MAE(start/end/all)=3.009/17.541/10.275 |
+[890/5300] image_252_crop_4.png | GT=109 | gem: pred=91 matched=91 MAE(start/end/all)=7.250/20.185/13.718 |
+[891/5300] image_253_crop_1.png | GT=54 | gem: pred=33 matched=33 MAE(start/end/all)=5.293/90.404/47.848 |
+[892/5300] image_253_crop_2.png | GT=68 | gem: pred=65 matched=65 MAE(start/end/all)=7.820/30.109/18.965 |
+[893/5300] image_253_crop_3.png | GT=55 | gem: pred=31 matched=31 MAE(start/end/all)=7.164/20.512/13.838 |
+[894/5300] image_253_crop_4.png | GT=68 | gem: pred=38 matched=38 MAE(start/end/all)=5.947/16.210/11.079 |
+[895/5300] image_253_crop_5.png | GT=73 | gem: pred=35 matched=35 MAE(start/end/all)=2.172/19.995/11.083 |
+[896/5300] image_253_crop_6.png | GT=68 | gem: pred=29 matched=29 MAE(start/end/all)=21.954/79.173/50.564 |
+[897/5300] image_253_crop_7.png | GT=58 | gem: pred=46 matched=46 MAE(start/end/all)=8.418/100.098/54.258 |
+[898/5300] image_254_crop_1.png | GT=146 | gem: pred=48 matched=48 MAE(start/end/all)=6.741/3.947/5.344 |
+[WARN] No GT found for image_255_crop_1.png, skipping.
+[900/5300] image_255_crop_2.png | GT=197 | gem: pred=36 matched=36 MAE(start/end/all)=9.529/23.079/16.304 |
+[WARN] No GT found for image_255_crop_3.png, skipping.
+[WARN] No GT found for image_255_crop_4.png, skipping.
+[WARN] No GT found for image_255_crop_5.png, skipping.
+[904/5300] image_255_crop_6.png | GT=311 | gem: pred=64 matched=64 MAE(start/end/all)=9.712/22.904/16.308 |
+[WARN] No GT found for image_255_crop_7.png, skipping.
+[WARN] No GT found for image_255_crop_8.png, skipping.
+[WARN] No GT found for image_256_crop_1.png, skipping.
+[908/5300] image_256_crop_10.png | GT=269 | gem: pred=48 matched=48 MAE(start/end/all)=2.549/70.920/36.735 |
+[909/5300] image_256_crop_11.png | GT=349 | gem: pred=44 matched=44 MAE(start/end/all)=6.593/19.938/13.265 |
+[WARN] No GT found for image_256_crop_12.png, skipping.
+[WARN] No GT found for image_256_crop_13.png, skipping.
+[WARN] No GT found for image_256_crop_2.png, skipping.
+[913/5300] image_256_crop_3.png | GT=341 | gem: pred=53 matched=53 MAE(start/end/all)=7.247/20.316/13.781 |
+[914/5300] image_256_crop_4.png | GT=348 | gem: pred=85 matched=85 MAE(start/end/all)=2.675/80.126/41.400 |
+[WARN] No GT found for image_256_crop_5.png, skipping.
+[WARN] No GT found for image_256_crop_6.png, skipping.
+[917/5300] image_256_crop_7.png | GT=354 | gem: pred=48 matched=48 MAE(start/end/all)=2.891/71.740/37.316 |
+[WARN] No GT found for image_256_crop_8.png, skipping.
+[WARN] No GT found for image_256_crop_9.png, skipping.
+[WARN] No GT found for image_257_crop_1.png, skipping.
+[WARN] No GT found for image_257_crop_2.png, skipping.
+[922/5300] image_257_crop_3.png | GT=400 | gem: pred=56 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[923/5300] image_257_crop_4.png | GT=400 | gem: pred=68 matched=68 MAE(start/end/all)=5.658/18.154/11.906 |
+[WARN] No GT found for image_257_crop_5.png, skipping.
+[WARN] No GT found for image_257_crop_6.png, skipping.
+[926/5300] image_258_crop_1.png | GT=184 | gem: pred=87 matched=87 MAE(start/end/all)=1.689/19.698/10.694 |
+[927/5300] image_258_crop_2.png | GT=185 | gem: pred=36 matched=36 MAE(start/end/all)=4.515/17.902/11.208 |
+[928/5300] image_259_crop_1.png | GT=62 | gem: pred=64 matched=62 MAE(start/end/all)=9.009/30.390/19.699 |
+[929/5300] image_259_crop_2.png | GT=46 | gem: pred=86 matched=46 MAE(start/end/all)=4.025/20.720/12.372 |
+[930/5300] image_25_crop_1.png | GT=105 | gem: pred=57 matched=57 MAE(start/end/all)=0.811/14.612/7.711 |
+[931/5300] image_25_crop_2.png | GT=93 | gem: pred=64 matched=64 MAE(start/end/all)=7.166/18.091/12.628 |
+[932/5300] image_260_crop_1.png | GT=275 | gem: pred=46 matched=46 MAE(start/end/all)=7.183/20.830/14.007 |
+[WARN] No GT found for image_260_crop_2.png, skipping.
+[934/5300] image_260_crop_3.png | GT=275 | gem: pred=57 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[935/5300] image_260_crop_4.png | GT=274 | gem: pred=60 matched=60 MAE(start/end/all)=6.757/20.295/13.526 |
+[WARN] No GT found for image_260_crop_5.png, skipping.
+[WARN] No GT found for image_260_crop_6.png, skipping.
+[WARN] No GT found for image_261_crop_1.png, skipping.
+[939/5300] image_261_crop_2.png | GT=67 | gem: pred=56 matched=56 MAE(start/end/all)=10.305/27.553/18.929 |
+[940/5300] image_261_crop_3.png | GT=65 | gem: pred=34 matched=34 MAE(start/end/all)=7.525/21.420/14.473 |
+[941/5300] image_261_crop_4.png | GT=62 | gem: pred=43 matched=43 MAE(start/end/all)=7.766/21.667/14.717 |
+[WARN] No GT found for image_261_crop_5.png, skipping.
+[WARN] No GT found for image_261_crop_6.png, skipping.
+[944/5300] image_262_crop_1.png | GT=125 | gem: pred=66 matched=66 MAE(start/end/all)=2.968/19.581/11.274 |
+[945/5300] image_262_crop_2.png | GT=81 | gem: pred=32 matched=32 MAE(start/end/all)=7.270/48.755/28.013 |
+[946/5300] image_262_crop_3.png | GT=125 | gem: pred=50 matched=50 MAE(start/end/all)=4.769/18.516/11.643 |
+[947/5300] image_262_crop_4.png | GT=100 | gem: pred=39 matched=39 MAE(start/end/all)=4.718/21.584/13.151 |
+[948/5300] image_262_crop_5.png | GT=125 | gem: pred=39 matched=39 MAE(start/end/all)=1.587/15.576/8.581 |
+[949/5300] image_262_crop_6.png | GT=123 | gem: pred=50 matched=50 MAE(start/end/all)=3.377/17.841/10.609 |
+[950/5300] image_262_crop_7.png | GT=121 | gem: pred=46 matched=46 MAE(start/end/all)=6.332/20.323/13.328 |
+[951/5300] image_263_crop_1.png | GT=101 | gem: pred=42 matched=42 MAE(start/end/all)=2.309/18.885/10.597 |
+[952/5300] image_263_crop_2.png | GT=92 | gem: pred=81 matched=81 MAE(start/end/all)=9.813/25.940/17.877 |
+[953/5300] image_263_crop_3.png | GT=99 | gem: pred=52 matched=52 MAE(start/end/all)=3.222/23.438/13.330 |
+[954/5300] image_264_crop_1.png | GT=106 | gem: pred=35 matched=35 MAE(start/end/all)=11.322/21.290/16.306 |
+[955/5300] image_264_crop_2.png | GT=100 | gem: pred=46 matched=46 MAE(start/end/all)=9.205/18.611/13.908 |
+[WARN] No GT found for image_264_crop_3.png, skipping.
+[957/5300] image_264_crop_4.png | GT=99 | gem: pred=65 matched=65 MAE(start/end/all)=12.844/25.996/19.420 |
+[WARN] No GT found for image_264_crop_5.png, skipping.
+[WARN] No GT found for image_264_crop_6.png, skipping.
+[960/5300] image_265_crop_1.png | GT=39 | gem: pred=40 matched=39 MAE(start/end/all)=18.924/42.287/30.606 |
+[961/5300] image_265_crop_2.png | GT=47 | gem: pred=41 matched=41 MAE(start/end/all)=25.376/23.181/24.278 |
+[962/5300] image_265_crop_3.png | GT=97 | gem: pred=58 matched=58 MAE(start/end/all)=5.851/20.510/13.181 |
+[963/5300] image_265_crop_4.png | GT=46 | gem: pred=57 matched=46 MAE(start/end/all)=3.926/26.227/15.076 |
+[964/5300] image_265_crop_5.png | GT=100 | gem: pred=48 matched=48 MAE(start/end/all)=4.978/20.613/12.795 |
+[965/5300] image_265_crop_6.png | GT=54 | gem: pred=84 matched=54 MAE(start/end/all)=4.845/27.988/16.417 |
+[966/5300] image_265_crop_7.png | GT=112 | gem: pred=68 matched=68 MAE(start/end/all)=2.877/20.199/11.538 |
+[967/5300] image_266_crop_1.png | GT=125 | gem: pred=51 matched=51 MAE(start/end/all)=2.447/19.750/11.099 |
+[968/5300] image_266_crop_2.png | GT=125 | gem: pred=57 matched=57 MAE(start/end/all)=4.383/24.466/14.425 |
+[969/5300] image_266_crop_3.png | GT=125 | gem: pred=42 matched=42 MAE(start/end/all)=10.330/57.227/33.779 |
+[970/5300] image_266_crop_4.png | GT=125 | gem: pred=51 matched=51 MAE(start/end/all)=5.024/24.436/14.730 |
+[971/5300] image_266_crop_5.png | GT=97 | gem: pred=38 matched=38 MAE(start/end/all)=7.830/32.730/20.280 |
+[972/5300] image_266_crop_6.png | GT=108 | gem: pred=31 matched=31 MAE(start/end/all)=6.713/20.930/13.822 |
+[973/5300] image_266_crop_7.png | GT=125 | gem: pred=38 matched=38 MAE(start/end/all)=4.374/20.335/12.355 |
+[974/5300] image_267_crop_1.png | GT=218 | gem: pred=70 matched=70 MAE(start/end/all)=1.208/16.096/8.652 |
+[975/5300] image_267_crop_2.png | GT=191 | gem: pred=62 matched=62 MAE(start/end/all)=1.695/15.324/8.510 |
+[976/5300] image_267_crop_3.png | GT=133 | gem: pred=54 matched=54 MAE(start/end/all)=4.728/18.388/11.558 |
+[WARN] No GT found for image_268_crop_1.png, skipping.
+[978/5300] image_268_crop_2.png | GT=64 | gem: pred=51 matched=51 MAE(start/end/all)=12.878/18.467/15.673 |
+[979/5300] image_268_crop_3.png | GT=63 | gem: pred=47 matched=47 MAE(start/end/all)=7.911/26.896/17.403 |
+[980/5300] image_268_crop_4.png | GT=73 | gem: pred=38 matched=38 MAE(start/end/all)=7.149/25.486/16.318 |
+[WARN] No GT found for image_268_crop_5.png, skipping.
+[WARN] No GT found for image_268_crop_6.png, skipping.
+[983/5300] image_269_crop_1.png | GT=121 | gem: pred=46 matched=46 MAE(start/end/all)=2.517/21.128/11.823 |
+[984/5300] image_269_crop_2.png | GT=88 | gem: pred=72 matched=72 MAE(start/end/all)=25.984/26.605/26.295 |
+[985/5300] image_269_crop_3.png | GT=87 | gem: pred=53 matched=53 MAE(start/end/all)=19.122/17.215/18.168 |
+[986/5300] image_26_crop_1.png | GT=55 | gem: pred=53 matched=53 MAE(start/end/all)=5.168/32.992/19.080 |
+[987/5300] image_26_crop_2.png | GT=73 | gem: pred=33 matched=33 MAE(start/end/all)=3.164/19.216/11.190 |
+[988/5300] image_26_crop_3.png | GT=64 | gem: pred=30 matched=30 MAE(start/end/all)=6.910/19.231/13.070 |
+[989/5300] image_270_crop_1.png | GT=258 | gem: pred=43 matched=43 MAE(start/end/all)=3.087/23.923/13.505 |
+[990/5300] image_270_crop_2.png | GT=259 | gem: pred=77 matched=77 MAE(start/end/all)=2.684/20.691/11.687 |
+[991/5300] image_270_crop_3.png | GT=361 | gem: pred=34 matched=34 MAE(start/end/all)=2.508/17.158/9.833 |
+[992/5300] image_270_crop_4.png | GT=270 | gem: pred=41 matched=41 MAE(start/end/all)=3.724/18.864/11.294 |
+[993/5300] image_270_crop_5.png | GT=372 | gem: pred=61 matched=61 MAE(start/end/all)=3.401/18.897/11.149 |
+[994/5300] image_270_crop_6.png | GT=394 | gem: pred=34 matched=34 MAE(start/end/all)=2.446/18.905/10.676 |
+[995/5300] image_270_crop_7.png | GT=289 | gem: pred=63 matched=63 MAE(start/end/all)=2.124/18.702/10.413 |
+[996/5300] image_271_crop_1.png | GT=65 | gem: pred=63 matched=63 MAE(start/end/all)=14.495/17.803/16.149 |
+[997/5300] image_271_crop_2.png | GT=73 | gem: pred=60 matched=60 MAE(start/end/all)=5.428/22.492/13.960 |
+[998/5300] image_271_crop_3.png | GT=46 | gem: pred=68 matched=46 MAE(start/end/all)=11.195/21.507/16.351 |
+[WARN] No GT found for image_272_crop_1.png, skipping.
+[1000/5300] image_272_crop_10.png | GT=113 | gem: pred=29 matched=29 MAE(start/end/all)=2.712/77.747/40.229 |
+[WARN] No GT found for image_272_crop_11.png, skipping.
+[WARN] No GT found for image_272_crop_12.png, skipping.
+[WARN] No GT found for image_272_crop_2.png, skipping.
+[1004/5300] image_272_crop_3.png | GT=93 | gem: pred=66 matched=66 MAE(start/end/all)=21.592/84.138/52.865 |
+[WARN] No GT found for image_272_crop_4.png, skipping.
+[WARN] No GT found for image_272_crop_5.png, skipping.
+[1007/5300] image_272_crop_6.png | GT=116 | gem: pred=27 matched=27 MAE(start/end/all)=2.555/20.102/11.329 |
+[WARN] No GT found for image_272_crop_7.png, skipping.
+[1009/5300] image_272_crop_8.png | GT=108 | gem: pred=45 matched=45 MAE(start/end/all)=2.942/80.353/41.647 |
+[WARN] No GT found for image_272_crop_9.png, skipping.
+[1011/5300] image_273_crop_1.png | GT=244 | gem: pred=46 matched=46 MAE(start/end/all)=6.726/21.106/13.916 |
+[1012/5300] image_273_crop_2.png | GT=235 | gem: pred=41 matched=41 MAE(start/end/all)=0.941/15.788/8.365 |
+[1013/5300] image_273_crop_3.png | GT=240 | gem: pred=60 matched=60 MAE(start/end/all)=7.308/21.558/14.433 |
+[1014/5300] image_273_crop_4.png | GT=214 | gem: pred=47 matched=47 MAE(start/end/all)=3.784/23.521/13.653 |
+[1015/5300] image_273_crop_5.png | GT=244 | gem: pred=77 matched=0 MAE(start/end/all)=0.000/0.000/0.000 |
+[1016/5300] image_274_crop_1.png | GT=125 | gem: pred=61 matched=61 MAE(start/end/all)=6.977/23.183/15.080 |
+[1017/5300] image_274_crop_2.png | GT=125 | gem: pred=46 matched=46 MAE(start/end/all)=1.199/16.314/8.757 |
+[1018/5300] image_274_crop_3.png | GT=125 | gem: pred=69 matched=69 MAE(start/end/all)=2.741/22.802/12.772 |
+[1019/5300] image_275_crop_1.png | GT=53 | gem: pred=37 matched=37 MAE(start/end/all)=23.231/7.893/15.562 |
+[1020/5300] image_275_crop_2.png | GT=53 | gem: pred=40 matched=40 MAE(start/end/all)=8.082/22.472/15.277 |
+[1021/5300] image_275_crop_3.png | GT=58 | gem: pred=40 matched=40 MAE(start/end/all)=10.822/4.368/7.595 |
+[1022/5300] image_275_crop_4.png | GT=49 | gem: pred=43 matched=43 MAE(start/end/all)=6.081/13.759/9.920 |
+[1023/5300] image_275_crop_5.png | GT=47 | gem: pred=38 matched=38 MAE(start/end/all)=12.452/7.132/9.792 |
+[1024/5300] image_275_crop_6.png | GT=42 | gem: pred=43 matched=42 MAE(start/end/all)=13.100/33.818/23.459 |
+[1025/5300] image_275_crop_7.png | GT=47 | gem: pred=56 matched=47 MAE(start/end/all)=11.738/13.911/12.824 |
+[WARN] No GT found for image_276_crop_1.png, skipping.
+[WARN] No GT found for image_276_crop_10.png, skipping.
+[WARN] No GT found for image_276_crop_11.png, skipping.
+[WARN] No GT found for image_276_crop_12.png, skipping.
+[WARN] No GT found for image_276_crop_13.png, skipping.
+[WARN] No GT found for image_276_crop_14.png, skipping.
+[WARN] No GT found for image_276_crop_15.png, skipping.
+[WARN] No GT found for image_276_crop_16.png, skipping.
+[WARN] No GT found for image_276_crop_17.png, skipping.
+[WARN] No GT found for image_276_crop_18.png, skipping.
+[WARN] No GT found for image_276_crop_19.png, skipping.
+[1037/5300] image_276_crop_2.png | GT=120 | gem: pred=14 matched=14 MAE(start/end/all)=20.353/32.091/26.222 |
+[WARN] No GT found for image_276_crop_20.png, skipping.
+[WARN] No GT found for image_276_crop_21.png, skipping.
+[WARN] No GT found for image_276_crop_22.png, skipping.
+[WARN] No GT found for image_276_crop_3.png, skipping.
+[WARN] No GT found for image_276_crop_4.png, skipping.
+[1043/5300] image_276_crop_5.png | GT=80 | gem: pred=32 matched=32 MAE(start/end/all)=7.909/22.555/15.232 |
+[WARN] No GT found for image_276_crop_6.png, skipping.
+[WARN] No GT found for image_276_crop_7.png, skipping.
+[WARN] No GT found for image_276_crop_8.png, skipping.
+[WARN] No GT found for image_276_crop_9.png, skipping.
+[1048/5300] image_277_crop_1.png | GT=287 | gem: pred=63 matched=63 MAE(start/end/all)=2.871/14.928/8.899 |
+[1049/5300] image_277_crop_2.png | GT=298 | gem: pred=69 matched=69 MAE(start/end/all)=3.100/20.635/11.868 |
+[1050/5300] image_277_crop_3.png | GT=298 | gem: pred=130 matched=130 MAE(start/end/all)=3.617/18.435/11.026 |
+[1051/5300] image_277_crop_4.png | GT=244 | gem: pred=84 matched=84 MAE(start/end/all)=3.029/22.459/12.744 |
+[1052/5300] image_277_crop_5.png | GT=269 | gem: pred=46 matched=46 MAE(start/end/all)=7.384/20.890/14.137 |

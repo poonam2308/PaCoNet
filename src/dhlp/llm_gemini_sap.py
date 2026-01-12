@@ -41,7 +41,7 @@ project_root = Path(project_root)
 IMAGE_DIR = project_root / "data/synthetic_plots/testing/images_100"
 GT_JSON_PATH = project_root / "data/synthetic_plots/testing/test.json"
 
-OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test_mae.csv"
+OUT_CSV = project_root / "outputs/llms/results_Gemini_only_with_sap_test_mae_gem3.0.csv"
 
 # Gemini_MODEL = "gpt-4.1-mini"  # change if you want
 
@@ -560,7 +560,7 @@ def main() -> None:
         if USE_Gemini:
             try:
                 gem = GeminiLinePredictor(
-                    model="gemini-2.5-flash",  # example model from Google docs :contentReference[gemcite:7]{index=7}
+                    model="gemini-3-flash-preview",  # example model from Google docs :contentReference[gemcite:7]{index=7}
                     api_key=GEMINI_API_KEY        # optional; else use env GEMINI_API_KEY
                 )
                 gem_lines = gem.predict_lines_from_b64png(img_b64, USER_PROMPT_BASE)
