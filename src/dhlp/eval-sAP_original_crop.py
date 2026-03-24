@@ -125,8 +125,6 @@ def line_score_merged(pred_glob: str, threshold: float = 5.0) -> float:
     all_tp, all_fp, all_scores = [], [], []
 
     crops = sorted(set(gt_lines_by_crop.keys()) & set(pred_lines_by_crop.keys()))
-    # If you want to allow crops with no preds, you can include gt-only crops too,
-    # but that changes behavior; current script matches your original zip pairing.
 
     for ck in crops:
         # merge preds

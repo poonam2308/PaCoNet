@@ -30,7 +30,7 @@ import scipy.io as sio
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, project_root)
 
-from dhlp.process_utils import set_seed, get_mask_for_index, filter_lines_with_mask_heatmap, line_nms, \
+from src.dhlp.process_utils import set_seed, get_mask_for_index, filter_lines_with_mask_heatmap, line_nms, \
     build_gt_lines_from_meta, match_lines
 
 import src.dhlp.lcnn  # noqa: F401
@@ -55,7 +55,7 @@ metric = LineSegmentSAPMetric(thresholds=(5.0, 10.0, 15.0))
 # and masks are in:       data/pcw_test_masks/test/*.npz
 
 # # masks path for the color + unet 1
-# MASK_ROOT = "data/pcw_test/masks"
+MASK_ROOT = "data/pcw_test/masks"
 
 # masks path for the cluster  + unet  2
 # MASK_ROOT = "data/pcw_test_cls/masks"
@@ -66,8 +66,8 @@ metric = LineSegmentSAPMetric(thresholds=(5.0, 10.0, 15.0))
 # masks path for cluster without unet 4
 # MASK_ROOT = "data/pcw_ntest_cls/masks"
 
-# all cat in crops
-MASK_ROOT = "data/pcw_crops_test/masks"
+# # all cat in crops
+# MASK_ROOT = "data/pcw_crops_test/masks"
 
 
 
@@ -144,7 +144,7 @@ def main():
 
     # 7. Data loader (change split to 'valid' / 'test' as you like)
     loader = torch.utils.data.DataLoader(
-        WireframeDataset(rootdir=C.io.datadir, split="test"),
+        WireframeDataset(rootdir=C.io.datadir, split="low_level"),
         shuffle=False,
         batch_size=M.batch_size,
         collate_fn=collate,
