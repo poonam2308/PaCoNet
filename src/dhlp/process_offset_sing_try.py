@@ -55,10 +55,10 @@ metric = LineSegmentSAPMetric(thresholds=(5.0, 10.0, 15.0))
 # and masks are in:       data/pcw_test_masks/test/*.npz
 
 # # masks path for the color + unet 1
-MASK_ROOT = "data/pcw_test/masks"
+# MASK_ROOT = "data/pcw_test/masks"
 
 # masks path for the cluster  + unet  2
-# MASK_ROOT = "data/pcw_test_cls/masks"
+MASK_ROOT = "data/pcw_test_cls/masks"
 
 # # masks path for color  without unet 3
 # MASK_ROOT = "data/pcw_ntest/masks"
@@ -144,7 +144,7 @@ def main():
 
     # 7. Data loader (change split to 'valid' / 'test' as you like)
     loader = torch.utils.data.DataLoader(
-        WireframeDataset(rootdir=C.io.datadir, split="low_level"),
+        WireframeDataset(rootdir=C.io.datadir, split="high_level"),
         shuffle=False,
         batch_size=M.batch_size,
         collate_fn=collate,

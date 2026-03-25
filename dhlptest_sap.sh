@@ -17,8 +17,9 @@
 
 #-------------------------------------Ablation Evaluation for different difficulty level of category ---------------------------------------------------------------------
 
-./src/dhlp/process_offset_sing_try.py ./src/dhlp/config/test_diff.yaml ./outputs/chkpt/dhlp/checkpoint_best_c.pth
+#./src/dhlp/process_offset_sing_try.py ./src/dhlp/config/test_diff.yaml ./outputs/chkpt/dhlp/checkpoint_best_c.pth
 
+./src/dhlp//process_offset_sing_try.py ./src/dhlp/config/test_diff.yaml ./outputs/chkpt/dhlp/checkpoint_best_cls.pth
 
 
 
