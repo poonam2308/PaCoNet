@@ -100,8 +100,8 @@ Rules:
 
 # =========================
 
-OPENAI_API_KEY="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"
-GEMINI_API_KEY="AIzaSyDnmum8L8pHicm-8OqNOFzuTeG7fxI1yCM"
+OPENAI_API_KEY=""
+GEMINI_API_KEY=""
 
 
 # Put keys into env so the rest of the code can read them

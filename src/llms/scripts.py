@@ -50,8 +50,8 @@ TEMPERATURE = 0.0
 MAX_SIDE = 1600                  # downscale max side before sending to API
 MAX_IMAGES = 0                   # 0 = all images, else limit (e.g. 10)
 
-OPENAI_API_KEY="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"
-GEMINI_API_KEY="AIzaSyDnmum8L8pHicm-8OqNOFzuTeG7fxI1yCM"
+OPENAI_API_KEY=""
+GEMINI_API_KEY=""
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY

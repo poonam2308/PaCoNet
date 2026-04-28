@@ -91,7 +91,7 @@ Rules:
 # IMPORTANT: do not hardcode real keys in shared code.
 # =========================
 
-OPENAI_API_KEY="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"
+OPENAI_API_KEY=""
 #
 # OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 if OPENAI_API_KEY:
