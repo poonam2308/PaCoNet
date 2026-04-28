@@ -51,8 +51,7 @@ MAX_SIDE = 0
 MAX_MATCH_COST = 400.0
 
 
-GEMINI_API_KEY="AIzaSyDnmum8L8pHicm-8OqNOFzuTeG7fxI1yCM"
-# GEMINI_API_KEY="AIzaSyBYu99uo9JfS0z_p-akz4XwJCN3qk8J-gc" # daniel's key
+GEMINI_API_KEY=""
 if GEMINI_API_KEY:
     os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 

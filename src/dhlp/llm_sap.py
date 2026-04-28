@@ -58,8 +58,7 @@ MAX_SIDE = 0          # 0 = do NOT resize (recommended to match GT pixel scale)
 MAX_MATCH_COST = 400.0  # threshold on cost for match acceptance
 
 # Your API key is "mentioned at the top" — keep it here if you want, but env var is safer:
-OPENAI_API_KEY="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"
-#
+OPENAI_API_KEY=" "
 # OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 if OPENAI_API_KEY:
     os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
